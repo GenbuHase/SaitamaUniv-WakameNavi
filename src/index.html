@@ -9,7 +9,7 @@
   <body>
     <h1>Bus List for KokusaiKogyo</h1>
 
-    <form method="get" action="./bus/KokusaiKogyo/search">
+    <form method="get" action="/bus/KokusaiKogyo/search">
       <select name="startPos">
         <option value="SaitamaUniv">埼玉大学</option>
         <option value="KitaUrawa">北浦和</option>
@@ -24,6 +24,24 @@
         <option value="MinamiYono">南与野</option>
         <option value="Shiki">志木</option>
         <option value="KitaAsaka">北朝霞</option>
+      </select>
+
+      <input id="submit" type="submit" value="検索" />
+    </form>
+
+    <h1>Bus List for Seibu</h1>
+
+    <form method="get" action="/bus/Seibu/search">
+      <select name="startPos">
+        <option value="SaitamaUniv">埼玉大学</option>
+        <option value="KitaUrawa">北浦和</option>
+        <option value="MinamiYono">南与野</option>
+      </select>
+
+      <select name="goalPos">
+        <option value="SaitamaUniv">埼玉大学</option>
+        <option value="KitaUrawa">北浦和</option>
+        <option value="MinamiYono">南与野</option>
       </select>
 
       <input id="submit" type="submit" value="検索" />

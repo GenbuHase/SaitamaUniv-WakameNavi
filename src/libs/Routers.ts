@@ -25,7 +25,9 @@ busRouter
     await next();
     console.log("Now searching services...");
 
-    const { BUS_STOP_IDS } = KokusaiKogyo;
+    const KokusaiKogyo_BusStopIds = KokusaiKogyo.BUS_STOP_IDS;
+    const Seibu_BusStopIds = Seibu.BUS_STOP_IDS;
+
     const { busCompany } = ctx.params;
     const { startPos, goalPos } = ctx.request.query;
 
@@ -33,7 +35,12 @@ busRouter
 
     switch (busCompany) {
       case KokusaiKogyo.TYPE:
-        ctx.body = await KokusaiKogyo.getServices(BUS_STOP_IDS[startPos as keyof typeof BUS_STOP_IDS], BUS_STOP_IDS[goalPos as keyof typeof BUS_STOP_IDS]);
+        ctx.body = await KokusaiKogyo.getServices(KokusaiKogyo_BusStopIds[startPos as keyof typeof KokusaiKogyo_BusStopIds], KokusaiKogyo_BusStopIds[goalPos as keyof typeof KokusaiKogyo_BusStopIds]);
+        break;
+
+      case Seibu.TYPE:
+        // ctx.body = await Seibu.getServices("00110252", "00110264");
+        ctx.body = await Seibu.getServices(Seibu_BusStopIds[startPos as keyof typeof Seibu_BusStopIds], Seibu_BusStopIds[goalPos as keyof typeof Seibu_BusStopIds]);
         break;
     }
 

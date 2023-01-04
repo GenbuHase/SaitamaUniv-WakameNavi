@@ -1,7 +1,7 @@
 {
   "name": "su_transportation-status-bot",
   "description": "",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "main": "index.js",
   "scripts": {
     "start": "ts-node-dev --respawn src/server.ts",
