@@ -1,9 +1,7 @@
 import Koa from "koa";
 import Routers from "./libs/Routers";
-import Transportation from "./libs/Transportation";
 
-const { router, busRouter } = Routers;
-const { KokusaiKogyo, Seibu } = Transportation.Bus;
+const { router } = Routers;
 
 const app = new Koa();
 
