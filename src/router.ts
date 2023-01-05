@@ -1,6 +1,5 @@
-import fs from "fs";
 import Router from "@koa/router";
-import Transportation from "./Transportation";
+import Transportation from "./libs/Transportation";
 
 const { KokusaiKogyo, Seibu } = Transportation.Bus;
 
@@ -12,12 +11,6 @@ router
     await next();
 
     console.log(ctx.request.url, ctx);
-  })
-  .get("/", async (ctx, next) => {
-    await next();
-
-    ctx.response.type = "html";
-    ctx.response.body = fs.readFileSync("./src/index.html", "utf-8");
   });
 
 busRouter
@@ -52,4 +45,4 @@ router
 
 
 
-export default { router, busRouter };
+export default router;

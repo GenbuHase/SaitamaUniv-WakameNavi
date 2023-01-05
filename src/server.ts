@@ -1,11 +1,11 @@
 import Koa from "koa";
-import Routers from "./libs/Routers";
-
-const { router } = Routers;
+import serve from "koa-static";
+import router from "./router";
 
 const app = new Koa();
 
 app
+  .use(serve("./src/public"))
   .use(router.routes())
   .use(router.allowedMethods())
 

@@ -103,7 +103,7 @@ namespace Transportation {
             const { className } = bus.querySelector(".locationClass");
 
             const matcher = className.match(/position-(\d)/);
-            return matcher ? parseInt(matcher[1]) : 10;
+            return matcher ? parseInt(matcher[1]) : 100;
           })();
 
           const plannedTime = bus.querySelector(".plannedTime").textContent.match(/\d{1,2}:\d{1,2}/)[0];
