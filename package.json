@@ -1,12 +1,12 @@
 {
   "name": "su_transportation-status-bot",
   "description": "",
-  "version": "0.1.4",
+  "version": "0.1.5",
   "main": "index.js",
   "scripts": {
-    "start": "ts-node src/server.ts",
+    "start": "ts-node src/main.ts",
     "build": "tsc",
-    "dev": "ts-node-dev --respawn src/server.ts"
+    "dev": "ts-node-dev --respawn src/main.ts"
   },
   "repository": {
     "type": "git",
