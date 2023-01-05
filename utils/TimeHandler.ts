@@ -23,8 +23,7 @@ export default class TimeHandler {
    * @returns {Date}
    */
   static parseTimeStringToDate (timeStr: string) {
-    const now = new Date(Date.now());
-
+    const now: Date = new Date(Date.now());
     return new Date(now.getFullYear(), now.getMonth(), now.getDate(), parseInt(timeStr.split(":")[0]), parseInt(timeStr.split(":")[1]));
   }
 
