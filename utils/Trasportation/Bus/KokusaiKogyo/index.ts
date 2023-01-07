@@ -2,24 +2,24 @@ import { JSDOM } from "jsdom";
 import TimeHandler from "~~/utils/TimeHandler";
 
 import Bus from "..";
-import KK_BUS_STOPS from "./BusStops";
-import KK_ROUTES from "./Routes";
+import BUS_STOPS from "./BusStops";
+import ROUTES from "./Routes";
 
-namespace KokusaiKogyo {
-  export const BASE_URL = "https://transfer.navitime.biz/5931bus/pc/location/BusLocationResult";
+export default class KokusaiKogyo {
+  public static readonly BASE_URL = "https://transfer.navitime.biz/5931bus/pc/location/BusLocationResult";
 
-  export const COMPANY_CODE = "KokusaiKogyo";
-  export const BUS_STOPS = KK_BUS_STOPS;
-  export const ROUTES = KK_ROUTES;
-
-
-
-  const __getFetchUrl = (startId: string, goalId: string) => `${BASE_URL}?startId=${startId}&goalId=${goalId}`;
+  public static readonly COMPANY_CODE = "KokusaiKogyo";
+  public static readonly BUS_STOPS = BUS_STOPS;
+  public static readonly ROUTES = ROUTES;
 
 
 
-  export const getRoutes = (startId?: string, goalId?: string) => {
-    let routes = ROUTES;
+  private static __getFetchUrl = (startId: string, goalId: string) => `${KokusaiKogyo.BASE_URL}?startId=${startId}&goalId=${goalId}`;
+
+
+
+  public static getRoutes (startId?: string, goalId?: string) {
+    let routes = KokusaiKogyo.ROUTES;
 
     if (startId) {
       routes = routes.filter(route => {
@@ -36,8 +36,8 @@ namespace KokusaiKogyo {
     return routes;
   }
 
-  export const getServices = async (startId: typeof BUS_STOPS[keyof typeof BUS_STOPS]["id"], goalId: typeof BUS_STOPS[keyof typeof BUS_STOPS]["id"]): Promise<Bus.Service[]> => {
-    const dom = await JSDOM.fromURL(__getFetchUrl(startId, goalId));
+  public static async getServices (startId: typeof BUS_STOPS[keyof typeof BUS_STOPS]["id"], goalId: typeof BUS_STOPS[keyof typeof BUS_STOPS]["id"]): Promise<Bus.Service[]> {
+    const dom = await JSDOM.fromURL(KokusaiKogyo.__getFetchUrl(startId, goalId));
     const document = dom.window.document;
     const buses = document.querySelectorAll("#resultList > .plotList");
 
@@ -70,7 +70,7 @@ namespace KokusaiKogyo {
       );
 
       services.push({
-        companyCode: COMPANY_CODE,
+        companyCode: KokusaiKogyo.COMPANY_CODE,
         
         route,
         destination,
@@ -106,5 +106,3 @@ namespace KokusaiKogyo {
     return services;
   }
 }
-
-export default KokusaiKogyo;

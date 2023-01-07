@@ -1,5 +1,3 @@
-import BusStop from "../BusStop";
-
 export const BUS_STOPS = {
   SaitamaUniv: { id: "00021229", code: "SaitamaUniv", name: "埼玉大学" },
   KitaUrawa: { id: "00021176", code: "KitaUrawa", name: "北浦和駅西口" },

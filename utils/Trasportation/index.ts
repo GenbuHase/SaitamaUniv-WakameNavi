@@ -1,7 +1,7 @@
-import BusNamespace from "./Bus";
+import Bus from "./Bus";
 
-namespace Transportation {
-  export const Bus = BusNamespace;
+export class Transportation {
+  public static readonly Bus = Bus;
 }
 
 export default Transportation;

@@ -1,16 +1,20 @@
-import BusStop from "./BusStop";
-import KokusaiKogyoNamespace from "./KokusaiKogyo";
-import SeibuNamespace from "./Seibu";
+import KokusaiKogyo from "./KokusaiKogyo";
+import Seibu from "./Seibu";
+
+class Bus {
+  public static readonly KokusaiKogyo = KokusaiKogyo;
+  public static readonly Seibu = Seibu;
+}
 
 namespace Bus {
-  export type BusStopParameter = {
+  export type BusStop = {
     id: string;
     code: string;
     name: string;
   }
-
+  
   export type Service = {
-    companyCode: typeof KokusaiKogyoNamespace.COMPANY_CODE | typeof SeibuNamespace.COMPANY_CODE;
+    companyCode: typeof KokusaiKogyo.COMPANY_CODE | typeof Seibu.COMPANY_CODE;
     
     route: string;
     destination: string;
@@ -19,18 +23,15 @@ namespace Bus {
     arrivalTime: string;
     delay: number;
   }
-
+  
   export type Route = {
-    companyCode: typeof KokusaiKogyoNamespace.COMPANY_CODE | typeof SeibuNamespace.COMPANY_CODE;
-
+    companyCode: typeof KokusaiKogyo.COMPANY_CODE | typeof Seibu.COMPANY_CODE;
+  
     name: string;
     start: BusStop;
     goal: BusStop;
     via: BusStop[];
   }
-
-  export const KokusaiKogyo = KokusaiKogyoNamespace;
-  export const Seibu = SeibuNamespace;
 }
 
 export default Bus;

@@ -2,23 +2,23 @@ import { JSDOM } from "jsdom";
 import TimeHandler from "~~/utils/TimeHandler";
 
 import Bus from "..";
-import SEIBU_BUS_STOPS from "./BusStops";
-import SEIBU_ROUTES from "./Routes";
+import BUS_STOPS from "./BusStops";
+import ROUTES from "./Routes";
 
-namespace Seibu {
-  export const BASE_URL = "https://transfer.navitime.biz/seibubus-dia/pc/location/BusLocationResult";
+export default class Seibu {
+  public static readonly BASE_URL = "https://transfer.navitime.biz/seibubus-dia/pc/location/BusLocationResult";
 
-  export const COMPANY_CODE = "Seibu";
-  export const BUS_STOPS = SEIBU_BUS_STOPS
-  export const ROUTES = SEIBU_ROUTES;
-
-
-
-  const __getFetchUrl = (startId: string, goalId: string) => `${BASE_URL}?startId=${startId}&goalId=${goalId}`;
+  public static readonly COMPANY_CODE = "Seibu";
+  public static readonly BUS_STOPS = BUS_STOPS;
+  public static readonly ROUTES = ROUTES;
 
 
 
-  export const getRoutes = (startId?: string, goalId?: string) => {
+  private static __getFetchUrl = (startId: string, goalId: string) => `${Seibu.BASE_URL}?startId=${startId}&goalId=${goalId}`;
+
+
+
+  public static getRoutes (startId?: string, goalId?: string) {
     let routes = ROUTES;
 
     if (startId) {
@@ -36,8 +36,8 @@ namespace Seibu {
     return routes;
   }
   
-  export const getServices = async (startId: typeof BUS_STOPS[keyof typeof BUS_STOPS]["id"], goalId: typeof BUS_STOPS[keyof typeof BUS_STOPS]["id"]): Promise<Bus.Service[]> => {
-    const dom = await JSDOM.fromURL(__getFetchUrl(startId, goalId));
+  public static async getServices (startId: typeof BUS_STOPS[keyof typeof BUS_STOPS]["id"], goalId: typeof BUS_STOPS[keyof typeof BUS_STOPS]["id"]): Promise<Bus.Service[]> {
+    const dom = await JSDOM.fromURL(Seibu.__getFetchUrl(startId, goalId));
     const document = dom.window.document;
     const buses = document.querySelectorAll("#resultList > .plotList");
 
@@ -62,7 +62,7 @@ namespace Seibu {
       );
 
       services.push({
-        companyCode: COMPANY_CODE,
+        companyCode: Seibu.COMPANY_CODE,
 
         route,
         destination,
@@ -98,5 +98,3 @@ namespace Seibu {
     return services;
   }
 }
-
-export default Seibu;
