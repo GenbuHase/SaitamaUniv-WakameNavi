@@ -19,7 +19,7 @@ export default class KokusaiKogyo {
 
 
   public static getRoutes (startId?: string, goalId?: string) {
-    let routes = KokusaiKogyo.ROUTES;
+    let routes = ROUTES;
 
     if (startId) {
       routes = routes.filter(route => {
