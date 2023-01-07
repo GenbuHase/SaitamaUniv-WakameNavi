@@ -9,11 +9,10 @@ export default defineEventHandler(async event => {
   const SEIBU_BUS_STOPS = Seibu.BUS_STOPS;
 
   const { company, start, goal } = getQuery(event) as { [K: string]: string };
-  
+
   const validity = Bus.checkValidityOfBusStopCode(company, start, goal);
 
-  let routes: Bus.Route[] = [];
-
+  const routes: Bus.Route[] = [];
   switch (company) {
     default:
       if (validity.KokusaiKogyo.start && validity.KokusaiKogyo.goal) routes.push(...await KokusaiKogyo.getRoutes(KK_BUS_STOPS[start as keyof typeof KK_BUS_STOPS].id, KK_BUS_STOPS[goal as keyof typeof KK_BUS_STOPS].id));
