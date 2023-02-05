@@ -1,7 +1,7 @@
 {
   "name": "su_transportation-status-bot",
   "description": "",
-  "version": "0.2.5",
+  "version": "0.2.6",
   "scripts": {
     "build": "nuxt build",
     "dev": "nuxt dev",
@@ -22,9 +22,11 @@
   "homepage": "https://github.com/GenbuHase/SaitamaUniv-TransportationStatusBot#readme",
   "devDependencies": {
     "@types/jsdom": "^20.0.1",
-    "nuxt": "3.0.0"
+    "nuxt": "3.0.0",
+    "sass": "^1.57.1"
   },
   "dependencies": {
+    "@mdi/font": "^7.1.96",
     "jsdom": "^20.0.0",
     "vuetify": "^3.1.0"
   }
