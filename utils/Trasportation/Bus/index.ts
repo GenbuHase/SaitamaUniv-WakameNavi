@@ -19,6 +19,8 @@ class Bus {
       return {
         start: Boolean(startBusStopCode && Bus.getParentOfBusStop(startBusStopCode).includes(company)),
         goal: Boolean(goalBusStopCode && Bus.getParentOfBusStop(goalBusStopCode).includes(company))
+        // ToDo: goalが未入力でも全てのServicesを返すようにする
+        // goal: Boolean(!goalBusStopCode ? true : (goalBusStopCode && Bus.getParentOfBusStop(goalBusStopCode).includes(company)))
       }
     }
 

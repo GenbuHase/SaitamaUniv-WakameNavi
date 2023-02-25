@@ -5,25 +5,26 @@
     </head>
 
     <VList>
+      <VListItem v-for="(service, index) of busServices" :key="index">
+        <Service :="service" />
+      </VListItem>
+
       <VListItem>
-        <VCard>
-          <VCardItem title="北浦03(国際興業バス)">
+        <VCard flat>
+          <VCardItem>
+            <VCardTitle>北浦03(国際興業バス)</VCardTitle>
             <VCardSubtitle>北浦和駅西口 → 埼玉大学</VCardSubtitle>
           </VCardItem>
 
           <VCardText>
             <VRow align="center">
-              <VCol cols="6">
+              <VCol cols="12">
                 <span class="text-h4">
                   <VIcon>mdi-bus-clock</VIcon>
-                  22:19
+                  <span class="mx-2">22:19</span>
                 </span>
 
                 <span>到着予定</span>
-              </VCol>
-
-              <VCol cols="6">
-
               </VCol>
             </VRow>
           </VCardText>
@@ -31,24 +32,21 @@
       </VListItem>
 
       <VListItem>
-        <VCard>
-          <VCardItem title="北朝02(国際興業バス)">
+        <VCard flat>
+          <VCardItem>
+            <VCardTitle>北朝02(国際興業バス)</VCardTitle>
             <VCardSubtitle>北朝霞駅 → 埼玉大学</VCardSubtitle>
           </VCardItem>
 
           <VCardText>
             <VRow align="center">
-              <VCol cols="6">
+              <VCol cols="12">
                 <span class="text-h4">
                   <VIcon>mdi-bus-clock</VIcon>
-                  08:30
+                  <span class="mx-2">08:30</span>
                 </span>
 
                 <span>到着予定</span>
-              </VCol>
-
-              <VCol cols="6">
-
               </VCol>
             </VRow>
           </VCardText>
@@ -59,11 +57,14 @@
 </template>
 
 <script setup>
+  import { ref } from "vue";
+  import Service from "@/components/bus/Service.vue";
+
   definePageMeta({
     title: "バス検索"
   });
-  
-  const busServices = useState("bus/services", () => [
+
+  /*const busServices = ref([
     {
       route: "北浦03",
       destination: "（埼大通り発）北浦和駅西口",
@@ -81,9 +82,8 @@
       arrivalTime: "08:58",
       delay: 28
     }
-  ]);
-</script>
+  ]);*/
 
-<script>
-  export default {};
+  const busServices = ref([]);
+  busServices.value = await fetch("/api/v1/bus/services?start=SaitamaUniv&goal=KitaUrawa").then(res => res.json());
 </script>
