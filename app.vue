@@ -1,7 +1,7 @@
 <template>
   <VApp>
     <head>
-      <title>{{ $route.meta.title ? `${$route.meta.title}｜` : ""}}わかめナビ</title>
+      <title>{{ $route.meta.title ? `${$route.meta.title}｜` : ""}}わかめナビ🌱</title>
     </head>
 
     <VNavigationDrawer v-model="drawer.visible" temporary>
@@ -21,13 +21,13 @@
 
     <VAppBar elevation="3">
       <VAppBarNavIcon @click.stop="drawer.visible = !drawer.visible" />
-      <VAppBarTitle>{{ $route.meta.title }}</VAppBarTitle>
+      <VAppBarTitle>{{ $route.meta.title }}｜わかめナビ🌱</VAppBarTitle>
     </VAppBar>
 
     <VMain class="bg-grey-lighten-3">
       <VContainer>
         <VRow>
-          <VCol class="d-none d-md-block" cols="12 v-col-md-4">
+          <VCol class="d-none d-md-block" md="4">
             <VList class="py-0" density="comfortable">
               <VCard flat>
                 <VImg src="/assets/hero_1920x1280.jpg" />
