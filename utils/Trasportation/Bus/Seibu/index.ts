@@ -43,8 +43,8 @@ export default class Seibu {
 
     const services: Bus.Service[] = [];
     for (const bus of buses) {
-      const route = bus.querySelector(".courseName").textContent;
-      const destination = bus.querySelector(".destination-name").textContent;
+      const route = bus.querySelector(".courseName").textContent.replace(/[０-９]/g, str => String.fromCharCode(str.charCodeAt(0) - 0xFEE0)).slice(1, -1);
+      const destination = bus.querySelector(".destination-name").textContent?.split("～")[1].slice(0, -1);
 
       const location: number = (() => {
         const { className } = bus.querySelector(".locationClass");

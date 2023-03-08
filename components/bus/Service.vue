@@ -2,7 +2,7 @@
   <VCard flat>
     <VCardItem>
       <VCardTitle>{{ route }}({{ companyCode === "KokusaiKogyo" ? "国際興業バス" : "西武バス" }})</VCardTitle>
-      <VCardSubtitle>〇〇駅 → {{ destination }}</VCardSubtitle>
+      <VCardSubtitle>{{ destination }}行き</VCardSubtitle>
     </VCardItem>
 
     <VCardText>

@@ -27,7 +27,7 @@
 
             <VRow>
               <VCol cols="12">
-                <VBtn block color="primary" prepend-icon="mdi-database-search-outline">検索</VBtn>
+                <VBtn block color="primary" prepend-icon="mdi-database-search">検索</VBtn>
               </VCol>
             </VRow>
           </VForm>
@@ -117,4 +117,29 @@
       return 0;
     });
   }
+
+  import KK_BUS_STOPS from "@/utils/Trasportation/Bus/KokusaiKogyo/BusStops";
+  import SEIBU_BUS_STOPS from "@/utils/Trasportation/Bus/Seibu/BusStops";
+
+  const sortCandidates = (busStop: string) => {
+    let candidates = [];
+    let result = [];
+
+    if (busStop in KK_BUS_STOPS) {
+      for (const route of KK_BUS_STOPS[busStop].routes) {
+        candidates.push(Object.keys(KK_BUS_STOPS).filter(busCode => KK_BUS_STOPS[busCode].routes.includes(route)));
+      }
+    }
+
+    if (busStop in SEIBU_BUS_STOPS) {
+      for (const route of SEIBU_BUS_STOPS[busStop].routes) {
+        candidates.push(Object.keys(SEIBU_BUS_STOPS).filter(busCode => SEIBU_BUS_STOPS[busCode].routes.includes(route)));
+      }
+    }
+
+    for (const candidate of candidates) result.push(...candidate);
+    return result;
+  }
+
+  console.log(sortCandidates("Shiki"));
 </script>
