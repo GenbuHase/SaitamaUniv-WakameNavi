@@ -16,7 +16,11 @@ export default defineNuxtConfig({
         { hid: "og:url", property: "og:url", content: "https://wakame-navi.vercel.app/" },
         { hid: "og:image", property: "og:image", content: "https://wakame-navi.vercel.app/assets/ogp_1200x600.png" },
         { name: "twitter:card", content: "summary_large_image" },
-        { name: "twitter:creator", content: "@SU_Mentsuyu" }
+        { name: "twitter:site", content: "@SU_Mentsuyu" }
+      ],
+
+      link: [
+        { rel: "icon", type: "image/x-icon", href: "/favicon.png" },
       ]
     }
   },
