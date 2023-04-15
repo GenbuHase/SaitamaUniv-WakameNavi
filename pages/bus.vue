@@ -91,7 +91,9 @@
     { label: "北浦和駅 → 埼玉大学", value: "KitaUrawa-SaitamaUniv" },
     { label: "南与野駅 → 埼玉大学", value: "MinamiYono-SaitamaUniv" },
     { label: "志木駅 → 埼玉大学", value: "Shiki-SaitamaUniv" },
-    { label: "北朝霞駅 → 埼玉大学", value: "KitaAsaka-SaitamaUniv" }
+    { label: "北朝霞駅 → 埼玉大学", value: "KitaAsaka-SaitamaUniv" },
+    { label: "埼大裏 → 浦和駅", value: "SaitamaUnivUra-Urawa" },
+    { label: "浦和駅 → 埼大裏", value: "Urawa-SaitamaUnivUra" }
   ]
   // ########## Constants ##########
 
