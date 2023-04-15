@@ -1,6 +1,6 @@
 <template>
   <VSheet class="pa-6">
-    <VImg class="mx-6" src="/assets/logo.svg" />
+    <VImg class="ma-6" src="/assets/logo.svg" />
 
     <VSheet class="pa-4">
       <p class="mb-6">
