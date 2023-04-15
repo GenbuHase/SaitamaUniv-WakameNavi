@@ -5,23 +5,22 @@
         <VSheet>
           <VForm class="v-container">
             <VRow>
-              <VCol cols="12" md="6">
+              <VCol cols="12">
                 <VSelect
-                  label="出発地点"
-                  :items="['埼玉大学', '北浦和駅', '北朝霞駅']"
+                  label="区間"
+                  :items="[
+                    '埼玉大学 → 北浦和駅',
+                    '埼玉大学 → 南与野駅',
+                    '埼玉大学 → 志木駅',
+                    '埼玉大学 → 北朝霞駅',
+                    '北浦和駅 → 埼玉大学',
+                    '南与野駅 → 埼玉大学',
+                    '志木駅 → 埼玉大学',
+                    '北朝霞駅 → 埼玉大学',
+                  ]"
                   variant="outlined"
                   hide-details
                   prepend-inner-icon="mdi-source-commit-start" />
-              </VCol>
-
-              <VCol cols="12" md="6">
-                <VSelect
-                  label="到着地点"
-                  :items="['埼玉大学', '北浦和駅', '北朝霞駅']"
-                  variant="outlined"
-                  hide-details
-                  clearable
-                  prepend-inner-icon="mdi-source-commit-end" />
               </VCol>
             </VRow>
 
@@ -36,17 +35,25 @@
 
       <VCol cols="12">
         <VSheet rounded="lg">
-          <VTabs align-tabs="center" v-model="tab">
-            <VTab>到着時刻順</VTab>
-            <VTab>定刻順</VTab>
+          <VTabs align-tabs="center" v-model="tabState">
+            <VTab>到着予定時刻順</VTab>
+            <VTab>時刻表順</VTab>
             <VBtn variant="text" icon="mdi-reload" />
           </VTabs>
 
-          <VWindow v-model="tab">
-            <VWindowItem v-for="item in 2" :key="item">
+          <VWindow v-model="tabState">
+            <VWindowItem>
               <VList>
-                <VListItem v-for="(service, index) of sortServices(busServices, item)" :key="index">
-                  <Service :="service" :time="item === 1 ? service.arrivalTime : service.plannedTime" />
+                <VListItem v-for="(service, index) of arrivalTimeSortedServices" :key="index">
+                  <ArrivalTimeSortedService :="service" />
+                </VListItem>
+              </VList>
+            </VWindowItem>
+
+            <VWindowItem>
+              <VList>
+                <VListItem v-for="(service, index) of plannedTimeSortedServices" :key="index">
+                  <PlannnedTimeSortedService :="service" />
                 </VListItem>
               </VList>
             </VWindowItem>
@@ -64,20 +71,18 @@
 </style>
 
 <script lang="ts" setup>
-  import { ref } from "vue";
+  import { ref, computed } from "vue";
   import Bus from "@/utils/Trasportation/Bus";
-  import Service from "@/components/bus/Service.vue";
+  
+  import ArrivalTimeSortedService from "@/components/bus/ArrivalTimeSortedService.vue";
+  import PlannnedTimeSortedService from "@/components/bus/PlannnedTimeSortedService.vue";
 
   definePageMeta({
     name: "BusPage",
     title: "バス検索"
   });
 
-  const tab = ref(0);
-
-  const busServices = ref([]);
-
-  /*busServices.value = [
+  const services = ref<Bus.Service[]>([
     {
       arrivalTime: '15:11',
       companyCode: 'KokusaiKogyo',
@@ -97,40 +102,20 @@
       plannedTime: '15:08',
       route: '北朝02'
     }
-  ];*/
+  ]);
 
-  busServices.value = await fetch("/api/v1/bus/services?start=SaitamaUniv&goal=KitaUrawa").then(res => res.json());
+  services.value = await fetch("/api/v1/bus/services?start=SaitamaUniv&goal=KitaUrawa").then(res => res.json());
 
-  const sortServices = (services: Bus.Service[], type = 0) => {
-    return services.sort((a, b) => {
-      if ((type === 1 ? a.arrivalTime : a.plannedTime) < (type === 1 ? b.arrivalTime : b.plannedTime)) return -1;
-      if ((type === 1 ? a.arrivalTime : a.plannedTime) > (type === 1 ? b.arrivalTime : b.plannedTime)) return 1;
+  const tabState = ref(0);
+
+  const arrivalTimeSortedServices = computed(() => sortServices(services.value, 0));
+  const plannedTimeSortedServices = computed(() => sortServices(services.value, 1));
+
+  function sortServices (busServices: Bus.Service[], type: number = 0) {
+    return Array.from(busServices).sort((a, b) => {
+      if ((type === 1 ? a.plannedTime : a.arrivalTime) < (type === 1 ? b.plannedTime : b.arrivalTime)) return -1;
+      if ((type === 1 ? a.plannedTime : a.arrivalTime) > (type === 1 ? b.plannedTime : b.arrivalTime)) return 1;
       return 0;
     });
   }
-
-  import KK_BUS_STOPS from "@/utils/Trasportation/Bus/KokusaiKogyo/BusStops";
-  import SEIBU_BUS_STOPS from "@/utils/Trasportation/Bus/Seibu/BusStops";
-
-  const sortCandidates = (busStop: string) => {
-    let candidates = [];
-    let result = [];
-
-    if (busStop in KK_BUS_STOPS) {
-      for (const route of KK_BUS_STOPS[busStop].routes) {
-        candidates.push(Object.keys(KK_BUS_STOPS).filter(busCode => KK_BUS_STOPS[busCode].routes.includes(route)));
-      }
-    }
-
-    if (busStop in SEIBU_BUS_STOPS) {
-      for (const route of SEIBU_BUS_STOPS[busStop].routes) {
-        candidates.push(Object.keys(SEIBU_BUS_STOPS).filter(busCode => SEIBU_BUS_STOPS[busCode].routes.includes(route)));
-      }
-    }
-
-    for (const candidate of candidates) result.push(...candidate);
-    return result;
-  }
-
-  console.log(sortCandidates("Shiki"));
 </script>

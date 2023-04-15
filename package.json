@@ -1,7 +1,7 @@
 {
   "name": "su_transportation-status-bot",
   "description": "",
-  "version": "0.2.11.2",
+  "version": "0.2.12",
   "scripts": {
     "build": "nuxt build",
     "dev": "nuxt dev",

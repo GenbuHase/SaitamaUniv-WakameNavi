@@ -4,7 +4,7 @@
       <title>{{ $route.meta.title ? `${$route.meta.title}｜` : ""}}わかめナビ🌱</title>
     </head>
 
-    <VNavigationDrawer v-model="drawer.visible" temporary>
+    <VNavigationDrawer v-model="drawerState" temporary>
       <VList class="py-0">
         <VCard flat>
           <VImg src="/assets/hero_1920x1280.jpg" />
@@ -20,7 +20,7 @@
     </VNavigationDrawer>
 
     <VAppBar elevation="3">
-      <VAppBarNavIcon @click.stop="drawer.visible = !drawer.visible" />
+      <VAppBarNavIcon @click.stop="drawerState = !drawerState" />
       <VAppBarTitle>{{ $route.meta.title ? `${$route.meta.title}｜` : ""}}わかめナビ🌱</VAppBarTitle>
     </VAppBar>
 
@@ -54,7 +54,5 @@
 <script setup>
   import { ref } from "vue";
 
-  const drawer = ref({
-    visible: false
-  });
+  const drawerState = ref(false);
 </script>

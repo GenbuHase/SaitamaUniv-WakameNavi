@@ -8,12 +8,12 @@
     <VCardText class="navi-service-time_indicator">
       <span class="text-h4">
         <VIcon>mdi-bus-clock</VIcon>
-        <span class="navi-service-time_indicator-time mx-2">{{ time }}</span>
+        <span class="navi-service-time_indicator-time mx-2">{{ plannedTime }}</span>
       </span>
 
       <div>
-        <span>到着予定</span>
-        <span class="navi-service-time_indicator-delay text-caption text-red-darken-2">({{ delay }}分の遅延)</span>
+        <span>定刻</span>
+        <span class="navi-service-time_indicator-arrival_time text-caption">({{ arrivalTime }}到着予定)</span>
       </div>
     </VCardText>
   </VCard>
@@ -29,7 +29,7 @@
       flex-direction: column;
     }
 
-    &-delay {
+    &-arrival_time {
       font-weight: bold;
     }
   }

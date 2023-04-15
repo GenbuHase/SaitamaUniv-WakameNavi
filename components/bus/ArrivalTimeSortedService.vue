@@ -8,7 +8,7 @@
     <VCardText class="navi-service-time_indicator">
       <span class="text-h4">
         <VIcon>mdi-bus-clock</VIcon>
-        <span class="navi-service-time_indicator-time mx-2">{{ time }}</span>
+        <span class="navi-service-time_indicator-time mx-2">{{ arrivalTime }}</span>
       </span>
 
       <div>
