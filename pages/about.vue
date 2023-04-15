@@ -5,7 +5,20 @@
 </template>
 
 <script setup>
-  definePageMeta({
-    title: 'このアプリについて'
+  // ########## SEO ##########
+  const route = useRoute();
+
+  useHead({
+    title: `${route.meta.title}｜わかめナビ🌱`,
+
+    meta: [
+      { hid: "og:title", property: "og:title", content: `${route.meta.title}｜わかめナビ🌱` },
+    ]
   });
+
+  definePageMeta({
+    name: "AboutPage",
+    title: "本サイトについて"
+  });
+  // ########## SEO ##########
 </script>

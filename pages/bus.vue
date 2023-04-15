@@ -77,10 +77,22 @@
   import PlannnedTimeSortedService from "@/components/bus/PlannnedTimeSortedService.vue";
   // ########## Components ##########
 
+  // ########## SEO ##########
+  const route = useRoute();
+
+  useHead({
+    title: `${route.meta.title}｜わかめナビ🌱`,
+
+    meta: [
+      { hid: "og:title", property: "og:title", content: `${route.meta.title}｜わかめナビ🌱` },
+    ]
+  });
+
   definePageMeta({
     name: "BusPage",
     title: "バス検索"
   });
+  // ########## SEO ##########
 
   // ########## Constants ##########
   const __INTERVALS = [

@@ -1,21 +1,5 @@
 <template>
   <VApp>
-    <head>
-      <meta charset="utf-8" />
-
-      <title>{{ $route.meta.title ? `${$route.meta.title}｜` : ""}}わかめナビ🌱</title>
-      <meta name="description" content="埼玉大学周辺を走るバスの運行情報を確認することができます。" />
-
-      <meta property="og:site_name" content="わかめナビ🌱" />
-      <meta property="og:title" content="わかめナビ🌱" />
-      <meta property="og:description" content="埼玉大学周辺を走るバスの運行情報を確認することができます。" />
-      <meta property="og:type" content="website" />
-      <meta property="og:url" content="https://wakame-navi.vercel.app/" />
-      <meta property="og:image" content="https://wakame-navi.vercel.app/assets/ogp_1200x600.png" />
-      <meta name="twitter:card" content="summary_large_image">
-      <meta name="twitter:site" content="@SU_Mentsuyu">
-    </head>
-
     <VNavigationDrawer v-model="drawerState" temporary>
       <VList class="py-0">
         <VCard flat>
