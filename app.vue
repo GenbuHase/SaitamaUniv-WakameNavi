@@ -2,10 +2,7 @@
   <VApp>
     <VNavigationDrawer v-model="drawerState" temporary>
       <VList class="py-0">
-        <VCard flat>
-          <VImg src="/assets/hero_1920x1280.jpg" />
-          <VCardTitle>わかめナビ🌱</VCardTitle>
-        </VCard>
+        <VImg class="ma-6" src="/assets/logo.svg" />
 
         <VDivider />
 
@@ -25,10 +22,7 @@
         <VRow>
           <VCol class="d-none d-md-block" md="4">
             <VList class="py-0" density="comfortable">
-              <VCard flat>
-                <VImg src="/assets/hero_1920x1280.jpg" />
-                <VCardTitle class="text-h6">わかめナビ🌱</VCardTitle>
-              </VCard>
+              <VImg class="ma-6" src="/assets/logo.svg" />
 
               <VDivider />
 
