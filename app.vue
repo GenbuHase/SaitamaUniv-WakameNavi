@@ -13,15 +13,15 @@
 
         <VDivider />
 
+        <VListItem title="トップページ" to="/" prepend-icon="mdi-home" />
         <VListItem title="バス検索" to="/bus" prepend-icon="mdi-bus-side" />
         <VListItem title="電車検索(未実装)" prepend-icon="mdi-train" disabled />
-        <VListItem title="このアプリについて" to="/about" prepend-icon="mdi-information-outline" />
       </VList>
     </VNavigationDrawer>
 
     <VAppBar elevation="3">
       <VAppBarNavIcon @click.stop="drawer.visible = !drawer.visible" />
-      <VAppBarTitle>{{ $route.meta.title }}｜わかめナビ🌱</VAppBarTitle>
+      <VAppBarTitle>{{ $route.meta.title ? `${$route.meta.title}｜` : ""}}わかめナビ🌱</VAppBarTitle>
     </VAppBar>
 
     <VMain class="bg-grey-lighten-3">
@@ -36,13 +36,13 @@
 
               <VDivider />
 
+              <VListItem title="トップページ" to="/" prepend-icon="mdi-home" />
               <VListItem title="バス検索" to="/bus" prepend-icon="mdi-bus-side" />
               <VListItem title="電車検索(未実装)" prepend-icon="mdi-train" disabled />
-              <VListItem title="このアプリについて" to="/about" prepend-icon="mdi-information-outline" />
             </VList>
           </VCol>
 
-          <VCol>
+          <VCol class="text-body-1">
             <NuxtPage />
           </VCol>
         </VRow>
