@@ -1,26 +1,25 @@
 <template>
-  <VCard flat>
-    <VCardItem>
-      <VCardTitle>{{ route }}({{ companyCode === "KokusaiKogyo" ? "国際興業バス" : "西武バス" }})</VCardTitle>
+  <VCard class="navi-service" flat>
+    <VCardItem class="navi-service-direction_indicator">
+      <VCardTitle>{{ route }}({{ companyName }})</VCardTitle>
       <VCardSubtitle>{{ destination }}行き</VCardSubtitle>
     </VCardItem>
 
-    <VCardText>
-      <VRow align="center">
-        <VCol cols="12">
-          <span class="text-h4">
-            <VIcon>mdi-bus-clock</VIcon>
-            <span class="mx-2">{{ arrivalTime }}</span>
-          </span>
+    <VCardText class="navi-service-time_indicator">
+      <span class="text-h4">
+        <VIcon>mdi-bus-clock</VIcon>
+        <span class="navi-service-time_indicator-time mx-2">{{ time }}</span>
+      </span>
 
-          <span>到着予定</span>
-        </VCol>
-      </VRow>
+      <div>
+        <span>到着予定</span>
+        <span class="navi-service-time_indicator-delay text-caption text-red-darken-2">({{ delay }}分の遅延)</span>
+      </div>
     </VCardText>
   </VCard>
 </template>
 
-<script>
+<script lang="ts">
   export default {
     props: {
       companyCode: { type: String, required: true },
@@ -29,7 +28,30 @@
       location: { type: Number, required: true },
       plannedTime: { type: String, required: true },
       arrivalTime: { type: String, required: true },
-      delay: { type: Number, required: true }
+      delay: { type: Number, required: true },
+      time: { type: String, required: true }
+    },
+
+    computed: {
+      companyName () {
+        return this.companyCode === "KokusaiKogyo" ? "国際興業バス" : this.companyCode === "Seibu" ? "西武バス" : "";
+      }
     }
   }
 </script>
+
+<style lang="scss" scoped>
+  .navi-service-time_indicator {
+    display: flex;
+    align-items: center;
+
+    & > div {
+      display: flex;
+      flex-direction: column;
+    }
+
+    &-delay {
+      font-weight: bold;
+    }
+  }
+</style>

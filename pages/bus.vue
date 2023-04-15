@@ -36,55 +36,21 @@
 
       <VCol cols="12">
         <VSheet rounded="lg">
-          <VList>
-            <VListItem v-for="(service, index) of sortServices(busServices)" :key="index">
-              <Service :="service" />
-            </VListItem>
+          <VTabs align-tabs="center" v-model="tab">
+            <VTab>到着時刻順</VTab>
+            <VTab>定刻順</VTab>
+            <VBtn variant="text" icon="mdi-reload" />
+          </VTabs>
 
-            <VListItem>
-              <VCard flat>
-                <VCardItem>
-                  <VCardTitle>北浦03(国際興業バス)</VCardTitle>
-                  <VCardSubtitle>北浦和駅西口 → 埼玉大学</VCardSubtitle>
-                </VCardItem>
-
-                <VCardText>
-                  <VRow align="center">
-                    <VCol cols="12">
-                      <span class="text-h4">
-                        <VIcon>mdi-bus-clock</VIcon>
-                        <span class="mx-2">22:19</span>
-                      </span>
-
-                      <span>到着予定</span>
-                    </VCol>
-                  </VRow>
-                </VCardText>
-              </VCard>
-            </VListItem>
-
-            <VListItem>
-              <VCard flat>
-                <VCardItem>
-                  <VCardTitle>北朝02(国際興業バス)</VCardTitle>
-                  <VCardSubtitle>北朝霞駅 → 埼玉大学</VCardSubtitle>
-                </VCardItem>
-
-                <VCardText>
-                  <VRow align="center">
-                    <VCol cols="12">
-                      <span class="text-h4">
-                        <VIcon>mdi-bus-clock</VIcon>
-                        <span class="mx-2">08:30</span>
-                      </span>
-
-                      <span>到着予定</span>
-                    </VCol>
-                  </VRow>
-                </VCardText>
-              </VCard>
-            </VListItem>
-          </VList>
+          <VWindow v-model="tab">
+            <VWindowItem v-for="item in 2" :key="item">
+              <VList>
+                <VListItem v-for="(service, index) of sortServices(busServices, item)" :key="index">
+                  <Service :="service" :time="item === 1 ? service.arrivalTime : service.plannedTime" />
+                </VListItem>
+              </VList>
+            </VWindowItem>
+          </VWindow>
         </VSheet>
       </VCol>
     </VRow>
@@ -107,13 +73,38 @@
     title: "バス検索"
   });
 
+  const tab = ref(0);
+
   const busServices = ref([]);
+
+  /*busServices.value = [
+    {
+      arrivalTime: '15:11',
+      companyCode: 'KokusaiKogyo',
+      delay: 16,
+      destination: '南与野駅西口',
+      location: 6,
+      plannedTime: '14:54',
+      route: '志03-3'
+    },
+
+    {
+      arrivalTime: '15:08',
+      companyCode: 'KokusaiKogyo',
+      delay: 0,
+      destination: '南与野駅西口',
+      location: 5,
+      plannedTime: '15:08',
+      route: '北朝02'
+    }
+  ];*/
+
   busServices.value = await fetch("/api/v1/bus/services?start=SaitamaUniv&goal=KitaUrawa").then(res => res.json());
 
-  const sortServices = (services: Bus.Service[]) => {
+  const sortServices = (services: Bus.Service[], type = 0) => {
     return services.sort((a, b) => {
-      if (a.arrivalTime < b.arrivalTime) return -1;
-      if (a.arrivalTime > b.arrivalTime) return 1;
+      if ((type === 1 ? a.arrivalTime : a.plannedTime) < (type === 1 ? b.arrivalTime : b.plannedTime)) return -1;
+      if ((type === 1 ? a.arrivalTime : a.plannedTime) > (type === 1 ? b.arrivalTime : b.plannedTime)) return 1;
       return 0;
     });
   }
