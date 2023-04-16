@@ -1,5 +1,5 @@
 import { JSDOM } from "jsdom";
-import TimeHandler from "~~/utils/TimeHandler";
+import Time from "~~/utils/Time";
 
 import Bus from "..";
 import BUS_STOPS from "./BusStops";
@@ -63,9 +63,9 @@ export default class KokusaiKogyo {
 
       const plannedTime = bus.querySelector(".on-time").textContent;
 
-      const arrivalTime = TimeHandler.parseDateToTimeString(
-        TimeHandler.addMinutes(
-          TimeHandler.parseTimeStringToDate(plannedTime), delay
+      const arrivalTime = Time.parseDateToTimeString(
+        Time.addMinutes(
+          Time.parseTimeStringToDate(plannedTime), delay
         )
       );
 

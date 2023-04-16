@@ -1,5 +1,5 @@
 import { JSDOM } from "jsdom";
-import TimeHandler from "~~/utils/TimeHandler";
+import Time from "~~/utils/Time";
 
 import Bus from "..";
 import BUS_STOPS from "./BusStops";
@@ -56,9 +56,9 @@ export default class Seibu {
       const plannedTime = bus.querySelector(".plannedTime").textContent.match(/\d{1,2}:\d{1,2}/)[0];
       const arrivalTime = bus.querySelector(".predictionTime").textContent.match(/\d{1,2}:\d{1,2}/)[0];
 
-      const delay = TimeHandler.getDifferenceInMinutes(
-        TimeHandler.parseTimeStringToDate(arrivalTime),
-        TimeHandler.parseTimeStringToDate(plannedTime)
+      const delay = Time.getDifferenceInMinutes(
+        Time.parseTimeStringToDate(arrivalTime),
+        Time.parseTimeStringToDate(plannedTime)
       );
 
       services.push({

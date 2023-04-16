@@ -120,7 +120,7 @@
 
   const services = ref<Bus.Service[]>([]);
 
-  /*services.value = [
+  services.value = [
     {
       arrivalTime: '15:11',
       companyCode: 'KokusaiKogyo',
@@ -140,7 +140,7 @@
       plannedTime: '15:08',
       route: '北朝02'
     }
-  ]*/
+  ]
   // ########## Reactives ##########
 
   // ########## Computed ##########
@@ -164,7 +164,7 @@
   // ########## Methods ##########
   async function fetchServices (interval: string) {
     const [ start, goal ] = interval.split("-");
-    services.value = await fetch(`/api/v1/bus/services?start=${start}&goal=${goal}`).then(res => res.json());
+    // services.value = await fetch(`/api/v1/bus/services?start=${start}&goal=${goal}`).then(res => res.json());
   }
   // ########## Methods ##########
 </script>

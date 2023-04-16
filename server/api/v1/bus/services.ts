@@ -1,35 +1,42 @@
 // /api/v1/bus/services?company=:company?(Seibu|KokusaiKogyo)&start=:start&goal=:goal?
 
-import Bus from "~~/utils/Trasportation/Bus";
+import Bus from "@/utils/Bus";
 
-const { KokusaiKogyo, Seibu } = Bus;
+const { BusStops, KokusaiKogyoBus, SeibuBus } = Bus;
 
 export default defineEventHandler(async event => {
-  const KK_BUS_STOPS = KokusaiKogyo.BUS_STOPS;
-  const SEIBU_BUS_STOPS = Seibu.BUS_STOPS;
-
   const { company, start, goal } = getQuery(event) as { [K: string]: string };
 
-  const validity = Bus.checkValidityOfBusStopCode(company, start, goal);
-
-  if (!start) sendError(event, createError({ statusCode: 400, data: "A query-parameter 'start' is required." }));
-
-  const services: Bus.Service[] = [];
-  switch (company) {
-    default:
-      if (validity.KokusaiKogyo.start && validity.KokusaiKogyo.goal) services.push(...await KokusaiKogyo.getServices(KK_BUS_STOPS[start as keyof typeof KK_BUS_STOPS].id, KK_BUS_STOPS[goal as keyof typeof KK_BUS_STOPS].id));
-      if (validity.Seibu.start && validity.Seibu.goal) services.push(...await Seibu.getServices(SEIBU_BUS_STOPS[start as keyof typeof SEIBU_BUS_STOPS].id, SEIBU_BUS_STOPS[goal as keyof typeof SEIBU_BUS_STOPS].id));
-      break;
-
-    case KokusaiKogyo.COMPANY_CODE:
-      if (validity.KokusaiKogyo.start && validity.KokusaiKogyo.goal) services.push(...await KokusaiKogyo.getServices(KK_BUS_STOPS[start as keyof typeof KK_BUS_STOPS].id, KK_BUS_STOPS[goal as keyof typeof KK_BUS_STOPS].id));
-      break;
-
-    case Seibu.COMPANY_CODE:
-      // services.push(...await Seibu.getServices("00110252", "00110264"));
-      if (validity.Seibu.start && validity.Seibu.goal) services.push(...await Seibu.getServices(SEIBU_BUS_STOPS[start as keyof typeof SEIBU_BUS_STOPS].id, SEIBU_BUS_STOPS[goal as keyof typeof SEIBU_BUS_STOPS].id));
-      break;
-  }
-
-  return services;
+  return await Services.getServices(company, start, goal);
 });
+
+export namespace Services {
+  export async function getServices (company: string, start: string, goal: string) {
+    if (!start) {
+      throw createError({
+        statusCode: 400,
+        data: "A query-parameter 'start' is required."
+      });
+    }
+  
+    const validity = Bus.Route.checkValidityOfBusStop(company, start, goal);
+    const services: Bus.Service[] = [];
+  
+    switch (company) {
+      default:
+        if (validity.KokusaiKogyo?.start && validity.KokusaiKogyo?.goal) services.push(...await KokusaiKogyoBus.Service.getServices(BusStops.KokusaiKogyo[start as keyof typeof BusStops.KokusaiKogyo].id, BusStops.KokusaiKogyo[goal as keyof typeof BusStops.KokusaiKogyo].id));
+        if (validity.Seibu?.start && validity.Seibu?.goal) services.push(...await SeibuBus.Service.getServices(BusStops.Seibu[start as keyof typeof BusStops.Seibu].id, BusStops.Seibu[goal as keyof typeof BusStops.Seibu].id));
+        break;
+  
+      case KokusaiKogyoBus.COMPANY_CODE:
+        if (validity.KokusaiKogyo?.start && validity.KokusaiKogyo?.goal) services.push(...await KokusaiKogyoBus.Service.getServices(BusStops.KokusaiKogyo[start as keyof typeof BusStops.KokusaiKogyo].id, BusStops.KokusaiKogyo[goal as keyof typeof BusStops.KokusaiKogyo].id));
+        break;
+  
+      case SeibuBus.COMPANY_CODE:
+        if (validity.Seibu?.start && validity.Seibu?.goal) services.push(...await SeibuBus.Service.getServices(BusStops.Seibu[start as keyof typeof BusStops.Seibu].id, BusStops.Seibu[goal as keyof typeof BusStops.Seibu].id));
+        break;
+    }
+  
+    return services;
+  }
+}
