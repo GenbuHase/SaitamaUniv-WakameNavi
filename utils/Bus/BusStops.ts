@@ -20,6 +20,13 @@ export const BusStops = {
       name: "南与野駅西口",
       routes: ["南与01", "南与02", "志03-3", "北朝02"]
     },
+
+    MinamiYonoKita: {
+      id: "00021224",
+      code: "MinamiYonoKita",
+      name: "南与野駅北入口",
+      routes: ["北浦03"]
+    },
   
     Shiki: {
       id: "00021278",
@@ -91,7 +98,14 @@ export const BusStops = {
       code: "MinamiYono",
       name: "南与野駅西口",
       routes: ["南与01"]
-    }
+    },
+
+    MinamiYonoKita: {
+      id: "00111639",
+      code: "MinamiYonoKita",
+      name: "南与野駅北入口",
+      routes: ["北浦03"]
+    },
   }
 }
 

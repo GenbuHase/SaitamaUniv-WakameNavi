@@ -70,7 +70,7 @@
 
 <script lang="ts" setup>
   import { ref, computed } from "vue";
-  import Bus from "@/utils/Trasportation/Bus";
+  import Bus from "@/utils/Bus";
   
   // ########## Components ##########
   import ArrivalTimeSortedService from "@/components/bus/ArrivalTimeSortedService.vue";
@@ -100,12 +100,20 @@
     { label: "埼玉大学 → 南与野駅", value: "SaitamaUniv-MinamiYono" },
     { label: "埼玉大学 → 志木駅", value: "SaitamaUniv-Shiki" },
     { label: "埼玉大学 → 北朝霞駅", value: "SaitamaUniv-KitaAsaka" },
+
     { label: "北浦和駅 → 埼玉大学", value: "KitaUrawa-SaitamaUniv" },
     { label: "南与野駅 → 埼玉大学", value: "MinamiYono-SaitamaUniv" },
     { label: "志木駅 → 埼玉大学", value: "Shiki-SaitamaUniv" },
     { label: "北朝霞駅 → 埼玉大学", value: "KitaAsaka-SaitamaUniv" },
+
+    { label: "南与野駅北入口 → 埼玉大学", value: "MinamiYonoKita-SaitamaUniv" },
+    { label: "南与野駅北入口 → 北浦和駅", value: "MinamiYonoKita-KitaUrawa" },
+
     { label: "埼大裏 → 浦和駅", value: "SaitamaUnivUra-Urawa" },
-    { label: "浦和駅 → 埼大裏", value: "Urawa-SaitamaUnivUra" }
+    { label: "桜区役所 → 浦和駅", value: "SakuraWardOffice-Urawa" },
+
+    { label: "浦和駅 → 埼大裏", value: "Urawa-SaitamaUnivUra" },
+    { label: "浦和駅 → 桜区役所", value: "Urawa-SakuraWardOffice" }
   ]
   // ########## Constants ##########
 
