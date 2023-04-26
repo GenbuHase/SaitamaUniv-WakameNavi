@@ -11,29 +11,10 @@
         <span class="navi-service-time_indicator-time mx-2">{{ plannedTime }}</span>
       </span>
 
-      <div>
-        <span>定刻</span>
-        <span class="navi-service-time_indicator-arrival_time text-caption">({{ arrivalTime }}到着予定)</span>
-      </div>
+      <span>定刻</span>
     </VCardText>
   </VCard>
 </template>
-
-<style lang="scss" scoped>
-  .navi-service-time_indicator {
-    display: flex;
-    align-items: center;
-
-    & > div {
-      display: flex;
-      flex-direction: column;
-    }
-
-    &-arrival_time {
-      font-weight: bold;
-    }
-  }
-</style>
 
 <script lang="ts" setup>
   import { computed } from "vue";
