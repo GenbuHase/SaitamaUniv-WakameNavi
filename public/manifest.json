@@ -1,0 +1,17 @@
+{
+  "name": "わかめナビ🌱",
+  "short_name": "わかめナビ🌱",
+  "start_url": "/",
+  "display": "standalone",
+  "description": "埼玉大学周辺を走るバスの運行情報を確認することができます。",
+  "background_color": "#eeeeee",
+  "theme_color": "#c8ea50",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "favicon.png",
+      "sizes": "256x256",
+      "type": "image/png"
+    }
+  ]
+}
