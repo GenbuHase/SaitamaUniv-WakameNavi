@@ -33,7 +33,7 @@
           </VCol>
 
           <VCol class="text-body-1">
-            <NuxtPage />
+            <NuxtPage keepalive />
           </VCol>
         </VRow>
       </VContainer>

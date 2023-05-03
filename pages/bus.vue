@@ -11,6 +11,7 @@
                   label="区間" :items="__INTERVALS"
                   item-title="label" item-value="value"
                   v-model="intervalSelector.selected"
+                  @update:model-value="saveInterval($event)"
 
                   variant="outlined" hide-details
                   prepend-inner-icon="mdi-source-commit-start" />
@@ -71,7 +72,10 @@
 <script lang="ts" setup>
   import { ref, computed } from "vue";
   import Bus from "@/utils/Bus";
-  
+  import LocalStorage from "@/utils/LocalStorage";
+
+  const storage = new LocalStorage("WakameNavi.BusPage");
+
   // ########## Components ##########
   import ArrivalTimeSortedService from "@/components/bus/ArrivalTimeSortedService.vue";
   import PlannnedTimeSortedService from "@/components/bus/PlannnedTimeSortedService.vue";
@@ -174,5 +178,18 @@
     const [ start, goal ] = interval.split("-");
     services.value = await fetch(`/api/v1/bus/services?start=${start}&goal=${goal}`).then(res => res.json());
   }
+
+  function loadInterval () {
+    console.log(storage.data);
+    intervalSelector.value.selected = storage.get("interval");
+  }
+
+  function saveInterval (value: string) {
+    storage.set("interval", value);
+  }
   // ########## Methods ##########
+
+  onMounted(() => {
+    loadInterval();
+  });
 </script>
