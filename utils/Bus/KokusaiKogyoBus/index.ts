@@ -13,86 +13,22 @@ namespace KokusaiKogyoBus {
 
 
 
-  export class Service {
-    public static async getServices (startBusstopId: string, goalBusstopId: string): Promise<Bus.Service[]> {
-      const document = (await JSDOM.fromURL(this.__getFetchUrl(startBusstopId, goalBusstopId))).window.document;
-      const elements = document.querySelectorAll("#resultList > .plotList");
-  
-      const services: Bus.Service[] = [];
-      for (const elem of elements) {
-        const route: string = elem.querySelector(".courseName")?.textContent || "";
-        const destination: string = elem.querySelector(".destination-name")?.textContent || "";
-        const destinationUnit: string = elem.querySelector(".destination-unit")?.textContent || "";
-        const location: string = elem.querySelector(".approach-number")?.textContent || "";
-        const delay: string = elem.querySelector(".delay-minutes-area > .middleText")?.textContent || "";
-        const plannedTime: string = elem.querySelector(".on-time")?.textContent || "";
-
-        services.push(
-          this.__normalize({ route, destination, destinationUnit, location, delay, plannedTime })
-        );
-      }
-
-      return services;
-    }
-
-    private static readonly FETCH_BASE_URL = "https://transfer.navitime.biz/5931bus/pc/location/BusLocationResult";
-    private static readonly DIAGRAM_BASE_URL = "https://transfer.navitime.biz/5931bus/pc/diagram/BusCourseSearch";
-
-    private static __getFetchUrl = (startId: string, goalId: string) => `${this.FETCH_BASE_URL}?startId=${startId}&goalId=${goalId}`;
-    private static __getDiagramUrl = (startId: string) => `${this.DIAGRAM_BASE_URL}?busstopId=${startId}`;
-
-    private static __normalize (unnormalizedService: Service.UnnormalizedService): Bus.Service {
-      const companyCode = KokusaiKogyoBus.COMPANY_CODE;
-
-      const route: string = unnormalizedService.route;
-      const destination: string = unnormalizedService.destination.replace(unnormalizedService.destinationUnit, "");
-
-      const location: number = (() => {
-        const locationContent = unnormalizedService.location;
-        const locationMatcher = locationContent.match(/(\d+)個前/);
-
-        if (locationContent === "始発バス停出発前") return 100;
-        if (locationContent === "まもなく到着いたします") return 1;
-        return locationMatcher ? parseInt(locationMatcher[1]) : 0;
-      })();
-
-      const delay: number = (() => {
-        const delayContent = unnormalizedService.delay;
-        const delayMatcher = delayContent.match(/(\d+)分/);
-
-        if (delayContent === "遅れなし") return 0;
-        return delayMatcher ? parseInt(delayMatcher[1]) : 0;
-      })();
-
-      const plannedTime: string = unnormalizedService.plannedTime;
-
-      const arrivalTime: string = Time.parseDateToTimeString(
-        Time.addMinutes(
-          Time.parseTimeStringToDate(plannedTime), delay
-        )
-      );
-
-      return {
-        companyCode,
-        
-        route,
-        destination,
-        location,
-        plannedTime,
-        arrivalTime,
-        delay
+  export class Busstop {
+    public static findById (busstopId: string) {
+      for (const busstops of Object.values(ROUTES)) {
+        if (busstops.some(busstop => busstop.id === busstopId)) {
+          return busstops.find(busstop => busstop.id === busstopId) as Bus.Busstop;
+        }
       }
     }
-  }
 
-  export namespace Service {
-    export type UnnormalizedService = {
-      route: string;
-      destination: string;
-      destinationUnit: string;
-      location: string;
-      delay: string;
-      plannedTime: string;
+
+    public static findByName (busstopName: string) {
+      for (const busstops of Object.values(ROUTES)) {
+        if (busstops.some(busstop => busstop.name === busstopName)) {
+          return busstops.find(busstop => busstop.name === busstopName) as Bus.Busstop;
+        }
+      }
     }
   }
 
@@ -167,22 +103,86 @@ namespace KokusaiKogyoBus {
 
 
 
-  export class Busstop {
-    public static findById (busstopId: string) {
-      for (const busstops of Object.values(ROUTES)) {
-        if (busstops.some(busstop => busstop.id === busstopId)) {
-          return busstops.find(busstop => busstop.id === busstopId) as Bus.Busstop;
-        }
+  export class Service {
+    public static async getServices (startBusstopId: string, goalBusstopId: string): Promise<Bus.Service[]> {
+      const document = (await JSDOM.fromURL(this.__getFetchUrl(startBusstopId, goalBusstopId))).window.document;
+      const elements = document.querySelectorAll("#resultList > .plotList");
+  
+      const services: Bus.Service[] = [];
+      for (const elem of elements) {
+        const route: string = elem.querySelector(".courseName")?.textContent || "";
+        const destination: string = elem.querySelector(".destination-name")?.textContent || "";
+        const destinationUnit: string = elem.querySelector(".destination-unit")?.textContent || "";
+        const location: string = elem.querySelector(".approach-number")?.textContent || "";
+        const delay: string = elem.querySelector(".delay-minutes-area > .middleText")?.textContent || "";
+        const plannedTime: string = elem.querySelector(".on-time")?.textContent || "";
+
+        services.push(
+          this.__normalize({ route, destination, destinationUnit, location, delay, plannedTime })
+        );
       }
+
+      return services;
     }
 
+    private static readonly __FETCH_BASE_URL = "https://transfer.navitime.biz/5931bus/pc/location/BusLocationResult";
+    private static readonly __DIAGRAM_BASE_URL = "https://transfer.navitime.biz/5931bus/pc/diagram/BusCourseSearch";
 
-    public static findByName (busstopName: string) {
-      for (const busstops of Object.values(ROUTES)) {
-        if (busstops.some(busstop => busstop.name === busstopName)) {
-          return busstops.find(busstop => busstop.name === busstopName) as Bus.Busstop;
-        }
+    private static __getFetchUrl = (startId: string, goalId: string) => `${this.__FETCH_BASE_URL}?startId=${startId}&goalId=${goalId}`;
+    private static __getDiagramUrl = (startId: string) => `${this.__DIAGRAM_BASE_URL}?busstopId=${startId}`;
+
+    private static __normalize (unnormalizedService: Service.UnnormalizedService): Bus.Service {
+      const companyCode = KokusaiKogyoBus.COMPANY_CODE;
+
+      const route: string = unnormalizedService.route;
+      const destination: string = unnormalizedService.destination.replace(unnormalizedService.destinationUnit, "");
+
+      const location: number = (() => {
+        const locationContent = unnormalizedService.location;
+        const locationMatcher = locationContent.match(/(\d+)個前/);
+
+        if (locationContent === "始発バス停出発前") return 100;
+        if (locationContent === "まもなく到着いたします") return 1;
+        return locationMatcher ? parseInt(locationMatcher[1]) : 0;
+      })();
+
+      const delay: number = (() => {
+        const delayContent = unnormalizedService.delay;
+        const delayMatcher = delayContent.match(/(\d+)分/);
+
+        if (delayContent === "遅れなし") return 0;
+        return delayMatcher ? parseInt(delayMatcher[1]) : 0;
+      })();
+
+      const plannedTime: string = unnormalizedService.plannedTime;
+
+      const arrivalTime: string = Time.parseDateToTimeString(
+        Time.addMinutes(
+          Time.parseTimeStringToDate(plannedTime), delay
+        )
+      );
+
+      return {
+        companyCode,
+        
+        route,
+        destination,
+        location,
+        plannedTime,
+        arrivalTime,
+        delay
       }
+    }
+  }
+
+  export namespace Service {
+    export type UnnormalizedService = {
+      route: string;
+      destination: string;
+      destinationUnit: string;
+      location: string;
+      delay: string;
+      plannedTime: string;
     }
   }
 }
