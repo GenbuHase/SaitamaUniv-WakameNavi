@@ -117,7 +117,13 @@
     { label: "桜区役所 → 浦和駅", value: "SakuraWardOffice-Urawa" },
 
     { label: "浦和駅 → 埼大裏", value: "Urawa-SaitamaUnivUra" },
-    { label: "浦和駅 → 桜区役所", value: "Urawa-SakuraWardOffice" }
+    { label: "浦和駅 → 桜区役所", value: "Urawa-SakuraWardOffice" },
+
+    { label: "浦和駅 → 区役所北口(さいたま市)", value: "Urawa-SaitamaCityOfficeNorth" },
+    { label: "浦和駅 → 鯛ヶ窪橋", value: "Urawa-TaigakuboBridge" },
+
+    { label: "区役所北口(さいたま市) → 浦和駅", value: "SaitamaCityOfficeNorth-Urawa" },
+    { label: "鯛ヶ窪橋 → 浦和駅", value: "TaigakuboBridge-Urawa" },
   ]
   // ########## Constants ##########
 

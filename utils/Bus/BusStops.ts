@@ -75,6 +75,20 @@ export const BusStops = {
       code: "OkuboPurificationPlant",
       name: "大久保浄水場",
       routes: ["浦13", "浦桜13-3"]
+    },
+
+    SaitamaCityOfficeNorth: {
+      id: "00021172",
+      code: "SaitamaCityOfficeNorth",
+      name: "市役所北口(さいたま市)",
+      routes: ["北浦80", "浦12", "浦12-2", "浦13", "浦桜13-3"]
+    },
+
+    TaigakuboBridge: {
+      id: "00022226",
+      code: "TaigakuboBridge",
+      name: "鯛ヶ窪橋",
+      routes: ["浦15"]
     }
   },
 
