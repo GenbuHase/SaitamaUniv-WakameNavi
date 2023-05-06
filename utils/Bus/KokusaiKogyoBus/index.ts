@@ -9,7 +9,9 @@ namespace KokusaiKogyoBus {
   export const COMPANY_CODE = "KokusaiKogyo";
   export const COMPANY_NAME = "国際興業バス";
   export const BUSSTOPS = Busstops;
-  export const ROUTES = Routes;
+  export const ROUTES: { [K in keyof typeof Routes]: Bus.Route } = Routes;
+
+
 
   export class Service {
     public static async getServices (startBusstopId: string, goalBusstopId: string): Promise<Bus.Service[]> {
@@ -94,17 +96,93 @@ namespace KokusaiKogyoBus {
     }
   }
 
+
+
   export class Route {
     public static findRoutes (startBusstopName: string, goalBusstopName?: string): Array<keyof typeof ROUTES> {
       const result: Array<keyof typeof ROUTES> = [];
 
       for (const [routeName, busstops] of Object.entries(ROUTES)) {
-        if (busstops.some(busstop => busstop.name === startBusstopName) && (!goalBusstopName ? true : busstops.some(busstop => busstop.name === goalBusstopName))) {
+        if (
+          busstops.some(busstop => busstop.name === startBusstopName) &&
+          (!goalBusstopName ? true : busstops.some(busstop => busstop.name === goalBusstopName))
+        ) {
           result.push(routeName as keyof typeof ROUTES);
         }
       }
 
       return result;
+    }
+
+    public static getBusstopsById (busstopId: string) {
+      const result: { [K: string]: Bus.Busstop } = {};
+
+      for (const [routeName, busstops] of Object.entries(ROUTES)) {
+        if (busstops.some(busstop => busstop.id === busstopId)) {
+          result[routeName] = busstops.find(busstop => busstop.id === busstopId) as Bus.Busstop;
+        }
+      }
+
+      return result;
+    }
+
+    public static getBusstopsByName (busstopName: string) {
+      const result: { [K: string]: Bus.Busstop } = {};
+
+      for (const [routeName, busstops] of Object.entries(ROUTES)) {
+        if (busstops.some(busstop => busstop.name === busstopName)) {
+          result[routeName] = busstops.find(busstop => busstop.name === busstopName) as Bus.Busstop;
+        }
+      }
+
+      return result;
+    }
+
+    public static isValid (startBusStopId: string, goalBusstopId?: string) {
+      const startSortedBusstops = this.getBusstopsById(startBusStopId);
+
+      if (Object.keys(startBusStopId).length === 0) return false;
+
+      if (goalBusstopId) {
+        const goalSortedBusstops = this.getBusstopsById(goalBusstopId);
+
+        if (Object.keys(goalSortedBusstops).length === 0) return false;
+
+        for (const [routeName, startBusstop] of Object.entries(startSortedBusstops)) {
+          if (routeName in goalSortedBusstops) {
+            const goalBusstop = goalSortedBusstops[routeName];
+            const startIndex = ROUTES[routeName].indexOf(startBusstop);
+            const goalIndex = ROUTES[routeName].indexOf(goalBusstop);
+
+            if (startIndex < goalIndex) return true;
+          }
+        }
+
+        return false;
+      }
+
+      return true;
+    }
+  }
+
+
+
+  export class Busstop {
+    public static findById (busstopId: string) {
+      for (const busstops of Object.values(ROUTES)) {
+        if (busstops.some(busstop => busstop.id === busstopId)) {
+          return busstops.find(busstop => busstop.id === busstopId) as Bus.Busstop;
+        }
+      }
+    }
+
+
+    public static findByName (busstopName: string) {
+      for (const busstops of Object.values(ROUTES)) {
+        if (busstops.some(busstop => busstop.name === busstopName)) {
+          return busstops.find(busstop => busstop.name === busstopName) as Bus.Busstop;
+        }
+      }
     }
   }
 }
