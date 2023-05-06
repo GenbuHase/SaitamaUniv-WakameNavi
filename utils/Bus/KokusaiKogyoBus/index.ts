@@ -39,7 +39,7 @@ namespace KokusaiKogyoBus {
     private static __getFetchUrl = (startId: string, goalId: string) => `${this.FETCH_BASE_URL}?startId=${startId}&goalId=${goalId}`;
     private static __getDiagramUrl = (startId: string) => `${this.DIAGRAM_BASE_URL}?busstopId=${startId}`;
 
-    private static __normalize (unnormalizedService: KokusaiKogyoBus.Service.UnnormalizedService): Bus.Service {
+    private static __normalize (unnormalizedService: Service.UnnormalizedService): Bus.Service {
       const companyCode = KokusaiKogyoBus.COMPANY_CODE;
 
       const route: string = unnormalizedService.route;

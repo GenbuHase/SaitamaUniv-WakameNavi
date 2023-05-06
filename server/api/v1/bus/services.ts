@@ -2,7 +2,7 @@ import Bus from "@/utils/Bus";
 
 const { KokusaiKogyoBus, SeibuBus } = Bus;
 
-// /api/v1/bus/services?company=:company?(Seibu|KokusaiKogyo)&start=:start&goal=:goal?
+// /api/v1/bus/services?company=(Seibu|KokusaiKogyo)?&start=string&goal=string?
 export default defineEventHandler(async event => {
   const { company, start, goal } = getQuery(event) as { [K: string]: string };
 

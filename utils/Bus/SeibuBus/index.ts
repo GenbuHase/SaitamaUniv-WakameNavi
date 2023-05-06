@@ -42,7 +42,7 @@ namespace SeibuBus {
 
     private static __getFetchUrl = (startId: string, goalId: string) => `${this.FETCH_BASE_URL}?startId=${startId}&goalId=${goalId}`;
 
-    private static __normalize (unnormalizedService: SeibuBus.Service.UnnormalizedService): Bus.Service {
+    private static __normalize (unnormalizedService: Service.UnnormalizedService): Bus.Service {
       const companyCode = SeibuBus.COMPANY_CODE;
 
       const route: string = unnormalizedService.route.replace(/[０-９]/g, str => String.fromCharCode(str.charCodeAt(0) - 0xFEE0)).slice(1, -1);;

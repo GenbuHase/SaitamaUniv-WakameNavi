@@ -87,12 +87,12 @@ namespace Bus {
     delay: number;
   }
 
-  export type BusStop = {
+  export type Busstop = {
     id: string;
     name: string;
   }
 
-  export type Route = BusStop[];
+  export type Route = Busstop[];
 }
 
 export default Bus;
