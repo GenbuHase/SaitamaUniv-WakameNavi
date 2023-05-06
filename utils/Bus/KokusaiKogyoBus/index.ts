@@ -1,15 +1,19 @@
 import { JSDOM } from "jsdom";
 
-import Bus from ".";
+import Bus from "..";
+import Busstops from "./Busstops";
+import Routes from "./Routes";
 import Time from "@/utils/Time";
 
 namespace KokusaiKogyoBus {
   export const COMPANY_CODE = "KokusaiKogyo";
   export const COMPANY_NAME = "国際興業バス";
+  export const BUSSTOPS = Busstops;
+  export const ROUTES = Routes;
 
   export class Service {
-    public static async getServices (startId: string, goalId: string): Promise<Bus.Service[]> {
-      const document = (await JSDOM.fromURL(this.__getFetchUrl(startId, goalId))).window.document;
+    public static async getServices (startBusstopId: string, goalBusstopId: string): Promise<Bus.Service[]> {
+      const document = (await JSDOM.fromURL(this.__getFetchUrl(startBusstopId, goalBusstopId))).window.document;
       const elements = document.querySelectorAll("#resultList > .plotList");
   
       const services: Bus.Service[] = [];
@@ -30,8 +34,10 @@ namespace KokusaiKogyoBus {
     }
 
     private static readonly FETCH_BASE_URL = "https://transfer.navitime.biz/5931bus/pc/location/BusLocationResult";
+    private static readonly DIAGRAM_BASE_URL = "https://transfer.navitime.biz/5931bus/pc/diagram/BusCourseSearch";
 
     private static __getFetchUrl = (startId: string, goalId: string) => `${this.FETCH_BASE_URL}?startId=${startId}&goalId=${goalId}`;
+    private static __getDiagramUrl = (startId: string) => `${this.DIAGRAM_BASE_URL}?busstopId=${startId}`;
 
     private static __normalize (unnormalizedService: KokusaiKogyoBus.Service.UnnormalizedService): Bus.Service {
       const companyCode = KokusaiKogyoBus.COMPANY_CODE;
@@ -85,6 +91,20 @@ namespace KokusaiKogyoBus {
       location: string;
       delay: string;
       plannedTime: string;
+    }
+  }
+
+  export class Route {
+    public static findRoutes (startBusstopName: string, goalBusstopName?: string): Array<keyof typeof ROUTES> {
+      const result: Array<keyof typeof ROUTES> = [];
+
+      for (const [routeName, busstops] of Object.entries(ROUTES)) {
+        if (busstops.some(busstop => busstop.name === startBusstopName) && (!goalBusstopName ? true : busstops.some(busstop => busstop.name === goalBusstopName))) {
+          result.push(routeName as keyof typeof ROUTES);
+        }
+      }
+
+      return result;
     }
   }
 }

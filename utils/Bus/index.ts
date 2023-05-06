@@ -1,32 +1,41 @@
-import BusStops from "./BusStops";
-import Routes from "./Routes";
 import KokusaiKogyoBus from "./KokusaiKogyoBus";
 import SeibuBus from "./SeibuBus";
 
 class Bus {
-  public static readonly BusStops = BusStops;
-  public static readonly Routes = Routes;
-
   public static readonly KokusaiKogyoBus = KokusaiKogyoBus;
   public static readonly SeibuBus = SeibuBus;
 
   public static readonly Service = class Service {
-    public static async getServices (start: string, goal: string) {
+    public static async getServices (startBusstopId: string, goalBusstopId: string) {
       const services: Bus.Service[] = [];
 
-      services.push(...await KokusaiKogyoBus.Service.getServices(start, goal));
-      services.push(...await SeibuBus.Service.getServices(start, goal));
+      services.push(...await KokusaiKogyoBus.Service.getServices(startBusstopId, goalBusstopId));
+      services.push(...await SeibuBus.Service.getServices(startBusstopId, goalBusstopId));
 
       return services;
     }
   }
 
   public static readonly Route = class Route {
+    public static readonly ROUTES = {
+      [KokusaiKogyoBus.COMPANY_CODE]: KokusaiKogyoBus.ROUTES,
+      [SeibuBus.COMPANY_CODE]: SeibuBus.ROUTES
+    }
+
+    public static findRoutes (start: string, goal?: string) {
+      const result = [];
+
+      result.push(...KokusaiKogyoBus.Route.findRoutes(start, goal).map(route => `${KokusaiKogyoBus.COMPANY_CODE}:${route}`));
+      result.push(...SeibuBus.Route.findRoutes(start, goal).map(route => `${SeibuBus.COMPANY_CODE}:${route}`));
+
+      return result;
+    }
+
     public static getParentsOfBusStop (busStopCode: string): (typeof KokusaiKogyoBus | typeof SeibuBus)[] {
       const parents = [];
 
-      if (busStopCode in BusStops.KokusaiKogyo) parents.push(KokusaiKogyoBus);
-      if (busStopCode in BusStops.Seibu) parents.push(SeibuBus);
+      if (busStopCode in KokusaiKogyoBus.BUSSTOPS) parents.push(KokusaiKogyoBus);
+      if (busStopCode in SeibuBus.BUSSTOPS) parents.push(SeibuBus);
 
       return parents;
     }
@@ -78,7 +87,12 @@ namespace Bus {
     delay: number;
   }
 
-  export type Route = {}
+  export type BusStop = {
+    id: string;
+    name: string;
+  }
+
+  export type Route = BusStop[];
 }
 
 export default Bus;

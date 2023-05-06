@@ -132,7 +132,7 @@
 
   const services = ref<Bus.Service[]>([]);
 
-  /*services.value = [
+  services.value = [
     {
       arrivalTime: '15:11',
       companyCode: 'KokusaiKogyo',
@@ -152,7 +152,7 @@
       plannedTime: '15:08',
       route: '北朝02'
     }
-  ]*/
+  ]
   // ########## Reactives ##########
 
   // ########## Computed ##########
@@ -180,7 +180,6 @@
   }
 
   function loadInterval () {
-    console.log(storage.data);
     intervalSelector.value.selected = storage.get("interval");
   }
 

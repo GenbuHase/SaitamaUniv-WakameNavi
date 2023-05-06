@@ -1,15 +1,19 @@
 import { JSDOM } from "jsdom";
 
-import Bus from ".";
+import Bus from "..";
+import Busstops from "./Busstops";
+import Routes from "./Routes";
 import Time from "@/utils/Time";
 
 namespace SeibuBus {
   export const COMPANY_CODE = "Seibu";
   export const COMPANY_NAME = "西武バス";
+  export const BUSSTOPS = Busstops;
+  export const ROUTES = Routes;
 
   export class Service {
-    public static async getServices (startId: string, goalId: string): Promise<Bus.Service[]> {
-      const document = (await JSDOM.fromURL(this.__getFetchUrl(startId, goalId))).window.document;
+    public static async getServices (startBusstopId: string, goalBusstopId: string): Promise<Bus.Service[]> {
+      const document = (await JSDOM.fromURL(this.__getFetchUrl(startBusstopId, goalBusstopId))).window.document;
       const elements = document.querySelectorAll("#resultList > .plotList");
   
       const services: Bus.Service[] = [];
@@ -86,6 +90,20 @@ namespace SeibuBus {
       location: Element | null;
       plannedTime: string;
       arrivalTime: string;
+    }
+  }
+
+  export class Route {
+    public static findRoutes (startBusstopName: string, goalBusstopName?: string): Array<keyof typeof ROUTES> {
+      const result: Array<keyof typeof ROUTES> = [];
+
+      for (const [routeName, busstops] of Object.entries(ROUTES)) {
+        if (busstops.some(busstop => busstop.name === startBusstopName) && (!goalBusstopName ? true : busstops.some(busstop => busstop.name === goalBusstopName))) {
+          result.push(routeName as keyof typeof ROUTES);
+        }
+      }
+
+      return result;
     }
   }
 }

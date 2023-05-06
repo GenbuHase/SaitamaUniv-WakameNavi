@@ -38,7 +38,7 @@
 <script lang="ts" setup>
   import { computed } from "vue";
 
-  const PROPS = defineProps({
+  const __PROPS = defineProps({
     companyCode: { type: String, required: true },
     route: { type: String, required: true },
     destination: { type: String, required: true },
@@ -48,5 +48,10 @@
     delay: { type: Number, required: true }
   });
 
-  const companyName = computed(() => PROPS.companyCode === "KokusaiKogyo" ? "国際興業バス" : PROPS.companyCode === "Seibu" ? "西武バス" : "");
+  const companyName = computed(() => {
+    if (__PROPS.companyCode === "KokusaiKogyo") return "国際興業バス";
+    if (__PROPS.companyCode === "Seibu") return "西武バス";
+    
+    return "";
+  });
 </script>

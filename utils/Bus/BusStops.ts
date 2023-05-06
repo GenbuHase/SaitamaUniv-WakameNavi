@@ -1,4 +1,4 @@
-export const BusStops = {
+export const Busstops = {
   KokusaiKogyo: {
     SaitamaUniv: {
       id: "00021229",
@@ -109,4 +109,4 @@ export const BusStops = {
   }
 }
 
-export default BusStops;
+export default Busstops;
