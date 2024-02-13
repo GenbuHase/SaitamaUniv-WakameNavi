@@ -1,6 +1,6 @@
 {
-  "name": "わかめナビ🌱",
-  "short_name": "わかめナビ🌱",
+  "name": "わかめナビ🌱(dev版)",
+  "short_name": "わかめナビ🌱(dev版)",
   "start_url": "/",
   "display": "standalone",
   "description": "埼玉大学周辺を走るバスの運行情報を確認することができます。",
