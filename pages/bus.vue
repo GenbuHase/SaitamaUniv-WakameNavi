@@ -134,6 +134,36 @@
 
   services.value = [
     {
+      arrivalTime: '12:51',
+      companyCode: 'KokusaiKogyo',
+      delay: 31,
+      destination: '南与野駅西口',
+      location: 2,
+      plannedTime: '12:20',
+      route: '志03-3'
+    },
+
+    {
+      arrivalTime: '13:00',
+      companyCode: 'KokusaiKogyo',
+      delay: 4,
+      destination: '南与野駅西口',
+      location: 5,
+      plannedTime: '12:56',
+      route: '志03-3'
+    },
+
+    {
+      arrivalTime: '13:34',
+      companyCode: 'KokusaiKogyo',
+      delay: 2,
+      destination: '南与野駅西口',
+      location: 10,
+      plannedTime: '13:32',
+      route: '志03-3'
+    },
+
+    {
       arrivalTime: '15:11',
       companyCode: 'KokusaiKogyo',
       delay: 16,
@@ -151,6 +181,56 @@
       location: 5,
       plannedTime: '15:08',
       route: '北朝02'
+    },
+
+    {
+      arrivalTime: '21:29',
+      companyCode: 'KokusaiKogyo',
+      delay: 7,
+      destination: '南与野駅西口',
+      location: 2,
+      plannedTime: '21:22',
+      route: '志03-3'
+    },
+    
+    {
+      arrivalTime: '21:30',
+      companyCode: 'KokusaiKogyo',
+      delay: 231,
+      destination: '南与野駅西口',
+      location: 5,
+      plannedTime: '17:39',
+      route: '志03-3'
+    },
+
+    {
+      arrivalTime: '21:33',
+      companyCode: 'KokusaiKogyo',
+      delay: 109,
+      destination: '南与野駅西口',
+      location: 6,
+      plannedTime: '19:41',
+      route: '志03-3'
+    },
+
+    {
+      arrivalTime: '21:34',
+      companyCode: 'KokusaiKogyo',
+      delay: 71,
+      destination: '南与野駅西口',
+      location: 6,
+      plannedTime: '20:23',
+      route: '志03-3'
+    },
+
+    {
+      arrivalTime: '22:10',
+      companyCode: 'KokusaiKogyo',
+      delay: 172,
+      destination: '南与野駅西口',
+      location: 15,
+      plannedTime: '18:18',
+      route: '志03-3'
     }
   ]
   // ########## Reactives ##########
