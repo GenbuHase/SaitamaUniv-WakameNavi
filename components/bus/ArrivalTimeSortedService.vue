@@ -13,7 +13,7 @@
 
       <div>
         <span>到着予定</span>
-        <span class="navi-service-time_indicator-delay text-caption text-red-darken-2">({{ delay }}分の遅延)</span>
+        <span :class="['navi-service-time_indicator-delay', 'text-caption', delay > 0 ? 'text-red-darken-2' : '']">({{ delay }}分の遅延)</span>
       </div>
     </VCardText>
   </VCard>
