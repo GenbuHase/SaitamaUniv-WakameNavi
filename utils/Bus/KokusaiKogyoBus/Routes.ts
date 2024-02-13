@@ -240,4 +240,17 @@ export const Routes = {
   ]
 }
 
+export const ALL_ROUTES = (() => {
+  const result = [];
+
+  for (const routeName in Routes) {
+    const route = Routes[routeName as keyof typeof Routes];
+    result.push(...route);
+  }
+
+  return result.filter((busstop1, i, _) => {
+    return _.findIndex(busstop2 => busstop2.id === busstop1.id) === i
+  });
+})();
+
 export default Routes;

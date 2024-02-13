@@ -5,16 +5,28 @@
         <VSheet>
           <VForm id="busPage-fetchForm" class="v-container">
             <VRow>
-              <VCol cols="12">
+              <VCol cols="12" md="6">
                 <VSelect
-                  id="busPage-fetchForm-intervalSelector"
-                  label="区間" :items="__INTERVALS"
-                  item-title="label" item-value="value"
-                  v-model="intervalSelector.selected"
-                  @update:model-value="saveInterval($event)"
+                  id="busPage-fetchForm-startSelector"
+                  label="出発地点" :items="ALL_ROUTES"
+                  item-title="name" item-value="id"
+                  v-model="startSelector.value"
+                  @update:model-value="listGoals($event), saveInterval()"
 
                   variant="outlined" hide-details
                   prepend-inner-icon="mdi-source-commit-start" />
+              </VCol>
+
+              <VCol cols="12" md="6">
+                <VSelect
+                  id="busPage-fetchForm-goalSelector"
+                  label="到着地点" :items="goalSelector.goals"
+                  item-title="name" item-value="id"
+                  v-model="goalSelector.value"
+                  @update:model-value="saveInterval()"
+
+                  variant="outlined" hide-details clearable
+                  prepend-inner-icon="mdi-source-commit-end" />
               </VCol>
             </VRow>
 
@@ -23,7 +35,7 @@
                 <VBtn
                   id="busPage-fetchForm-submitBtn"
                   block color="primary" prepend-icon="mdi-database-search"
-                  @click="fetchServices(intervalSelector.selected)">
+                  @click="fetchServices(startSelector.value, goalSelector.value)">
                   検索
                 </VBtn>
               </VCol>
@@ -72,6 +84,7 @@
 <script lang="ts" setup>
   import { ref, computed } from "vue";
   import Bus from "@/utils/Bus";
+  import { ALL_ROUTES } from "@/utils/Bus/KokusaiKogyoBus/Routes";
   import LocalStorage from "@/utils/LocalStorage";
 
   const storage = new LocalStorage("WakameNavi.BusPage");
@@ -122,8 +135,13 @@
   // ########## Constants ##########
 
   // ########## Reactives ##########
-  const intervalSelector = ref({
-    selected: ""
+  const startSelector = ref({
+    value: ""
+  });
+
+  const goalSelector = ref({
+    value: "",
+    goals: []
   });
 
   const fetchResultTabs = ref({
@@ -254,17 +272,23 @@
   // ########## Computed ##########
 
   // ########## Methods ##########
-  async function fetchServices (interval: string) {
-    const [ start, goal ] = interval.split("-");
+  async function fetchServices (start: string, goal: string) {
     services.value = await fetch(`/api/v1/bus/services?start=${start}&goal=${goal}`).then(res => res.json());
   }
 
-  function loadInterval () {
-    intervalSelector.value.selected = storage.get("interval");
+  async function listGoals (start: string) {
+    goalSelector.value.value = "";
+    goalSelector.value.goals = await fetch(`/api/v1/bus/search?company=KokusaiKogyo&start=${start}`).then(res => res.json());
   }
 
-  function saveInterval (value: string) {
-    storage.set("interval", value);
+  function loadInterval () {
+    startSelector.value.value = storage.get("interval_start");
+    goalSelector.value.value = storage.get("interval_goal");
+  }
+
+  function saveInterval () {
+    storage.set("interval_start", startSelector.value.value);
+    storage.set("interval_goal", goalSelector.value.value);
   }
   // ########## Methods ##########
 

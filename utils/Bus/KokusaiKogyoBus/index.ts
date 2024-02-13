@@ -66,6 +66,22 @@ namespace KokusaiKogyoBus {
       });
     }
 
+    /*public static listBusstops (startBusstopName: string) {
+      const result: Bus.Busstop[] = [];
+
+      for (const routeName in ROUTES) {
+        const route = ROUTES[routeName as keyof typeof ROUTES];
+
+        if (route.find(busstop => busstop.name === startBusstopName)) {
+          result.push(...route.filter(busstop => busstop.name !== startBusstopName));
+        }
+      }
+
+      return result.filter((busstop1, i, _) => {
+        return _.findIndex(busstop2 => busstop2.id === busstop1.id) === i
+      });
+    }*/
+
     public static getBusstopsById (busstopId: string) {
       const result: { [K: string]: Bus.Busstop } = {};
 
