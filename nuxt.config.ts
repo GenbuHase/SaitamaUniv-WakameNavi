@@ -1,7 +1,7 @@
 // https://nuxt.com/docs/api/configuration/nuxt-config
 export default defineNuxtConfig({
   compatibilityDate: "2025-12-08",
-  modules: ["@nuxt/eslint"],
+  modules: ["@nuxt/eslint", "@nuxtjs/tailwindcss"],
 
   ssr: false,
 
@@ -10,6 +10,7 @@ export default defineNuxtConfig({
       title: "わかめナビ🌱",
 
       meta: [
+        //
         { charset: "utf-8" },
 
         { property: "og:site_name", content: "わかめナビ🌱" },
@@ -26,14 +27,9 @@ export default defineNuxtConfig({
       link: [
         { rel: "icon", type: "image/x-icon", href: "/favicon.png" },
         { rel: "manifest", href: "/manifest.json" }
-      ],
-    },
+      ]
+    }
   },
-
-  css: [
-    "vuetify/lib/styles/main.sass",
-    "@mdi/font/css/materialdesignicons.min.css"
-  ],
 
   build: {
     transpile: ["vuetify"]
