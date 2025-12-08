@@ -1,6 +1,7 @@
 // https://nuxt.com/docs/api/configuration/nuxt-config
 export default defineNuxtConfig({
   compatibilityDate: "2025-12-08",
+  modules: ["@nuxt/eslint"],
 
   ssr: false,
 
@@ -37,4 +38,10 @@ export default defineNuxtConfig({
   build: {
     transpile: ["vuetify"]
   },
+
+  eslint: {
+    config: {
+      stylistic: true
+    }
+  }
 });

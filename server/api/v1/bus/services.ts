@@ -1,4 +1,4 @@
-import Bus from "@/utils/Bus";
+import Bus from "@@/shared/utils/Bus";
 
 const { BusStops, KokusaiKogyoBus, SeibuBus } = Bus;
 

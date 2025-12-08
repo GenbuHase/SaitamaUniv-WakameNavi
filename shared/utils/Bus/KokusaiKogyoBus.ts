@@ -1,7 +1,7 @@
 import { JSDOM } from "jsdom";
 
 import Bus from ".";
-import Time from "@/utils/Time";
+import Time from "@@/shared/utils/Time";
 
 namespace KokusaiKogyoBus {
   export const COMPANY_CODE = "KokusaiKogyo";

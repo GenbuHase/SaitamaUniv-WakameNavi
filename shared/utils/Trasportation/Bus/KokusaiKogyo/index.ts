@@ -1,5 +1,5 @@
 import { JSDOM } from "jsdom";
-import Time from "@/utils/Time";
+import Time from "@@/shared/utils/Time";
 
 import Bus from "..";
 import BUS_STOPS from "./BusStops";

@@ -1,7 +1,7 @@
 {
   "name": "su_wakame-navi",
   "description": "埼玉大学周辺を走るバスの運行情報を確認することができます。",
-  "version": "2.0.0-alpha.0",
+  "version": "2.0.0-alpha.1",
   "scripts": {
     "build": "nuxt build",
     "dev": "nuxt dev",
@@ -21,7 +21,9 @@
   },
   "homepage": "https://github.com/GenbuHase/SaitamaUniv-WakameNavi#readme",
   "devDependencies": {
+    "@nuxt/eslint": "^1.11.0",
     "@types/jsdom": "^27.0.0",
+    "eslint": "^9.39.1",
     "nuxt": "^4.2.1",
     "sass": "^1.94.2"
   },

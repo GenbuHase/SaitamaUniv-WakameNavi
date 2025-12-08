@@ -81,10 +81,8 @@
 
 <script lang="ts" setup>
   import { ref, computed } from "vue";
-  import Bus from "@/utils/Bus";
-  import LocalStorage from "@/utils/LocalStorage";
-
-  const storage = new LocalStorage("WakameNavi.BusPage");
+  import type Bus from "@@/shared/utils/Bus";
+  import LocalStorage from "@@/shared/utils/LocalStorage";
 
   // ########## Components ##########
   import ArrivalTimeSortedService from "@/components/bus/ArrivalTimeSortedService.vue";
@@ -93,6 +91,8 @@
 
   // ########## SEO ##########
   const route = useRoute();
+
+  const storage = new LocalStorage("WakameNavi.BusPage");
 
   useHead({
     title: `${route.meta.title}｜わかめナビ🌱`,
