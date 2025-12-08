@@ -98,7 +98,7 @@
     title: `${route.meta.title}｜わかめナビ🌱`,
 
     meta: [
-      { hid: "og:title", property: "og:title", content: `${route.meta.title}｜わかめナビ🌱` },
+      { property: "og:title", content: `${route.meta.title}｜わかめナビ🌱` },
     ]
   });
 
@@ -168,7 +168,7 @@
 
   // ########## Computed ##########
   const arrivalTimeSortedServices = computed(() => {
-    return Array.from(services.value).sort((a, b) => {
+    return Array.from(services.value).sort((a: Bus.Service, b: Bus.Service) => {
       if ((a.arrivalTime) < (b.arrivalTime)) return -1;
       if ((a.arrivalTime) > (b.arrivalTime)) return 1;
       return 0;
@@ -176,7 +176,7 @@
   });
 
   const plannedTimeSortedServices = computed(() => {
-    return Array.from(services.value).sort((a, b) => {
+    return Array.from(services.value).sort((a: Bus.Service, b: Bus.Service) => {
       if ((a.plannedTime) < (b.plannedTime)) return -1;
       if ((a.plannedTime) > (b.plannedTime)) return 1;
       return 0;

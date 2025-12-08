@@ -1,6 +1,6 @@
 // /api/v1/bus/routes?company=:company(Seibu|KokusaiKogyo)&start=:start&goal=:goal?
 
-import Bus from "~~/utils/Trasportation/Bus";
+import Bus from "@/utils/Trasportation/Bus";
 
 const { KokusaiKogyo, Seibu } = Bus;
 

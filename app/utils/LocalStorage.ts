@@ -1,4 +1,4 @@
-import { Ref, ref } from "vue";
+import { type Ref, ref } from "vue";
 
 export default class LocalStorage {
   public data: Ref = ref(null);
