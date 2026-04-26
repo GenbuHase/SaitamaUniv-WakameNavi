@@ -1,10 +1,10 @@
 {
   "name": "su_wakame-navi",
   "description": "埼玉大学周辺を走るバスの運行情報を確認することができます。",
-  "version": "2.0.0-alpha.3",
+  "version": "2.0.0-alpha.4",
   "scripts": {
     "build": "nuxt build",
-    "dev": "nuxt dev",
+    "dev": "nuxt dev --host",
     "generate": "nuxt generate",
     "preview": "nuxt preview",
     "postinstall": "nuxt prepare"
@@ -34,7 +34,7 @@
     "@prisma/client": "^7.8.0",
     "jsdom": "^29.0.2",
     "lucide-vue-next": "^1.0.0",
-    "prisma": "^7.8.0",
+    "prisma": "^6.19.3",
     "vuetify": "^4.0.6"
   }
 }
