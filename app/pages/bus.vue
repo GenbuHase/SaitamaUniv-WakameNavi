@@ -1,5 +1,59 @@
 <template>
   <main>
+    <!-- 運行状況要約 -->
+    <section class="flex justify-between items-center px-1">
+      <div class="text-xs text-gray-500 flex items-center gap-1">
+        <Clock class="w-3 h-3" />
+        {{ formatTime(lastUpdated) }} 現在
+      </div>
+      <span v-if="hasDelayInUpcoming" class="text-xs font-bold text-red-700 bg-red-100 px-2 py-1 rounded flex items-center gap-1 animate-pulse"> <AlertTriangle class="w-3 h-3" /> 遅延発生中 </span>
+    </section>
+
+    <!-- 次のバス（ハイライト） -->
+    <section v-if="nextBus" :class="`${nextBus.routeColor} text-white rounded-xl shadow-lg p-5 relative overflow-hidden transition-all duration-300`">
+      <!-- 会社ロゴっぽい表示 -->
+      <div class="absolute top-4 right-4 text-xs font-bold px-2 py-0.5 bg-white/20 backdrop-blur-sm rounded border border-white/30">
+        {{ nextBus.company === "Kokusai" ? "国際興業バス" : "西武バス" }}
+      </div>
+
+      <div class="absolute -bottom-4 -right-4 p-3 opacity-10">
+        <Bus class="w-32 h-32" />
+      </div>
+
+      <div class="relative z-10">
+        <div class="flex items-center gap-2 mb-1 opacity-90">
+          <span class="text-xs font-bold border border-white/40 px-2 py-0.5 rounded bg-black/10">先発</span>
+          <span class="text-sm font-medium">{{ nextBus.boardingStopName }} 発</span>
+        </div>
+
+        <div class="flex items-baseline gap-3 my-2">
+          <span class="text-6xl font-bold tracking-tighter tabular-nums">
+            {{ nextBus.estimatedTime.slice(0, 5) }}
+            <span class="text-2xl ml-1">{{ nextBus.estimatedTime.slice(6) }}</span>
+          </span>
+        </div>
+
+        <div class="flex items-center gap-3 text-sm font-medium text-white/90 mb-4">
+          <span class="opacity-80">定刻: {{ nextBus.scheduledTime }}</span>
+          <span v-if="nextBus.delay > 0" class="bg-red-500 text-white px-2 py-0.5 rounded text-xs font-bold shadow-sm"> +{{ nextBus.delay }}分 遅れ </span>
+        </div>
+
+        <div class="pt-3 border-t border-white/20">
+          <div class="flex items-center gap-2 mb-1">
+            <span class="bg-white text-gray-800 font-bold px-1.5 py-0.5 rounded text-[10px] shadow-sm">
+              {{ nextBus.routeCode }}
+            </span>
+            <span class="font-bold text-lg">{{ nextBus.destination }} <span class="text-sm font-normal opacity-80">行</span></span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section v-else class="bg-gray-200 rounded-xl p-8 text-center text-gray-500">
+      <p class="font-bold">該当するバスがありません</p>
+      <p class="text-xs mt-2">条件を変更するか、運行終了している可能性があります。</p>
+    </section>
+
     <!-- 区間選択パネル -->
     <section class="bg-white rounded-xl shadow-sm border border-gray-100 p-4 space-y-4">
       <!-- 乗車バス停 -->
@@ -67,60 +121,6 @@
         <Search class="w-4 h-4" />
         検索して表示
       </button>
-    </section>
-
-    <!-- 運行状況要約 -->
-    <section class="flex justify-between items-center px-1">
-      <div class="text-xs text-gray-500 flex items-center gap-1">
-        <Clock class="w-3 h-3" />
-        {{ formatTime(lastUpdated) }} 現在
-      </div>
-      <span v-if="hasDelayInUpcoming" class="text-xs font-bold text-red-700 bg-red-100 px-2 py-1 rounded flex items-center gap-1 animate-pulse"> <AlertTriangle class="w-3 h-3" /> 遅延発生中 </span>
-    </section>
-
-    <!-- 次のバス（ハイライト） -->
-    <section v-if="nextBus" :class="`${nextBus.routeColor} text-white rounded-xl shadow-lg p-5 relative overflow-hidden transition-all duration-300`">
-      <!-- 会社ロゴっぽい表示 -->
-      <div class="absolute top-4 right-4 text-xs font-bold px-2 py-0.5 bg-white/20 backdrop-blur-sm rounded border border-white/30">
-        {{ nextBus.company === "Kokusai" ? "国際興業バス" : "西武バス" }}
-      </div>
-
-      <div class="absolute -bottom-4 -right-4 p-3 opacity-10">
-        <Bus class="w-32 h-32" />
-      </div>
-
-      <div class="relative z-10">
-        <div class="flex items-center gap-2 mb-1 opacity-90">
-          <span class="text-xs font-bold border border-white/40 px-2 py-0.5 rounded bg-black/10">先発</span>
-          <span class="text-sm font-medium">{{ nextBus.boardingStopName }} 発</span>
-        </div>
-
-        <div class="flex items-baseline gap-3 my-2">
-          <span class="text-6xl font-bold tracking-tighter tabular-nums">
-            {{ nextBus.estimatedTime.slice(0, 5) }}
-            <span class="text-2xl ml-1">{{ nextBus.estimatedTime.slice(6) }}</span>
-          </span>
-        </div>
-
-        <div class="flex items-center gap-3 text-sm font-medium text-white/90 mb-4">
-          <span class="opacity-80">定刻: {{ nextBus.scheduledTime }}</span>
-          <span v-if="nextBus.delay > 0" class="bg-red-500 text-white px-2 py-0.5 rounded text-xs font-bold shadow-sm"> +{{ nextBus.delay }}分 遅れ </span>
-        </div>
-
-        <div class="pt-3 border-t border-white/20">
-          <div class="flex items-center gap-2 mb-1">
-            <span class="bg-white text-gray-800 font-bold px-1.5 py-0.5 rounded text-[10px] shadow-sm">
-              {{ nextBus.routeCode }}
-            </span>
-            <span class="font-bold text-lg">{{ nextBus.destination }} <span class="text-sm font-normal opacity-80">行</span></span>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <section v-else class="bg-gray-200 rounded-xl p-8 text-center text-gray-500">
-      <p class="font-bold">該当するバスがありません</p>
-      <p class="text-xs mt-2">条件を変更するか、運行終了している可能性があります。</p>
     </section>
 
     <!-- 統合時刻表リスト -->
@@ -1040,11 +1040,11 @@
       if (container && element) {
         const containerRect = container.getBoundingClientRect();
         const elementRect = element.getBoundingClientRect();
-        
+
         if (elementRect.bottom > containerRect.bottom) {
-          container.scrollTop += (elementRect.bottom - containerRect.bottom);
+          container.scrollTop += elementRect.bottom - containerRect.bottom;
         } else if (elementRect.top < containerRect.top) {
-          container.scrollTop -= (containerRect.top - elementRect.top);
+          container.scrollTop -= containerRect.top - elementRect.top;
         }
       }
     });
