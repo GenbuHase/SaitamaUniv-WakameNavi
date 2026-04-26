@@ -9,15 +9,15 @@
           乗車バス停 (出発)
         </label>
         <div class="relative">
-          <input type="text" v-model="boardingStopInput" @focus="isBoardingDropdownOpen = true" @click="isBoardingDropdownOpen = true" @blur="isBoardingDropdownOpen = false" placeholder="バス停名を入力または選択" class="w-full p-3 pl-3 pr-10 bg-white border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 font-medium text-gray-700 transition-shadow" autocomplete="off" />
+          <input type="text" v-model="boardingStopInput" @focus="isBoardingDropdownOpen = true" @click="isBoardingDropdownOpen = true" @blur="isBoardingDropdownOpen = false" @keydown="handleBoardingKeyDown" placeholder="バス停名を入力または選択" class="w-full p-3 pl-3 pr-10 bg-white border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 font-medium text-gray-700 transition-shadow" autocomplete="off" />
           <ChevronDown class="w-5 h-5 text-gray-400 absolute right-3 top-4 pointer-events-none transition-transform" :class="{ 'rotate-180': isBoardingDropdownOpen }" />
 
           <transition enter-active-class="transition duration-100 ease-out" enter-from-class="transform scale-95 opacity-0" enter-to-class="transform scale-100 opacity-100" leave-active-class="transition duration-75 ease-in" leave-from-class="transform scale-100 opacity-100" leave-to-class="transform scale-95 opacity-0">
-            <div v-if="isBoardingDropdownOpen" class="absolute z-20 w-full mt-1 bg-white border border-gray-100 rounded-xl shadow-lg max-h-60 overflow-auto">
+            <div v-if="isBoardingDropdownOpen" id="boarding-dropdown-container" class="absolute z-20 w-full mt-1 bg-white border border-gray-100 rounded-xl shadow-lg max-h-60 overflow-auto">
               <ul class="py-1">
                 <li v-if="filteredBoardingStops.length === 0" class="px-4 py-3 text-sm text-gray-500 text-center">見つかりませんでした</li>
-                <li v-for="stop in filteredBoardingStops" :key="stop" @mousedown.prevent="selectBoardingStop(stop)" class="px-4 py-2.5 cursor-pointer transition-colors hover:bg-blue-50 group border-b border-gray-50 last:border-0">
-                  <div class="text-sm font-medium text-gray-700 group-hover:text-blue-700">{{ stop }}</div>
+                <li v-for="(stop, index) in filteredBoardingStops" :id="'boarding-stop-' + index" :key="stop" @mousedown.prevent="selectBoardingStop(stop)" @mouseenter="boardingActiveIndex = index" class="px-4 py-2.5 cursor-pointer transition-colors group border-b border-gray-50 last:border-0" :class="boardingActiveIndex === index ? 'bg-blue-50' : 'hover:bg-blue-50'">
+                  <div class="text-sm font-medium transition-colors" :class="boardingActiveIndex === index ? 'text-blue-700' : 'text-gray-700 group-hover:text-blue-700'">{{ stop }}</div>
                   <div class="text-[10px] text-gray-400 mt-0.5 truncate" title="運行系統">{{ stopRoutesMap[stop]?.join(", ") }}</div>
                 </li>
               </ul>
@@ -39,19 +39,19 @@
           降車バス停 (到着・任意)
         </label>
         <div class="relative">
-          <input type="text" v-model="dropOffStopInput" @focus="isDropOffDropdownOpen = true" @click="isDropOffDropdownOpen = true" @blur="isDropOffDropdownOpen = false" :disabled="availableDropOffStops.length === 0" placeholder="指定なし (すべての行き先を表示)" class="w-full p-3 pl-3 pr-10 bg-white border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 font-medium text-gray-700 disabled:bg-gray-100 disabled:text-gray-400 disabled:opacity-60 transition-shadow" autocomplete="off" />
+          <input type="text" v-model="dropOffStopInput" @focus="isDropOffDropdownOpen = true" @click="isDropOffDropdownOpen = true" @blur="isDropOffDropdownOpen = false" @keydown="handleDropOffKeyDown" :disabled="availableDropOffStops.length === 0" placeholder="指定なし (すべての行き先を表示)" class="w-full p-3 pl-3 pr-10 bg-white border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 font-medium text-gray-700 disabled:bg-gray-100 disabled:text-gray-400 disabled:opacity-60 transition-shadow" autocomplete="off" />
           <ChevronDown class="w-5 h-5 text-gray-400 absolute right-3 top-3.5 pointer-events-none transition-transform" :class="{ 'rotate-180': isDropOffDropdownOpen }" />
 
           <transition enter-active-class="transition duration-100 ease-out" enter-from-class="transform scale-95 opacity-0" enter-to-class="transform scale-100 opacity-100" leave-active-class="transition duration-75 ease-in" leave-from-class="transform scale-100 opacity-100" leave-to-class="transform scale-95 opacity-0">
-            <div v-if="isDropOffDropdownOpen && availableDropOffStops.length > 0" class="absolute z-20 w-full mt-1 bg-white border border-gray-100 rounded-xl shadow-lg max-h-60 overflow-auto">
+            <div v-if="isDropOffDropdownOpen && availableDropOffStops.length > 0" id="dropoff-dropdown-container" class="absolute z-20 w-full mt-1 bg-white border border-gray-100 rounded-xl shadow-lg max-h-60 overflow-auto">
               <ul class="py-1">
-                <li @mousedown.prevent="selectDropOffStop('')" class="px-4 py-2.5 text-sm font-bold text-gray-500 hover:bg-gray-100 cursor-pointer border-b border-gray-50 flex items-center gap-2">
+                <li id="dropoff-stop-0" @mousedown.prevent="selectDropOffStop('')" @mouseenter="dropOffActiveIndex = 0" class="px-4 py-2.5 text-sm font-bold cursor-pointer border-b border-gray-50 flex items-center gap-2 transition-colors" :class="dropOffActiveIndex === 0 ? 'bg-gray-100 text-gray-700' : 'text-gray-500 hover:bg-gray-100'">
                   <span class="w-2 h-2 rounded-full bg-gray-400"></span>
                   指定なし (すべての行き先を表示)
                 </li>
                 <li v-if="filteredDropOffStops.length === 0" class="px-4 py-3 text-sm text-gray-500 text-center">見つかりませんでした</li>
-                <li v-for="stop in filteredDropOffStops" :key="stop" @mousedown.prevent="selectDropOffStop(stop)" class="px-4 py-2.5 cursor-pointer transition-colors hover:bg-red-50 group border-b border-gray-50 last:border-0">
-                  <div class="text-sm font-medium text-gray-700 group-hover:text-red-700">{{ stop }}</div>
+                <li v-for="(stop, index) in filteredDropOffStops" :id="'dropoff-stop-' + (index + 1)" :key="stop" @mousedown.prevent="selectDropOffStop(stop)" @mouseenter="dropOffActiveIndex = index + 1" class="px-4 py-2.5 cursor-pointer transition-colors group border-b border-gray-50 last:border-0" :class="dropOffActiveIndex === index + 1 ? 'bg-red-50' : 'hover:bg-red-50'">
+                  <div class="text-sm font-medium transition-colors" :class="dropOffActiveIndex === index + 1 ? 'text-red-700' : 'text-gray-700 group-hover:text-red-700'">{{ stop }}</div>
                   <div class="text-[10px] text-gray-400 mt-0.5 truncate" title="運行系統">{{ stopRoutesMap[stop]?.join(", ") }}</div>
                 </li>
               </ul>
@@ -207,7 +207,7 @@
 </template>
 
 <script setup lang="ts">
-  import { ref, computed, onMounted, onUnmounted, watch } from "vue";
+  import { ref, computed, onMounted, onUnmounted, watch, nextTick } from "vue";
   import { Bus, Clock, AlertTriangle, MapPin, ChevronDown, Filter, ArrowLeftRight, CalendarClock, Search } from "lucide-vue-next";
 
   // --- データ定義 ---
@@ -1020,10 +1020,91 @@
 
   // 入力変更時のリセットと開閉制御
   watch(boardingStopInput, (newVal, oldVal) => {
+    boardingActiveIndex.value = -1;
     if (newVal !== oldVal) {
       dropOffStopInput.value = "";
     }
   });
+
+  watch(dropOffStopInput, () => {
+    dropOffActiveIndex.value = -1;
+  });
+
+  const boardingActiveIndex = ref(-1);
+  const dropOffActiveIndex = ref(-1);
+
+  const scrollToActiveElement = (containerId: string, elementId: string) => {
+    nextTick(() => {
+      const container = document.getElementById(containerId);
+      const element = document.getElementById(elementId);
+      if (container && element) {
+        const containerRect = container.getBoundingClientRect();
+        const elementRect = element.getBoundingClientRect();
+        
+        if (elementRect.bottom > containerRect.bottom) {
+          container.scrollTop += (elementRect.bottom - containerRect.bottom);
+        } else if (elementRect.top < containerRect.top) {
+          container.scrollTop -= (containerRect.top - elementRect.top);
+        }
+      }
+    });
+  };
+
+  const handleBoardingKeyDown = (e: KeyboardEvent) => {
+    if (!isBoardingDropdownOpen.value) {
+      if (e.key === "ArrowDown" || e.key === "Enter") {
+        isBoardingDropdownOpen.value = true;
+      }
+      return;
+    }
+
+    const maxIndex = filteredBoardingStops.value.length - 1;
+    if (e.key === "ArrowDown") {
+      e.preventDefault();
+      boardingActiveIndex.value = boardingActiveIndex.value < maxIndex ? boardingActiveIndex.value + 1 : 0;
+      scrollToActiveElement("boarding-dropdown-container", `boarding-stop-${boardingActiveIndex.value}`);
+    } else if (e.key === "ArrowUp") {
+      e.preventDefault();
+      boardingActiveIndex.value = boardingActiveIndex.value > 0 ? boardingActiveIndex.value - 1 : maxIndex;
+      scrollToActiveElement("boarding-dropdown-container", `boarding-stop-${boardingActiveIndex.value}`);
+    } else if (e.key === "Enter") {
+      e.preventDefault();
+      if (boardingActiveIndex.value >= 0 && boardingActiveIndex.value <= maxIndex) {
+        selectBoardingStop(filteredBoardingStops.value[boardingActiveIndex.value]);
+      }
+    } else if (e.key === "Escape") {
+      isBoardingDropdownOpen.value = false;
+    }
+  };
+
+  const handleDropOffKeyDown = (e: KeyboardEvent) => {
+    if (!isDropOffDropdownOpen.value) {
+      if (e.key === "ArrowDown" || e.key === "Enter") {
+        isDropOffDropdownOpen.value = true;
+      }
+      return;
+    }
+
+    const items = ["", ...filteredDropOffStops.value];
+    const maxIndex = items.length - 1;
+
+    if (e.key === "ArrowDown") {
+      e.preventDefault();
+      dropOffActiveIndex.value = dropOffActiveIndex.value < maxIndex ? dropOffActiveIndex.value + 1 : 0;
+      scrollToActiveElement("dropoff-dropdown-container", `dropoff-stop-${dropOffActiveIndex.value}`);
+    } else if (e.key === "ArrowUp") {
+      e.preventDefault();
+      dropOffActiveIndex.value = dropOffActiveIndex.value > 0 ? dropOffActiveIndex.value - 1 : maxIndex;
+      scrollToActiveElement("dropoff-dropdown-container", `dropoff-stop-${dropOffActiveIndex.value}`);
+    } else if (e.key === "Enter") {
+      e.preventDefault();
+      if (dropOffActiveIndex.value >= 0 && dropOffActiveIndex.value <= maxIndex) {
+        selectDropOffStop(items[dropOffActiveIndex.value]);
+      }
+    } else if (e.key === "Escape") {
+      isDropOffDropdownOpen.value = false;
+    }
+  };
 
   const swapStops = () => {
     if (dropOffStopInput.value) {
