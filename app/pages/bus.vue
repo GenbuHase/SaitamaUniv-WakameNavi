@@ -10,8 +10,8 @@
         </label>
         <div class="relative">
           <input type="text" v-model="boardingStopInput" @focus="isBoardingDropdownOpen = true" @blur="isBoardingDropdownOpen = false" placeholder="バス停名を入力または選択" class="w-full p-3 pl-3 pr-10 bg-white border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 font-medium text-gray-700 transition-shadow" autocomplete="off" />
-          <ChevronDown class="w-5 h-5 text-gray-400 absolute right-3 top-4 pointer-events-none transition-transform" :class="{'rotate-180': isBoardingDropdownOpen}" />
-          
+          <ChevronDown class="w-5 h-5 text-gray-400 absolute right-3 top-4 pointer-events-none transition-transform" :class="{ 'rotate-180': isBoardingDropdownOpen }" />
+
           <transition enter-active-class="transition duration-100 ease-out" enter-from-class="transform scale-95 opacity-0" enter-to-class="transform scale-100 opacity-100" leave-active-class="transition duration-75 ease-in" leave-from-class="transform scale-100 opacity-100" leave-to-class="transform scale-95 opacity-0">
             <div v-if="isBoardingDropdownOpen" class="absolute z-20 w-full mt-1 bg-white border border-gray-100 rounded-xl shadow-lg max-h-60 overflow-auto">
               <ul class="py-1">
@@ -39,8 +39,8 @@
         </label>
         <div class="relative">
           <input type="text" v-model="dropOffStopInput" @focus="isDropOffDropdownOpen = true" @blur="isDropOffDropdownOpen = false" :disabled="availableDropOffStops.length === 0" placeholder="指定なし (すべての行き先を表示)" class="w-full p-3 pl-3 pr-10 bg-white border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 font-medium text-gray-700 disabled:bg-gray-100 disabled:text-gray-400 disabled:opacity-60 transition-shadow" autocomplete="off" />
-          <ChevronDown class="w-5 h-5 text-gray-400 absolute right-3 top-3.5 pointer-events-none transition-transform" :class="{'rotate-180': isDropOffDropdownOpen}" />
-          
+          <ChevronDown class="w-5 h-5 text-gray-400 absolute right-3 top-3.5 pointer-events-none transition-transform" :class="{ 'rotate-180': isDropOffDropdownOpen }" />
+
           <transition enter-active-class="transition duration-100 ease-out" enter-from-class="transform scale-95 opacity-0" enter-to-class="transform scale-100 opacity-100" leave-active-class="transition duration-75 ease-in" leave-from-class="transform scale-100 opacity-100" leave-to-class="transform scale-95 opacity-0">
             <div v-if="isDropOffDropdownOpen && availableDropOffStops.length > 0" class="absolute z-20 w-full mt-1 bg-white border border-gray-100 rounded-xl shadow-lg max-h-60 overflow-auto">
               <ul class="py-1">
@@ -206,13 +206,13 @@
 
 <script setup lang="ts">
   import { ref, computed, onMounted, onUnmounted, watch } from "vue";
-  import { Bus, Clock, RefreshCw, AlertTriangle, MapPin, ArrowRight, ChevronDown, Filter, ArrowLeftRight, CalendarClock, Search } from "lucide-vue-next";
+  import { Bus, Clock, AlertTriangle, MapPin, ChevronDown, Filter, ArrowLeftRight, CalendarClock, Search } from "lucide-vue-next";
 
   // --- データ定義 ---
 
   // 頂いたデータを元に構築
   const KOKUSAI_ROUTES_DATA = {
-    北浦03: [
+    "北浦03": [
       { id: "00021176", name: "北浦和駅西口" },
       { id: "00021222", name: "常磐十丁目" },
       { id: "00021200", name: "大戸小学校" },
@@ -224,7 +224,7 @@
       { id: "00021228", name: "大泉院通り" },
       { id: "00021229", name: "埼玉大学" }
     ],
-    南与01: [
+    "南与01": [
       { id: "00021362", name: "南与野駅西口" },
       { id: "00021225", name: "鈴谷札の辻" },
       { id: "00021226", name: "山久保" },
@@ -232,7 +232,7 @@
       { id: "00021228", name: "大泉院通り" },
       { id: "00021229", name: "埼玉大学" }
     ],
-    南与02: [
+    "南与02": [
       { id: "00021362", name: "南与野駅西口" },
       { id: "00021225", name: "鈴谷札の辻" },
       { id: "00021226", name: "山久保" },
@@ -266,7 +266,7 @@
       { id: "00021225", name: "鈴谷札の辻" },
       { id: "00021362", name: "南与野駅西口" }
     ],
-    北朝02: [
+    "北朝02": [
       { id: "00021352", name: "北朝霞駅" },
       { id: "00021347", name: "宮戸橋" },
       { id: "00021346", name: "宗岡第三小学校" },
@@ -288,7 +288,7 @@
       { id: "00021225", name: "鈴谷札の辻" },
       { id: "00021362", name: "南与野駅西口" }
     ],
-    浦11: [
+    "浦11": [
       { id: "00021083", name: "浦和駅西口" },
       { id: "00021156", name: "県庁通り" },
       { id: "00021157", name: "埼玉会館" },
@@ -309,7 +309,7 @@
       { id: "00021184", name: "十石田" },
       { id: "00021360", name: "桜区役所" }
     ],
-    浦12: [
+    "浦12": [
       { id: "00021083", name: "浦和駅西口" },
       { id: "00021084", name: "市民会館入口" },
       { id: "00021177", name: "常盤一丁目" },
@@ -348,7 +348,7 @@
       { id: "00021184", name: "十石田" },
       { id: "00021360", name: "桜区役所" }
     ],
-    浦13: [
+    "浦13": [
       { id: "00021083", name: "浦和駅西口" },
       { id: "00021084", name: "市民会館入口" },
       { id: "00021177", name: "常盤一丁目" },
@@ -426,7 +426,7 @@
       { id: "00021192", name: "やつしまニュータウン" },
       { id: "00021193", name: "大久保浄水場" }
     ],
-    浦15: [
+    "浦15": [
       { id: "00021083", name: "浦和駅西口" },
       { id: "00021084", name: "市民会館入口" },
       { id: "00021234", name: "仲町三丁目(浦和区)" },
@@ -657,7 +657,6 @@
   const selectedBoardingStop = ref("南与野駅西口");
   const selectedDropOffStop = ref("");
 
-  const currentDelay = ref(0);
   const busDelays = ref<Record<string, number>>({});
   const currentTime = ref(new Date());
   const lastUpdated = ref(new Date());
@@ -816,33 +815,112 @@
 
   // ひらがな -> ローマ字(訓令式ベース) 変換マップ
   const KANA_TO_ROMAJI_MAP: Record<string, string> = {
-    'あ':'a', 'い':'i', 'う':'u', 'え':'e', 'お':'o',
-    'か':'ka', 'き':'ki', 'く':'ku', 'け':'ke', 'こ':'ko',
-    'さ':'sa', 'し':'si', 'す':'su', 'せ':'se', 'そ':'so',
-    'た':'ta', 'ち':'ti', 'つ':'tu', 'て':'te', 'と':'to',
-    'な':'na', 'に':'ni', 'ぬ':'nu', 'ね':'ne', 'の':'no',
-    'は':'ha', 'ひ':'hi', 'ふ':'hu', 'へ':'he', 'ほ':'ho',
-    'ま':'ma', 'み':'mi', 'む':'mu', 'me':'め', 'も':'mo',
-    'や':'ya', 'ゆ':'yu', 'よ':'yo',
-    'ら':'ra', 'り':'ri', 'る':'ru', 'れ':'re', 'ろ':'ro',
-    'わ':'wa', 'を':'o', 'ん':'n',
-    'が':'ga', 'ぎ':'gi', 'ぐ':'gu', 'げ':'ge', 'ご':'go',
-    'ざ':'za', 'じ':'zi', 'ず':'zu', 'ぜ':'ze', 'ぞ':'zo',
-    'だ':'da', 'ぢ':'zi', 'づ':'zu', 'で':'de', 'ど':'do',
-    'ば':'ba', 'び':'bi', 'ぶ':'bu', 'べ':'be', 'ぼ':'bo',
-    'ぱ':'pa', 'ぴ':'pi', 'ぷ':'pu', 'ぺ':'pe', 'ぽ':'po',
-    'きゃ':'kya', 'きゅ':'kyu', 'きょ':'kyo',
-    'しゃ':'sya', 'しゅ':'syu', 'しょ':'syo',
-    'ちゃ':'tya', 'ちゅ':'tyu', 'ちょ':'tyo',
-    'にゃ':'nya', 'にゅ':'nyu', 'にょ':'nyo',
-    'ひゃ':'hya', 'ひゅ':'hyu', 'ひょ':'hyo',
-    'みゃ':'mya', 'みゅ':'myu', 'みょ':'myo',
-    'りゃ':'rya', 'りゅ':'ryu', 'りょ':'ryo',
-    'ぎゃ':'gya', 'ぎゅ':'gyu', 'ぎょ':'gyo',
-    'じゃ':'zya', 'じゅ':'zyu', 'じょ':'zyo',
-    'びゃ':'bya', 'びゅ':'byu', 'びょ':'byo',
-    'ぴゃ':'pya', 'ぴゅ':'pyu', 'ぴょ':'pyo',
-    'っ':'t', 'ー':'-'
+    あ: "a",
+    い: "i",
+    う: "u",
+    え: "e",
+    お: "o",
+    か: "ka",
+    き: "ki",
+    く: "ku",
+    け: "ke",
+    こ: "ko",
+    さ: "sa",
+    し: "si",
+    す: "su",
+    せ: "se",
+    そ: "so",
+    た: "ta",
+    ち: "ti",
+    つ: "tu",
+    て: "te",
+    と: "to",
+    な: "na",
+    に: "ni",
+    ぬ: "nu",
+    ね: "ne",
+    の: "no",
+    は: "ha",
+    ひ: "hi",
+    ふ: "hu",
+    へ: "he",
+    ほ: "ho",
+    ま: "ma",
+    み: "mi",
+    む: "mu",
+    me: "め",
+    も: "mo",
+    や: "ya",
+    ゆ: "yu",
+    よ: "yo",
+    ら: "ra",
+    り: "ri",
+    る: "ru",
+    れ: "re",
+    ろ: "ro",
+    わ: "wa",
+    を: "o",
+    ん: "n",
+    が: "ga",
+    ぎ: "gi",
+    ぐ: "gu",
+    げ: "ge",
+    ご: "go",
+    ざ: "za",
+    じ: "zi",
+    ず: "zu",
+    ぜ: "ze",
+    ぞ: "zo",
+    だ: "da",
+    ぢ: "zi",
+    づ: "zu",
+    で: "de",
+    ど: "do",
+    ば: "ba",
+    び: "bi",
+    ぶ: "bu",
+    べ: "be",
+    ぼ: "bo",
+    ぱ: "pa",
+    ぴ: "pi",
+    ぷ: "pu",
+    ぺ: "pe",
+    ぽ: "po",
+    きゃ: "kya",
+    きゅ: "kyu",
+    きょ: "kyo",
+    しゃ: "sya",
+    しゅ: "syu",
+    しょ: "syo",
+    ちゃ: "tya",
+    ちゅ: "tyu",
+    ちょ: "tyo",
+    にゃ: "nya",
+    にゅ: "nyu",
+    にょ: "nyo",
+    ひゃ: "hya",
+    ひゅ: "hyu",
+    ひょ: "hyo",
+    みゃ: "mya",
+    みゅ: "myu",
+    みょ: "myo",
+    りゃ: "rya",
+    りゅ: "ryu",
+    りょ: "ryo",
+    ぎゃ: "gya",
+    ぎゅ: "gyu",
+    ぎょ: "gyo",
+    じゃ: "zya",
+    じゅ: "zyu",
+    じょ: "zyo",
+    びゃ: "bya",
+    びゅ: "byu",
+    びょ: "byo",
+    ぴゃ: "pya",
+    ぴゅ: "pyu",
+    ぴょ: "pyo",
+    っ: "t",
+    ー: "-"
   };
 
   // ひらがなを正規化されたローマ字に変換
@@ -858,15 +936,15 @@
         }
       }
       const c = kana[i];
-      if (c === 'っ') {
+      if (c === "っ") {
         if (i < kana.length - 1) {
           const nextTwoChar = kana.substring(i + 1, i + 3);
           const nextChar = kana[i + 1];
-          let nextRomaji = KANA_TO_ROMAJI_MAP[nextTwoChar] || KANA_TO_ROMAJI_MAP[nextChar];
+          const nextRomaji = KANA_TO_ROMAJI_MAP[nextTwoChar] || KANA_TO_ROMAJI_MAP[nextChar];
           if (nextRomaji) {
             romaji += nextRomaji[0]; // 子音を重ねる
           } else {
-            romaji += 't';
+            romaji += "t";
           }
         }
         continue;
@@ -874,7 +952,7 @@
       romaji += KANA_TO_ROMAJI_MAP[c] || c;
     }
     // 長音の揺れを吸収 (ou -> o, uu -> u, oo -> o)
-    return romaji.replace(/ou/g, 'o').replace(/uu/g, 'u').replace(/oo/g, 'o');
+    return romaji.replace(/ou/g, "o").replace(/uu/g, "u").replace(/oo/g, "o");
   };
 
   // バス停のローマ字表現を取得
@@ -884,38 +962,15 @@
 
   // ユーザーの入力したローマ字クエリを正規化 (ヘボン式を訓令式に、長音を吸収)
   const normalizeRomajiQuery = (query: string) => {
-    return query
-      .toLowerCase()
-      .replace(/shi/g, 'si')
-      .replace(/chi/g, 'ti')
-      .replace(/tsu/g, 'tu')
-      .replace(/fu/g, 'hu')
-      .replace(/ji/g, 'zi')
-      .replace(/sha/g, 'sya')
-      .replace(/shu/g, 'syu')
-      .replace(/sho/g, 'syo')
-      .replace(/cha/g, 'tya')
-      .replace(/chu/g, 'tyu')
-      .replace(/cho/g, 'tyo')
-      .replace(/ja/g, 'zya')
-      .replace(/ju/g, 'zyu')
-      .replace(/jo/g, 'zyo')
-      .replace(/ou/g, 'o')
-      .replace(/uu/g, 'u')
-      .replace(/oo/g, 'o')
-      .replace(/tch/g, 'tt');
+    return query.toLowerCase().replace(/shi/g, "si").replace(/chi/g, "ti").replace(/tsu/g, "tu").replace(/fu/g, "hu").replace(/ji/g, "zi").replace(/sha/g, "sya").replace(/shu/g, "syu").replace(/sho/g, "syo").replace(/cha/g, "tya").replace(/chu/g, "tyu").replace(/cho/g, "tyo").replace(/ja/g, "zya").replace(/ju/g, "zyu").replace(/jo/g, "zyo").replace(/ou/g, "o").replace(/uu/g, "u").replace(/oo/g, "o").replace(/tch/g, "tt");
   };
 
   const filteredBoardingStops = computed(() => {
     if (!boardingStopInput.value) return allStops.value;
     const searchWord = normalizeKana(boardingStopInput.value);
     const searchRomaji = normalizeRomajiQuery(boardingStopInput.value);
-    
-    return allStops.value.filter(stop => 
-      normalizeKana(stop).includes(searchWord) || 
-      getStopKana(stop).includes(searchWord) ||
-      (searchRomaji.length > 0 && getStopRomaji(stop).includes(searchRomaji))
-    );
+
+    return allStops.value.filter(stop => normalizeKana(stop).includes(searchWord) || getStopKana(stop).includes(searchWord) || (searchRomaji.length > 0 && getStopRomaji(stop).includes(searchRomaji)));
   });
 
   const filteredDropOffStops = computed(() => {
@@ -923,11 +978,7 @@
     const searchWord = normalizeKana(dropOffStopInput.value);
     const searchRomaji = normalizeRomajiQuery(dropOffStopInput.value);
 
-    return availableDropOffStops.value.filter(stop => 
-      normalizeKana(stop).includes(searchWord) || 
-      getStopKana(stop).includes(searchWord) ||
-      (searchRomaji.length > 0 && getStopRomaji(stop).includes(searchRomaji))
-    );
+    return availableDropOffStops.value.filter(stop => normalizeKana(stop).includes(searchWord) || getStopKana(stop).includes(searchWord) || (searchRomaji.length > 0 && getStopRomaji(stop).includes(searchRomaji)));
   });
 
   const selectBoardingStop = (stop: string) => {

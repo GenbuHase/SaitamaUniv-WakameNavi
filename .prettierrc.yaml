@@ -14,7 +14,7 @@ semi: true
 singleQuote: false
 
 # Change when properties in objects are quoted.
-quoteProps: "as-needed"
+quoteProps: "consistent"
 
 # Use single quotes instead of double quotes in JSX.
 jsxSingleQuote: false
