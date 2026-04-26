@@ -1,246 +1,194 @@
 <template>
-  <div class="min-h-screen bg-gray-50 text-gray-800 font-sans pb-16">
-    <!-- ヘッダー -->
-    <header class="bg-slate-800 text-white shadow-md sticky top-0 z-50">
-      <div class="max-w-md mx-auto px-4 py-4 flex justify-between items-center">
-        <div class="flex items-center gap-2">
-          <Bus class="w-6 h-6" />
-          <h1 class="text-lg font-bold tracking-wider">わかめナビ🌱</h1>
-        </div>
-
-        <button v-if="currentView === 'timetable'" class="p-2 rounded-full hover:bg-white/20 transition-colors disabled:opacity-50" aria-label="更新" :disabled="isLoading" @click="refreshData">
-          <RefreshCw class="w-5 h-5" :class="{ 'animate-spin': isLoading }" />
-        </button>
-      </div>
-    </header>
-
+  <div>
     <!-- メインコンテンツエリア -->
     <main class="max-w-md mx-auto px-4 py-6 space-y-6">
-      <!-- Aboutページ表示 -->
-      <div v-if="currentView === 'about'" class="bg-white rounded-xl shadow-sm border border-gray-100 p-6 space-y-6 animate-in fade-in zoom-in duration-300">
-        <!-- ロゴ表示部分 -->
-        <div class="flex justify-center">
-          <img src="/assets/logo.svg" alt="わかめナビ ロゴ" class="h-28 w-auto" @error="handleImageError" />
+      <!-- 区間選択パネル -->
+      <section class="bg-white rounded-xl shadow-sm border border-gray-100 p-4 space-y-4">
+        <!-- 乗車バス停 -->
+        <div>
+          <label class="block text-xs font-bold text-gray-500 mb-1 flex items-center gap-1">
+            <MapPin class="w-3 h-3 text-blue-500" />
+            乗車バス停 (出発)
+          </label>
+          <div class="relative">
+            <select :value="boardingStopInput" @change="handleBoardingChange" class="w-full p-3 pl-3 pr-10 bg-white border border-gray-200 rounded-lg appearance-none focus:outline-none focus:ring-2 focus:ring-blue-500 font-medium text-gray-700">
+              <option v-for="stopName in allStops" :key="stopName" :value="stopName">{{ stopName }}</option>
+            </select>
+            <ChevronDown class="w-5 h-5 text-gray-400 absolute right-3 top-4 pointer-events-none" />
+          </div>
         </div>
 
-        <div class="space-y-4 text-gray-600 leading-relaxed text-sm">
-          <p>本日はわかめナビ🌱をご利用いただきまして、誠にありがとうございます。</p>
-          <p>埼玉大学前を通っている国道463号線(通称「埼大通り」)は、埼玉県越谷市、さいたま市、所沢市を経て、入間市へと至る国道であり、その総距離は58kmにもなります。主要幹線道路のため、その交通量は非常に多く、交通渋滞が発生することも少なくありません。その結果として10～30分の遅延が発生することもあり、従来の時刻表があてにならないという事態も生じています。</p>
-          <p>これらの遅延状況を知らせるものとして、国際興業バス及び西武バスには、それぞれにバス走行位置を確認することのできるサービスがあります。しかしながら、それらを一括で閲覧することはできません。</p>
-          <p>そこでわかめナビ🌱では、埼玉大学周辺を走るバスの運行情報を一括で閲覧することができるようにし、次に乗るバスを簡単に確認することができるようにしました。素敵な大学生活を支えるインフラの一つになれば幸いにございます。</p>
-          <p class="text-xs text-gray-500 bg-gray-50 p-4 rounded-lg mt-6 leading-relaxed">なお当サイトは、埼玉大学に在学している学生が開発しているものであり、埼玉大学とは一切関係ございません。お問い合わせは<a href="https://twitter.com/SU_Mentsuyu" target="_blank" rel="noopener noreferrer" class="text-blue-600 hover:underline font-bold">こちら</a>までお願いいたします。</p>
+        <div class="flex justify-center -my-2 relative z-0">
+          <button @click="swapStops" :disabled="!dropOffStopInput" class="bg-gray-100 p-1.5 rounded-full transition-colors border border-gray-200 shadow-sm z-10" :class="dropOffStopInput ? 'text-green-600 hover:bg-green-50 hover:border-green-300 cursor-pointer' : 'text-gray-300 cursor-not-allowed'" title="出発地と到着地を入れ替え" aria-label="出発地と到着地を入れ替える">
+            <ArrowLeftRight class="w-4 h-4 rotate-90" />
+          </button>
         </div>
 
-        <div class="pt-4 border-t border-gray-100 text-xs text-gray-400 text-center">
-          <p>© わかめナビ🌱</p>
+        <!-- 降車バス停 (任意) -->
+        <div>
+          <label class="block text-xs font-bold text-gray-500 mb-1 flex items-center gap-1">
+            <MapPin class="w-3 h-3 text-red-500" />
+            降車バス停 (到着・任意)
+          </label>
+          <div class="relative">
+            <select :value="dropOffStopInput" @change="handleDropOffChange" :disabled="availableDropOffStops.length === 0" class="w-full p-3 pl-3 pr-10 bg-white border border-gray-200 rounded-lg appearance-none focus:outline-none focus:ring-2 focus:ring-blue-500 font-medium text-gray-700 disabled:bg-gray-100 disabled:text-gray-400 disabled:opacity-60">
+              <option value="">指定なし (すべての行き先を表示)</option>
+              <option v-for="stopName in availableDropOffStops" :key="stopName" :value="stopName">{{ stopName }}</option>
+            </select>
+            <ChevronDown class="w-5 h-5 text-gray-400 absolute right-3 top-3.5 pointer-events-none" />
+          </div>
+          <!-- 補足メッセージ -->
+          <p v-if="boardingStopInput && availableDropOffStops.length > 0" class="text-[10px] text-gray-400 mt-1 text-right">※ 逆方向のバスに乗る場合は、乗車バス停を変更してください</p>
         </div>
-      </div>
 
-      <!-- 時刻表ページ表示 -->
-      <template v-else>
-        <!-- 区間選択パネル -->
-        <section class="bg-white rounded-xl shadow-sm border border-gray-100 p-4 space-y-4">
-          <!-- 乗車バス停 -->
-          <div>
-            <label class="block text-xs font-bold text-gray-500 mb-1 flex items-center gap-1">
-              <MapPin class="w-3 h-3 text-blue-500" />
-              乗車バス停 (出発)
-            </label>
-            <div class="relative">
-              <select :value="boardingStopInput" @change="handleBoardingChange" class="w-full p-3 pl-3 pr-10 bg-white border border-gray-200 rounded-lg appearance-none focus:outline-none focus:ring-2 focus:ring-blue-500 font-medium text-gray-700">
-                <option v-for="stopName in allStops" :key="stopName" :value="stopName">{{ stopName }}</option>
-              </select>
-              <ChevronDown class="w-5 h-5 text-gray-400 absolute right-3 top-4 pointer-events-none" />
-            </div>
+        <!-- 検索ボタン -->
+        <button @click="handleSearch" :disabled="isLoading" class="w-full py-3 bg-green-700 hover:bg-green-800 text-white font-bold rounded-lg shadow-sm flex justify-center items-center gap-2 transition-colors disabled:opacity-70">
+          <Search class="w-4 h-4" />
+          検索して表示
+        </button>
+      </section>
+
+      <!-- 運行状況要約 -->
+      <section class="flex justify-between items-center px-1">
+        <div class="text-xs text-gray-500 flex items-center gap-1">
+          <Clock class="w-3 h-3" />
+          {{ formatTime(lastUpdated) }} 現在
+        </div>
+        <span v-if="hasDelayInUpcoming" class="text-xs font-bold text-red-700 bg-red-100 px-2 py-1 rounded flex items-center gap-1 animate-pulse"> <AlertTriangle class="w-3 h-3" /> 遅延発生中 </span>
+      </section>
+
+      <!-- 次のバス（ハイライト） -->
+      <section v-if="nextBus" :class="`${nextBus.routeColor} text-white rounded-xl shadow-lg p-5 relative overflow-hidden transition-all duration-300`">
+        <!-- 会社ロゴっぽい表示 -->
+        <div class="absolute top-4 right-4 text-xs font-bold px-2 py-0.5 bg-white/20 backdrop-blur-sm rounded border border-white/30">
+          {{ nextBus.company === "Kokusai" ? "国際興業バス" : "西武バス" }}
+        </div>
+
+        <div class="absolute -bottom-4 -right-4 p-3 opacity-10">
+          <Bus class="w-32 h-32" />
+        </div>
+
+        <div class="relative z-10">
+          <div class="flex items-center gap-2 mb-1 opacity-90">
+            <span class="text-xs font-bold border border-white/40 px-2 py-0.5 rounded bg-black/10">先発</span>
+            <span class="text-sm font-medium">{{ nextBus.boardingStopName }} 発</span>
           </div>
 
-          <div class="flex justify-center -my-2 relative z-0">
-            <button @click="swapStops" :disabled="!dropOffStopInput" class="bg-gray-100 p-1.5 rounded-full transition-colors border border-gray-200 shadow-sm z-10" :class="dropOffStopInput ? 'text-green-600 hover:bg-green-50 hover:border-green-300 cursor-pointer' : 'text-gray-300 cursor-not-allowed'" title="出発地と到着地を入れ替え" aria-label="出発地と到着地を入れ替える">
-              <ArrowLeftRight class="w-4 h-4 rotate-90" />
+          <div class="flex items-baseline gap-3 my-2">
+            <span class="text-6xl font-bold tracking-tighter tabular-nums">
+              {{ nextBus.estimatedTime.slice(0, 5) }}
+              <span class="text-2xl ml-1">{{ nextBus.estimatedTime.slice(6) }}</span>
+            </span>
+          </div>
+
+          <div class="flex items-center gap-3 text-sm font-medium text-white/90 mb-4">
+            <span class="opacity-80">定刻: {{ nextBus.scheduledTime }}</span>
+            <span v-if="nextBus.delay > 0" class="bg-red-500 text-white px-2 py-0.5 rounded text-xs font-bold shadow-sm"> +{{ nextBus.delay }}分 遅れ </span>
+          </div>
+
+          <div class="pt-3 border-t border-white/20">
+            <div class="flex items-center gap-2 mb-1">
+              <span class="bg-white text-gray-800 font-bold px-1.5 py-0.5 rounded text-[10px] shadow-sm">
+                {{ nextBus.routeCode }}
+              </span>
+              <span class="font-bold text-lg">{{ nextBus.destination }} <span class="text-sm font-normal opacity-80">行</span></span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section v-else class="bg-gray-200 rounded-xl p-8 text-center text-gray-500">
+        <p class="font-bold">該当するバスがありません</p>
+        <p class="text-xs mt-2">条件を変更するか、運行終了している可能性があります。</p>
+      </section>
+
+      <!-- 統合時刻表リスト -->
+      <section class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+        <div class="p-4 border-b border-gray-100 bg-gray-50/50 flex flex-col gap-3">
+          <div class="flex justify-between items-center">
+            <h3 class="font-bold text-gray-700 flex items-center gap-2">
+              <Filter class="w-4 h-4 text-gray-500" />
+              通過予定リスト
+            </h3>
+            <span v-if="selectedDropOffStop" class="text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full font-bold"> {{ selectedDropOffStop }} まで </span>
+          </div>
+
+          <!-- 表示順序切り替えスイッチ -->
+          <div class="flex bg-gray-200 p-1 rounded-lg">
+            <button @click="sortType = 'estimated'" class="flex-1 flex items-center justify-center gap-1.5 py-1.5 text-xs font-bold rounded-md transition-all" :class="sortType === 'estimated' ? 'bg-white text-blue-600 shadow-sm' : 'text-gray-500 hover:text-gray-700'">
+              <Clock class="w-3.5 h-3.5" />
+              予測順 (遅延反映)
+            </button>
+            <button @click="sortType = 'scheduled'" class="flex-1 flex items-center justify-center gap-1.5 py-1.5 text-xs font-bold rounded-md transition-all" :class="sortType === 'scheduled' ? 'bg-white text-blue-600 shadow-sm' : 'text-gray-500 hover:text-gray-700'">
+              <CalendarClock class="w-3.5 h-3.5" />
+              定刻順 (ダイヤ通り)
             </button>
           </div>
+        </div>
 
-          <!-- 降車バス停 (任意) -->
-          <div>
-            <label class="block text-xs font-bold text-gray-500 mb-1 flex items-center gap-1">
-              <MapPin class="w-3 h-3 text-red-500" />
-              降車バス停 (到着・任意)
-            </label>
-            <div class="relative">
-              <select :value="dropOffStopInput" @change="handleDropOffChange" :disabled="availableDropOffStops.length === 0" class="w-full p-3 pl-3 pr-10 bg-white border border-gray-200 rounded-lg appearance-none focus:outline-none focus:ring-2 focus:ring-blue-500 font-medium text-gray-700 disabled:bg-gray-100 disabled:text-gray-400 disabled:opacity-60">
-                <option value="">指定なし (すべての行き先を表示)</option>
-                <option v-for="stopName in availableDropOffStops" :key="stopName" :value="stopName">{{ stopName }}</option>
-              </select>
-              <ChevronDown class="w-5 h-5 text-gray-400 absolute right-3 top-3.5 pointer-events-none" />
-            </div>
-            <!-- 補足メッセージ -->
-            <p v-if="boardingStopInput && availableDropOffStops.length > 0" class="text-[10px] text-gray-400 mt-1 text-right">※ 逆方向のバスに乗る場合は、乗車バス停を変更してください</p>
-          </div>
+        <div class="divide-y divide-gray-100 max-h-96 overflow-y-auto">
+          <template v-for="(bus, index) in integratedTimetable" :key="`${bus.routeId}-${index}`">
+            <!-- 過ぎたバスはリストに表示しない（次発が先頭に来るように） -->
+            <div v-if="!(bus.isPast && index !== nextBusIndex)" class="p-3 sm:p-4 flex justify-between items-center transition-colors border-l-4" :class="index === nextBusIndex ? 'bg-yellow-50/80 border-yellow-400 pl-2 sm:pl-3' : 'hover:bg-gray-50 border-transparent'">
+              <div class="flex items-start gap-3 w-full">
+                <!-- 時刻表示部 -->
+                <div class="flex flex-col items-center min-w-[4rem]">
+                  <template v-if="sortType === 'estimated'">
+                    <span class="text-xl sm:text-2xl font-bold tabular-nums leading-none" :class="index === nextBusIndex ? 'text-gray-900' : 'text-gray-600'">
+                      {{ bus.estimatedTime.slice(0, 5) }}
+                    </span>
+                    <span class="text-[10px] text-gray-400 mt-1"> 定刻 {{ bus.scheduledTime }} </span>
+                  </template>
+                  <template v-else>
+                    <span class="text-xl sm:text-2xl font-bold tabular-nums leading-none" :class="index === nextBusIndex ? 'text-gray-900' : 'text-gray-800'">
+                      {{ bus.scheduledTime }}
+                    </span>
+                    <div class="flex flex-col items-center mt-1">
+                      <span class="text-[10px] text-gray-500"> 予測 {{ bus.estimatedTime.slice(0, 5) }} </span>
+                      <span v-if="bus.delay > 0" class="text-[9px] text-red-500 font-bold bg-red-50 px-1 rounded-sm mt-0.5"> +{{ bus.delay }}分 </span>
+                    </div>
+                  </template>
+                </div>
 
-          <!-- 検索ボタン -->
-          <button @click="handleSearch" :disabled="isLoading" class="w-full py-3 bg-green-700 hover:bg-green-800 text-white font-bold rounded-lg shadow-sm flex justify-center items-center gap-2 transition-colors disabled:opacity-70">
-            <Search class="w-4 h-4" />
-            検索して表示
-          </button>
-        </section>
+                <!-- 系統・行先情報 -->
+                <div class="flex-1 min-w-0">
+                  <div class="flex items-center gap-2 mb-1 flex-wrap">
+                    <!-- 会社バッジ -->
+                    <span class="text-[9px] font-bold px-1.5 py-0.5 rounded text-white" :class="bus.company === 'Kokusai' ? 'bg-green-600' : 'bg-cyan-600'">
+                      {{ bus.company === "Kokusai" ? "国際" : "西武" }}
+                    </span>
 
-        <!-- 運行状況要約 -->
-        <section class="flex justify-between items-center px-1">
-          <div class="text-xs text-gray-500 flex items-center gap-1">
-            <Clock class="w-3 h-3" />
-            {{ formatTime(lastUpdated) }} 現在
-          </div>
-          <span v-if="hasDelayInUpcoming" class="text-xs font-bold text-red-700 bg-red-100 px-2 py-1 rounded flex items-center gap-1 animate-pulse"> <AlertTriangle class="w-3 h-3" /> 遅延発生中 </span>
-        </section>
+                    <!-- 系統コードバッジ -->
+                    <span class="text-[10px] font-bold px-1.5 py-0.5 rounded border bg-white" :class="[bus.textColor, bus.borderColor]">
+                      {{ bus.routeCode }}
+                    </span>
 
-        <!-- 次のバス（ハイライト） -->
-        <section v-if="nextBus" :class="`${nextBus.routeColor} text-white rounded-xl shadow-lg p-5 relative overflow-hidden transition-all duration-300`">
-          <!-- 会社ロゴっぽい表示 -->
-          <div class="absolute top-4 right-4 text-xs font-bold px-2 py-0.5 bg-white/20 backdrop-blur-sm rounded border border-white/30">
-            {{ nextBus.company === "Kokusai" ? "国際興業バス" : "西武バス" }}
-          </div>
+                    <!-- 遅延情報バッジ (予測順の時はここに表示) -->
+                    <span v-if="sortType === 'estimated' && bus.delay > 0" class="text-[10px] text-red-600 font-bold bg-red-50 px-1.5 py-0.5 rounded"> +{{ bus.delay }}分 </span>
 
-          <div class="absolute -bottom-4 -right-4 p-3 opacity-10">
-            <Bus class="w-32 h-32" />
-          </div>
-
-          <div class="relative z-10">
-            <div class="flex items-center gap-2 mb-1 opacity-90">
-              <span class="text-xs font-bold border border-white/40 px-2 py-0.5 rounded bg-black/10">先発</span>
-              <span class="text-sm font-medium">{{ nextBus.boardingStopName }} 発</span>
-            </div>
-
-            <div class="flex items-baseline gap-3 my-2">
-              <span class="text-6xl font-bold tracking-tighter tabular-nums">
-                {{ nextBus.estimatedTime.slice(0, 5) }}
-                <span class="text-2xl ml-1">{{ nextBus.estimatedTime.slice(6) }}</span>
-              </span>
-            </div>
-
-            <div class="flex items-center gap-3 text-sm font-medium text-white/90 mb-4">
-              <span class="opacity-80">定刻: {{ nextBus.scheduledTime }}</span>
-              <span v-if="nextBus.delay > 0" class="bg-red-500 text-white px-2 py-0.5 rounded text-xs font-bold shadow-sm"> +{{ nextBus.delay }}分 遅れ </span>
-            </div>
-
-            <div class="pt-3 border-t border-white/20">
-              <div class="flex items-center gap-2 mb-1">
-                <span class="bg-white text-gray-800 font-bold px-1.5 py-0.5 rounded text-[10px] shadow-sm">
-                  {{ nextBus.routeCode }}
-                </span>
-                <span class="font-bold text-lg">{{ nextBus.destination }} <span class="text-sm font-normal opacity-80">行</span></span>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        <section v-else class="bg-gray-200 rounded-xl p-8 text-center text-gray-500">
-          <p class="font-bold">該当するバスがありません</p>
-          <p class="text-xs mt-2">条件を変更するか、運行終了している可能性があります。</p>
-        </section>
-
-        <!-- 統合時刻表リスト -->
-        <section class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-          <div class="p-4 border-b border-gray-100 bg-gray-50/50 flex flex-col gap-3">
-            <div class="flex justify-between items-center">
-              <h3 class="font-bold text-gray-700 flex items-center gap-2">
-                <Filter class="w-4 h-4 text-gray-500" />
-                通過予定リスト
-              </h3>
-              <span v-if="selectedDropOffStop" class="text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full font-bold"> {{ selectedDropOffStop }} まで </span>
-            </div>
-
-            <!-- 表示順序切り替えスイッチ -->
-            <div class="flex bg-gray-200 p-1 rounded-lg">
-              <button @click="sortType = 'estimated'" class="flex-1 flex items-center justify-center gap-1.5 py-1.5 text-xs font-bold rounded-md transition-all" :class="sortType === 'estimated' ? 'bg-white text-blue-600 shadow-sm' : 'text-gray-500 hover:text-gray-700'">
-                <Clock class="w-3.5 h-3.5" />
-                予測順 (遅延反映)
-              </button>
-              <button @click="sortType = 'scheduled'" class="flex-1 flex items-center justify-center gap-1.5 py-1.5 text-xs font-bold rounded-md transition-all" :class="sortType === 'scheduled' ? 'bg-white text-blue-600 shadow-sm' : 'text-gray-500 hover:text-gray-700'">
-                <CalendarClock class="w-3.5 h-3.5" />
-                定刻順 (ダイヤ通り)
-              </button>
-            </div>
-          </div>
-
-          <div class="divide-y divide-gray-100 max-h-96 overflow-y-auto">
-            <template v-for="(bus, index) in integratedTimetable" :key="`${bus.routeId}-${index}`">
-              <!-- 過ぎたバスはリストに表示しない（次発が先頭に来るように） -->
-              <div v-if="!(bus.isPast && index !== nextBusIndex)" class="p-3 sm:p-4 flex justify-between items-center transition-colors border-l-4" :class="index === nextBusIndex ? 'bg-yellow-50/80 border-yellow-400 pl-2 sm:pl-3' : 'hover:bg-gray-50 border-transparent'">
-                <div class="flex items-start gap-3 w-full">
-                  <!-- 時刻表示部 -->
-                  <div class="flex flex-col items-center min-w-[4rem]">
-                    <template v-if="sortType === 'estimated'">
-                      <span class="text-xl sm:text-2xl font-bold tabular-nums leading-none" :class="index === nextBusIndex ? 'text-gray-900' : 'text-gray-600'">
-                        {{ bus.estimatedTime.slice(0, 5) }}
-                      </span>
-                      <span class="text-[10px] text-gray-400 mt-1"> 定刻 {{ bus.scheduledTime }} </span>
-                    </template>
-                    <template v-else>
-                      <span class="text-xl sm:text-2xl font-bold tabular-nums leading-none" :class="index === nextBusIndex ? 'text-gray-900' : 'text-gray-800'">
-                        {{ bus.scheduledTime }}
-                      </span>
-                      <div class="flex flex-col items-center mt-1">
-                        <span class="text-[10px] text-gray-500"> 予測 {{ bus.estimatedTime.slice(0, 5) }} </span>
-                        <span v-if="bus.delay > 0" class="text-[9px] text-red-500 font-bold bg-red-50 px-1 rounded-sm mt-0.5"> +{{ bus.delay }}分 </span>
-                      </div>
-                    </template>
+                    <!-- まもなく表示 -->
+                    <span v-if="index === nextBusIndex" class="ml-auto text-[10px] font-bold text-white bg-yellow-500 px-2 py-0.5 rounded shadow-sm animate-pulse whitespace-nowrap"> まもなく </span>
                   </div>
 
-                  <!-- 系統・行先情報 -->
-                  <div class="flex-1 min-w-0">
-                    <div class="flex items-center gap-2 mb-1 flex-wrap">
-                      <!-- 会社バッジ -->
-                      <span class="text-[9px] font-bold px-1.5 py-0.5 rounded text-white" :class="bus.company === 'Kokusai' ? 'bg-green-600' : 'bg-cyan-600'">
-                        {{ bus.company === "Kokusai" ? "国際" : "西武" }}
-                      </span>
-
-                      <!-- 系統コードバッジ -->
-                      <span class="text-[10px] font-bold px-1.5 py-0.5 rounded border bg-white" :class="[bus.textColor, bus.borderColor]">
-                        {{ bus.routeCode }}
-                      </span>
-
-                      <!-- 遅延情報バッジ (予測順の時はここに表示) -->
-                      <span v-if="sortType === 'estimated' && bus.delay > 0" class="text-[10px] text-red-600 font-bold bg-red-50 px-1.5 py-0.5 rounded"> +{{ bus.delay }}分 </span>
-
-                      <!-- まもなく表示 -->
-                      <span v-if="index === nextBusIndex" class="ml-auto text-[10px] font-bold text-white bg-yellow-500 px-2 py-0.5 rounded shadow-sm animate-pulse whitespace-nowrap"> まもなく </span>
-                    </div>
-
-                    <div class="flex items-center text-gray-800 font-medium truncate">
-                      <span class="truncate text-sm sm:text-base"> {{ bus.destination }} <span class="text-xs text-gray-400 font-normal">行</span> </span>
-                    </div>
+                  <div class="flex items-center text-gray-800 font-medium truncate">
+                    <span class="truncate text-sm sm:text-base"> {{ bus.destination }} <span class="text-xs text-gray-400 font-normal">行</span> </span>
                   </div>
                 </div>
               </div>
-            </template>
+            </div>
+          </template>
 
-            <div v-if="integratedTimetable.length > 0 && integratedTimetable.every(b => b.isPast)" class="p-8 text-center text-gray-400 text-sm">表示できるバスがありません</div>
-            <div v-if="integratedTimetable.length === 0" class="p-8 text-center text-gray-400 text-sm">この区間の運行はありません</div>
-          </div>
-        </section>
-      </template>
+          <div v-if="integratedTimetable.length > 0 && integratedTimetable.every(b => b.isPast)" class="p-8 text-center text-gray-400 text-sm">表示できるバスがありません</div>
+          <div v-if="integratedTimetable.length === 0" class="p-8 text-center text-gray-400 text-sm">この区間の運行はありません</div>
+        </div>
+      </section>
     </main>
-
-    <!-- ボトムナビゲーション -->
-    <nav class="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 safe-area-bottom z-50">
-      <div class="max-w-md mx-auto grid grid-cols-2 h-16">
-        <button class="flex flex-col items-center justify-center gap-1 transition-colors" :class="currentView === 'about' ? 'text-blue-600' : 'text-gray-400 hover:text-gray-600'" @click="currentView = 'about'">
-          <Info class="w-6 h-6" />
-          <span class="text-[10px] font-bold">About</span>
-        </button>
-
-        <button class="flex flex-col items-center justify-center gap-1 transition-colors" :class="currentView === 'timetable' ? 'text-blue-600' : 'text-gray-400 hover:text-gray-600'" @click="currentView = 'timetable'">
-          <ListOrdered class="w-6 h-6" />
-          <span class="text-[10px] font-bold">時刻表</span>
-        </button>
-      </div>
-    </nav>
   </div>
 </template>
 
 <script setup lang="ts">
   import { ref, computed, onMounted, onUnmounted } from "vue";
-  import { Bus, Clock, RefreshCw, AlertTriangle, MapPin, ArrowRight, ChevronDown, Filter, ArrowLeftRight, CalendarClock, ListOrdered, Info, Search } from "lucide-vue-next";
+  import { Bus, Clock, RefreshCw, AlertTriangle, MapPin, ArrowRight, ChevronDown, Filter, ArrowLeftRight, CalendarClock, Search } from "lucide-vue-next";
 
   // --- データ定義 ---
 
@@ -594,9 +542,6 @@
 
   // --- Vue コンポーネントロジック ---
 
-  // 画面遷移の状態: 'timetable' | 'about'
-  const currentView = ref("timetable");
-
   // UI入力用 (検索ボタンを押すまで確定しない)
   const boardingStopInput = ref("南与野駅西口");
   const dropOffStopInput = ref("");
@@ -767,11 +712,5 @@
       boardingStopInput.value = dropOffStopInput.value;
       dropOffStopInput.value = temp;
     }
-  };
-
-  const handleImageError = (e: Event) => {
-    const img = e.target as HTMLImageElement;
-    img.onerror = null;
-    img.style.display = "none";
   };
 </script>
