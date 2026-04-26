@@ -9,10 +9,19 @@
           乗車バス停 (出発)
         </label>
         <div class="relative">
-          <select :value="boardingStopInput" @change="handleBoardingChange" class="w-full p-3 pl-3 pr-10 bg-white border border-gray-200 rounded-lg appearance-none focus:outline-none focus:ring-2 focus:ring-blue-500 font-medium text-gray-700">
-            <option v-for="stopName in allStops" :key="stopName" :value="stopName">{{ stopName }}</option>
-          </select>
-          <ChevronDown class="w-5 h-5 text-gray-400 absolute right-3 top-4 pointer-events-none" />
+          <input type="text" v-model="boardingStopInput" @focus="isBoardingDropdownOpen = true" @blur="isBoardingDropdownOpen = false" placeholder="バス停名を入力または選択" class="w-full p-3 pl-3 pr-10 bg-white border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 font-medium text-gray-700 transition-shadow" autocomplete="off" />
+          <ChevronDown class="w-5 h-5 text-gray-400 absolute right-3 top-4 pointer-events-none transition-transform" :class="{'rotate-180': isBoardingDropdownOpen}" />
+          
+          <transition enter-active-class="transition duration-100 ease-out" enter-from-class="transform scale-95 opacity-0" enter-to-class="transform scale-100 opacity-100" leave-active-class="transition duration-75 ease-in" leave-from-class="transform scale-100 opacity-100" leave-to-class="transform scale-95 opacity-0">
+            <div v-if="isBoardingDropdownOpen" class="absolute z-20 w-full mt-1 bg-white border border-gray-100 rounded-xl shadow-lg max-h-60 overflow-auto">
+              <ul class="py-1">
+                <li v-if="filteredBoardingStops.length === 0" class="px-4 py-3 text-sm text-gray-500 text-center">見つかりませんでした</li>
+                <li v-for="stop in filteredBoardingStops" :key="stop" @mousedown.prevent="selectBoardingStop(stop)" class="px-4 py-2.5 text-sm font-medium text-gray-700 hover:bg-blue-50 hover:text-blue-700 cursor-pointer transition-colors">
+                  {{ stop }}
+                </li>
+              </ul>
+            </div>
+          </transition>
         </div>
       </div>
 
@@ -29,11 +38,23 @@
           降車バス停 (到着・任意)
         </label>
         <div class="relative">
-          <select :value="dropOffStopInput" @change="handleDropOffChange" :disabled="availableDropOffStops.length === 0" class="w-full p-3 pl-3 pr-10 bg-white border border-gray-200 rounded-lg appearance-none focus:outline-none focus:ring-2 focus:ring-blue-500 font-medium text-gray-700 disabled:bg-gray-100 disabled:text-gray-400 disabled:opacity-60">
-            <option value="">指定なし (すべての行き先を表示)</option>
-            <option v-for="stopName in availableDropOffStops" :key="stopName" :value="stopName">{{ stopName }}</option>
-          </select>
-          <ChevronDown class="w-5 h-5 text-gray-400 absolute right-3 top-3.5 pointer-events-none" />
+          <input type="text" v-model="dropOffStopInput" @focus="isDropOffDropdownOpen = true" @blur="isDropOffDropdownOpen = false" :disabled="availableDropOffStops.length === 0" placeholder="指定なし (すべての行き先を表示)" class="w-full p-3 pl-3 pr-10 bg-white border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 font-medium text-gray-700 disabled:bg-gray-100 disabled:text-gray-400 disabled:opacity-60 transition-shadow" autocomplete="off" />
+          <ChevronDown class="w-5 h-5 text-gray-400 absolute right-3 top-3.5 pointer-events-none transition-transform" :class="{'rotate-180': isDropOffDropdownOpen}" />
+          
+          <transition enter-active-class="transition duration-100 ease-out" enter-from-class="transform scale-95 opacity-0" enter-to-class="transform scale-100 opacity-100" leave-active-class="transition duration-75 ease-in" leave-from-class="transform scale-100 opacity-100" leave-to-class="transform scale-95 opacity-0">
+            <div v-if="isDropOffDropdownOpen && availableDropOffStops.length > 0" class="absolute z-20 w-full mt-1 bg-white border border-gray-100 rounded-xl shadow-lg max-h-60 overflow-auto">
+              <ul class="py-1">
+                <li @mousedown.prevent="selectDropOffStop('')" class="px-4 py-2.5 text-sm font-bold text-gray-500 hover:bg-gray-100 cursor-pointer border-b border-gray-50 flex items-center gap-2">
+                  <span class="w-2 h-2 rounded-full bg-gray-400"></span>
+                  指定なし (すべての行き先を表示)
+                </li>
+                <li v-if="filteredDropOffStops.length === 0" class="px-4 py-3 text-sm text-gray-500 text-center">見つかりませんでした</li>
+                <li v-for="stop in filteredDropOffStops" :key="stop" @mousedown.prevent="selectDropOffStop(stop)" class="px-4 py-2.5 text-sm font-medium text-gray-700 hover:bg-red-50 hover:text-red-700 cursor-pointer transition-colors">
+                  {{ stop }}
+                </li>
+              </ul>
+            </div>
+          </transition>
         </div>
         <!-- 補足メッセージ -->
         <p v-if="boardingStopInput && availableDropOffStops.length > 0" class="text-[10px] text-gray-400 mt-1 text-right">※ 逆方向のバスに乗る場合は、乗車バス停を変更してください</p>
@@ -184,7 +205,7 @@
 </template>
 
 <script setup lang="ts">
-  import { ref, computed, onMounted, onUnmounted } from "vue";
+  import { ref, computed, onMounted, onUnmounted, watch } from "vue";
   import { Bus, Clock, RefreshCw, AlertTriangle, MapPin, ArrowRight, ChevronDown, Filter, ArrowLeftRight, CalendarClock, Search } from "lucide-vue-next";
 
   // --- データ定義 ---
@@ -444,6 +465,95 @@
     ]
   };
 
+  // --- バス停よみがなマップ ---
+  const STOP_KANA_MAP: Record<string, string> = {
+    "北浦和駅西口": "きたうらわえきにしぐち",
+    "常磐十丁目": "ときわじゅっちょうめ",
+    "大戸小学校": "おおとしょうがっこう",
+    "鈴谷小学校": "すずやしょうがっこう",
+    "南与野駅北入口": "みなみよのえききたいりぐち",
+    "鈴谷札の辻": "すずやふだのつじ",
+    "山久保": "やまくぼ",
+    "栄和北町": "さかわきたまち",
+    "大泉院通り": "だいせんいんどおり",
+    "埼玉大学": "さいたまだいがく",
+    "南与野駅西口": "みなみよのえきにしぐち",
+    "本村": "ほんむら",
+    "下大久保": "しもおおくぼ",
+    "志木駅東口": "しきえきひがしぐち",
+    "東町": "ひがしちょう",
+    "双葉町": "ふたばちょう",
+    "昭和新道": "しょうわしんどう",
+    "上町": "かみちょう",
+    "富士道入口": "ふじどういりぐち",
+    "市場坂上": "いちばさかうえ",
+    "志木市役所": "しきしやくしょ",
+    "いろは橋": "いろはばし",
+    "中宗岡一丁目": "なかむねおかいっちょうめ",
+    "志木高校入口": "しきこうこういりぐち",
+    "宿": "しゅく",
+    "上宗岡二丁目": "かみむねおかにちょうめ",
+    "宗岡蓮田": "むねおかはすだ",
+    "北朝霞駅": "きたあさかえき",
+    "宮戸橋": "みやとばし",
+    "宗岡第三小学校": "むねおかだいさんしょうがっこう",
+    "下宗岡一丁目": "しもむねおかいっちょうめ",
+    "下宗岡二丁目": "しもむねおかにちょうめ",
+    "宗岡": "むねおか",
+    "中宗岡": "なかむねおか",
+    "中宗岡三丁目": "なかむねおかさんちょうめ",
+    "氷川前": "ひかわまえ",
+    "五反田": "ごたんだ",
+    "上宗岡四丁目": "かみむねおかよんちょうめ",
+    "浦和駅西口": "うらわえきにしぐち",
+    "県庁通り": "けんちょうどおり",
+    "埼玉会館": "さいたまかいかん",
+    "県庁前": "けんちょうまえ",
+    "附属中学校": "ふぞくちゅうがっこう",
+    "別所沼公園": "べっしょぬまこうえん",
+    "中浦和駅": "なかうらわえき",
+    "関": "せき",
+    "田島": "たじま",
+    "西堀": "にしぼり",
+    "浦和工業高校": "うらわこうぎょうこうこう",
+    "土合小学校": "つちあいしょうがっこう",
+    "南元宿": "みなみもとじゅく",
+    "町屋": "まちや",
+    "町屋三丁目": "まちやさんちょうめ",
+    "栄和": "さかわ",
+    "道場": "どうじょう",
+    "十石田": "じゅっこくだ",
+    "桜区役所": "さくらくやくしょ",
+    "市民会館入口": "しみんかいかんいりぐち",
+    "常盤一丁目": "ときわいっちょうめ",
+    "常盤二丁目": "ときわにちょうめ",
+    "常盤四丁目": "ときわよんちょうめ",
+    "六間道路(浦和区)": "ろっけんどうろ",
+    "市役所北口(さいたま市)": "しやくしょきたぐち",
+    "水道局前": "すいどうきょくまえ",
+    "大戸": "おおと",
+    "西戸橋": "にしどばし",
+    "日向": "ひなた",
+    "仲町三丁目(浦和区)": "なかちょうさんちょうめ",
+    "市役所前(さいたま市)": "しやくしょまえ",
+    "埼大裏": "さいだいうら",
+    "諏訪前橋": "すわまえばし",
+    "中島": "なかじま",
+    "浦和北高校": "うらわきたこうこう",
+    "大久保支所": "おおくぼししょ",
+    "塚本": "つかもと",
+    "やつしまニュータウン": "やつしまにゅーたうん",
+    "大久保浄水場": "おおくぼじょうすいじょう",
+    "鯛ヶ窪橋": "たいがくぼばし",
+    "西堀高沼公園": "にしぼりこうぬまこうえん",
+    "西堀氷川トンネル": "にしぼりひかわとんねる",
+    "西堀五丁目": "にしぼりごちょうめ",
+    "浦和市場入口": "うらわいちばいりぐち",
+    "町屋四丁目": "まちやよんちょうめ",
+    "道場三丁目": "どうじょうさんちょうめ",
+    "北浦和駅": "きたうらわえき"
+  };
+
   // シミュレーション用の仮時刻表パターン (各系統共通で時間だけずらす)
   const BASE_SCHEDULE_TEMPLATE = ["06:10", "06:25", "06:40", "06:55", "07:05", "07:15", "07:25", "07:35", "07:45", "07:55", "08:05", "08:15", "08:25", "08:40", "08:55", "09:10", "09:25", "09:40", "09:55", "10:15", "10:45", "11:15", "11:45", "12:15", "12:45", "13:15", "13:45", "14:15", "14:45", "15:05", "15:25", "15:45", "16:05", "16:20", "16:35", "16:50", "17:05", "17:15", "17:30", "17:45", "18:00", "18:15", "18:30", "18:45", "19:00", "19:15", "19:30", "19:50", "20:10", "20:30", "20:50", "21:20", "21:50"];
 
@@ -691,17 +801,53 @@
     return integratedTimetable.value.slice(startIndex).some(bus => bus.delay > 0);
   });
 
-  // イベントハンドラ
-  const handleBoardingChange = (e: Event) => {
-    const target = e.target as HTMLSelectElement;
-    boardingStopInput.value = target.value;
-    dropOffStopInput.value = ""; // 入力値をリセット
+  // カスタムドロップダウン用
+  const isBoardingDropdownOpen = ref(false);
+  const isDropOffDropdownOpen = ref(false);
+
+  // カタカナをひらがなに変換し、大文字小文字を統一するヘルパー
+  const normalizeKana = (str: string) => {
+    return str.replace(/[\u30a1-\u30f6]/g, match => String.fromCharCode(match.charCodeAt(0) - 0x60)).toLowerCase();
   };
 
-  const handleDropOffChange = (e: Event) => {
-    const target = e.target as HTMLSelectElement;
-    dropOffStopInput.value = target.value;
+  const getStopKana = (stopName: string) => {
+    return STOP_KANA_MAP[stopName] || "";
   };
+
+  const filteredBoardingStops = computed(() => {
+    if (!boardingStopInput.value) return allStops.value;
+    const searchWord = normalizeKana(boardingStopInput.value);
+    return allStops.value.filter(stop => 
+      normalizeKana(stop).includes(searchWord) || 
+      getStopKana(stop).includes(searchWord)
+    );
+  });
+
+  const filteredDropOffStops = computed(() => {
+    if (!dropOffStopInput.value) return availableDropOffStops.value;
+    const searchWord = normalizeKana(dropOffStopInput.value);
+    return availableDropOffStops.value.filter(stop => 
+      normalizeKana(stop).includes(searchWord) || 
+      getStopKana(stop).includes(searchWord)
+    );
+  });
+
+  const selectBoardingStop = (stop: string) => {
+    boardingStopInput.value = stop;
+    isBoardingDropdownOpen.value = false;
+  };
+
+  const selectDropOffStop = (stop: string) => {
+    dropOffStopInput.value = stop;
+    isDropOffDropdownOpen.value = false;
+  };
+
+  // 入力変更時のリセットと開閉制御
+  watch(boardingStopInput, (newVal, oldVal) => {
+    if (newVal !== oldVal) {
+      dropOffStopInput.value = "";
+    }
+  });
 
   const swapStops = () => {
     if (dropOffStopInput.value) {
