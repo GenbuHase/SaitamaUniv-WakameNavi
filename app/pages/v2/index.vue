@@ -8,7 +8,7 @@
           <h1 class="text-lg font-bold tracking-wider">わかめナビ🌱</h1>
         </div>
 
-        <button v-if="currentView === 'timetable'" @click="refreshData" :disabled="isLoading" class="p-2 rounded-full hover:bg-white/20 transition-colors disabled:opacity-50" aria-label="更新">
+        <button v-if="currentView === 'timetable'" class="p-2 rounded-full hover:bg-white/20 transition-colors disabled:opacity-50" aria-label="更新" :disabled="isLoading" @click="refreshData">
           <RefreshCw class="w-5 h-5" :class="{ 'animate-spin': isLoading }" />
         </button>
       </div>
@@ -19,8 +19,8 @@
       <!-- Aboutページ表示 -->
       <div v-if="currentView === 'about'" class="bg-white rounded-xl shadow-sm border border-gray-100 p-6 space-y-6 animate-in fade-in zoom-in duration-300">
         <!-- ロゴ表示部分 -->
-        <div class="flex justify-center mb-2">
-          <img src="https://wakame-navi.vercel.app/assets/logo.svg" alt="わかめナビ ロゴ" class="h-28 w-auto" @error="handleImageError" />
+        <div class="flex justify-center">
+          <img src="/assets/logo.svg" alt="わかめナビ ロゴ" class="h-28 w-auto" @error="handleImageError" />
         </div>
 
         <div class="space-y-4 text-gray-600 leading-relaxed text-sm">
@@ -47,7 +47,7 @@
               乗車バス停 (出発)
             </label>
             <div class="relative">
-              <select :value="selectedBoardingStop" @change="handleBoardingChange" class="w-full p-3 pl-3 pr-10 bg-white border border-gray-200 rounded-lg appearance-none focus:outline-none focus:ring-2 focus:ring-blue-500 font-medium text-gray-700">
+              <select :value="boardingStopInput" @change="handleBoardingChange" class="w-full p-3 pl-3 pr-10 bg-white border border-gray-200 rounded-lg appearance-none focus:outline-none focus:ring-2 focus:ring-blue-500 font-medium text-gray-700">
                 <option v-for="stopName in allStops" :key="stopName" :value="stopName">{{ stopName }}</option>
               </select>
               <ChevronDown class="w-5 h-5 text-gray-400 absolute right-3 top-4 pointer-events-none" />
@@ -55,7 +55,7 @@
           </div>
 
           <div class="flex justify-center -my-2 relative z-0">
-            <button @click="swapStops" :disabled="!selectedDropOffStop" class="bg-gray-100 p-1.5 rounded-full transition-colors border border-gray-200 shadow-sm z-10" :class="selectedDropOffStop ? 'text-green-600 hover:bg-green-50 hover:border-green-300 cursor-pointer' : 'text-gray-300 cursor-not-allowed'" title="出発地と到着地を入れ替え" aria-label="出発地と到着地を入れ替える">
+            <button @click="swapStops" :disabled="!dropOffStopInput" class="bg-gray-100 p-1.5 rounded-full transition-colors border border-gray-200 shadow-sm z-10" :class="dropOffStopInput ? 'text-green-600 hover:bg-green-50 hover:border-green-300 cursor-pointer' : 'text-gray-300 cursor-not-allowed'" title="出発地と到着地を入れ替え" aria-label="出発地と到着地を入れ替える">
               <ArrowLeftRight class="w-4 h-4 rotate-90" />
             </button>
           </div>
@@ -67,15 +67,21 @@
               降車バス停 (到着・任意)
             </label>
             <div class="relative">
-              <select :value="selectedDropOffStop" @change="handleDropOffChange" :disabled="availableDropOffStops.length === 0" class="w-full p-3 pl-3 pr-10 bg-white border border-gray-200 rounded-lg appearance-none focus:outline-none focus:ring-2 focus:ring-blue-500 font-medium text-gray-700 disabled:bg-gray-100 disabled:text-gray-400 disabled:opacity-60">
+              <select :value="dropOffStopInput" @change="handleDropOffChange" :disabled="availableDropOffStops.length === 0" class="w-full p-3 pl-3 pr-10 bg-white border border-gray-200 rounded-lg appearance-none focus:outline-none focus:ring-2 focus:ring-blue-500 font-medium text-gray-700 disabled:bg-gray-100 disabled:text-gray-400 disabled:opacity-60">
                 <option value="">指定なし (すべての行き先を表示)</option>
                 <option v-for="stopName in availableDropOffStops" :key="stopName" :value="stopName">{{ stopName }}</option>
               </select>
               <ChevronDown class="w-5 h-5 text-gray-400 absolute right-3 top-3.5 pointer-events-none" />
             </div>
             <!-- 補足メッセージ -->
-            <p v-if="selectedBoardingStop && availableDropOffStops.length > 0" class="text-[10px] text-gray-400 mt-1 text-right">※ 逆方向のバスに乗る場合は、乗車バス停を変更してください</p>
+            <p v-if="boardingStopInput && availableDropOffStops.length > 0" class="text-[10px] text-gray-400 mt-1 text-right">※ 逆方向のバスに乗る場合は、乗車バス停を変更してください</p>
           </div>
+
+          <!-- 検索ボタン -->
+          <button @click="handleSearch" :disabled="isLoading" class="w-full py-3 bg-green-700 hover:bg-green-800 text-white font-bold rounded-lg shadow-sm flex justify-center items-center gap-2 transition-colors disabled:opacity-70">
+            <Search class="w-4 h-4" />
+            検索して表示
+          </button>
         </section>
 
         <!-- 運行状況要約 -->
@@ -218,24 +224,23 @@
     <!-- ボトムナビゲーション -->
     <nav class="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 safe-area-bottom z-50">
       <div class="max-w-md mx-auto grid grid-cols-2 h-16">
-        <button @click="currentView = 'timetable'" class="flex flex-col items-center justify-center gap-1 transition-colors" :class="currentView === 'timetable' ? 'text-blue-600' : 'text-gray-400 hover:text-gray-600'">
-          <ListOrdered class="w-6 h-6" />
-          <span class="text-[10px] font-bold">時刻表</span>
-        </button>
-
-        <button @click="currentView = 'about'" class="flex flex-col items-center justify-center gap-1 transition-colors" :class="currentView === 'about' ? 'text-blue-600' : 'text-gray-400 hover:text-gray-600'">
+        <button class="flex flex-col items-center justify-center gap-1 transition-colors" :class="currentView === 'about' ? 'text-blue-600' : 'text-gray-400 hover:text-gray-600'" @click="currentView = 'about'">
           <Info class="w-6 h-6" />
           <span class="text-[10px] font-bold">About</span>
+        </button>
+
+        <button class="flex flex-col items-center justify-center gap-1 transition-colors" :class="currentView === 'timetable' ? 'text-blue-600' : 'text-gray-400 hover:text-gray-600'" @click="currentView = 'timetable'">
+          <ListOrdered class="w-6 h-6" />
+          <span class="text-[10px] font-bold">時刻表</span>
         </button>
       </div>
     </nav>
   </div>
 </template>
 
-<script lang="ts" setup>
+<script setup lang="ts">
   import { ref, computed, onMounted, onUnmounted } from "vue";
-
-  import { Bus, Clock, RefreshCw, AlertTriangle, MapPin, ChevronDown, Filter, ArrowLeftRight, CalendarClock, ListOrdered, Info } from "lucide-vue-next";
+  import { Bus, Clock, RefreshCw, AlertTriangle, MapPin, ArrowRight, ChevronDown, Filter, ArrowLeftRight, CalendarClock, ListOrdered, Info, Search } from "lucide-vue-next";
 
   // --- データ定義 ---
 
@@ -592,8 +597,15 @@
   // 画面遷移の状態: 'timetable' | 'about'
   const currentView = ref("timetable");
 
+  // UI入力用 (検索ボタンを押すまで確定しない)
+  const boardingStopInput = ref("南与野駅西口");
+  const dropOffStopInput = ref("");
+
+  // 確定した検索条件
   const selectedBoardingStop = ref("南与野駅西口");
-  const selectedDropOffStop = ref(""); // 空の場合は「指定なし」
+  const selectedDropOffStop = ref("");
+
+  const currentDelay = ref(0);
   const busDelays = ref<Record<string, number>>({});
   const currentTime = ref(new Date());
   const lastUpdated = ref(new Date());
@@ -632,11 +644,11 @@
     if (timer) clearInterval(timer);
   });
 
-  // 選択可能な降車バス停リスト
+  // 選択可能な降車バス停リスト (Input値に基づいて計算)
   const availableDropOffStops = computed(() => {
     const possibleStops = new Set<string>();
     GENERATED_ROUTES.forEach(route => {
-      const boardingIndex = route.stops.findIndex((s: any) => s.name === selectedBoardingStop.value);
+      const boardingIndex = route.stops.findIndex((s: any) => s.name === boardingStopInput.value); // Inputを使用
       if (boardingIndex !== -1 && boardingIndex < route.stops.length - 1) {
         for (let i = boardingIndex + 1; i < route.stops.length; i++) {
           possibleStops.add(route.stops[i].name);
@@ -667,7 +679,14 @@
     }, 600);
   };
 
-  // 統合時刻表データ
+  // 検索実行
+  const handleSearch = () => {
+    selectedBoardingStop.value = boardingStopInput.value;
+    selectedDropOffStop.value = dropOffStopInput.value;
+    refreshData();
+  };
+
+  // 統合時刻表データ (確定済みStateに基づいて計算)
   const integratedTimetable = computed(() => {
     let allBuses: any[] = [];
 
@@ -733,20 +752,20 @@
   // イベントハンドラ
   const handleBoardingChange = (e: Event) => {
     const target = e.target as HTMLSelectElement;
-    selectedBoardingStop.value = target.value;
-    selectedDropOffStop.value = "";
+    boardingStopInput.value = target.value;
+    dropOffStopInput.value = ""; // 入力値をリセット
   };
 
   const handleDropOffChange = (e: Event) => {
     const target = e.target as HTMLSelectElement;
-    selectedDropOffStop.value = target.value;
+    dropOffStopInput.value = target.value;
   };
 
   const swapStops = () => {
-    if (selectedDropOffStop.value) {
-      const temp = selectedBoardingStop.value;
-      selectedBoardingStop.value = selectedDropOffStop.value;
-      selectedDropOffStop.value = temp;
+    if (dropOffStopInput.value) {
+      const temp = boardingStopInput.value;
+      boardingStopInput.value = dropOffStopInput.value;
+      dropOffStopInput.value = temp;
     }
   };
 
