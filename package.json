@@ -1,7 +1,7 @@
 {
   "name": "su_wakame-navi",
   "description": "埼玉大学周辺を走るバスの運行情報を確認することができます。",
-  "version": "2.0.0.2-alpha.2",
+  "version": "2.0.0.3-alpha.1",
   "scripts": {
     "build": "nuxt build",
     "dev": "nuxt dev --host",

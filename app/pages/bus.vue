@@ -16,8 +16,9 @@
             <div v-if="isBoardingDropdownOpen" class="absolute z-20 w-full mt-1 bg-white border border-gray-100 rounded-xl shadow-lg max-h-60 overflow-auto">
               <ul class="py-1">
                 <li v-if="filteredBoardingStops.length === 0" class="px-4 py-3 text-sm text-gray-500 text-center">見つかりませんでした</li>
-                <li v-for="stop in filteredBoardingStops" :key="stop" @mousedown.prevent="selectBoardingStop(stop)" class="px-4 py-2.5 text-sm font-medium text-gray-700 hover:bg-blue-50 hover:text-blue-700 cursor-pointer transition-colors">
-                  {{ stop }}
+                <li v-for="stop in filteredBoardingStops" :key="stop" @mousedown.prevent="selectBoardingStop(stop)" class="px-4 py-2.5 cursor-pointer transition-colors hover:bg-blue-50 group border-b border-gray-50 last:border-0">
+                  <div class="text-sm font-medium text-gray-700 group-hover:text-blue-700">{{ stop }}</div>
+                  <div class="text-[10px] text-gray-400 mt-0.5 truncate" title="運行系統">{{ stopRoutesMap[stop]?.join(", ") }}</div>
                 </li>
               </ul>
             </div>
@@ -49,8 +50,9 @@
                   指定なし (すべての行き先を表示)
                 </li>
                 <li v-if="filteredDropOffStops.length === 0" class="px-4 py-3 text-sm text-gray-500 text-center">見つかりませんでした</li>
-                <li v-for="stop in filteredDropOffStops" :key="stop" @mousedown.prevent="selectDropOffStop(stop)" class="px-4 py-2.5 text-sm font-medium text-gray-700 hover:bg-red-50 hover:text-red-700 cursor-pointer transition-colors">
-                  {{ stop }}
+                <li v-for="stop in filteredDropOffStops" :key="stop" @mousedown.prevent="selectDropOffStop(stop)" class="px-4 py-2.5 cursor-pointer transition-colors hover:bg-red-50 group border-b border-gray-50 last:border-0">
+                  <div class="text-sm font-medium text-gray-700 group-hover:text-red-700">{{ stop }}</div>
+                  <div class="text-[10px] text-gray-400 mt-0.5 truncate" title="運行系統">{{ stopRoutesMap[stop]?.join(", ") }}</div>
                 </li>
               </ul>
             </div>
@@ -670,7 +672,7 @@
       route.stops.forEach((stop: any) => stopsSet.add(stop.name));
     });
     return Array.from(stopsSet).sort((a, b) => {
-      const priority = ["南与野駅西口", "埼玉大学", "北浦和駅西口", "北朝霞駅", "志木駅東口", "浦和駅西口"];
+      const priority = ["埼玉大学", "北浦和駅西口", "南与野駅西口", "南与野駅北入口", "志木駅東口", "北朝霞駅", "浦和駅西口"];
       const indexA = priority.indexOf(a);
       const indexB = priority.indexOf(b);
       if (indexA !== -1 && indexB !== -1) return indexA - indexB;
@@ -979,6 +981,25 @@
     const searchRomaji = normalizeRomajiQuery(dropOffStopInput.value);
 
     return availableDropOffStops.value.filter(stop => normalizeKana(stop).includes(searchWord) || getStopKana(stop).includes(searchWord) || (searchRomaji.length > 0 && getStopRomaji(stop).includes(searchRomaji)));
+  });
+
+  // バス停ごとの通過系統マップ (サジェストのガイド用)
+  const stopRoutesMap = computed(() => {
+    const map: Record<string, string[]> = {};
+    GENERATED_ROUTES.forEach(route => {
+      route.stops.forEach((s: any) => {
+        if (!map[s.name]) {
+          map[s.name] = [];
+        }
+        if (!map[s.name].includes(route.code)) {
+          map[s.name].push(route.code);
+        }
+      });
+    });
+    for (const stop in map) {
+      map[stop].sort();
+    }
+    return map;
   });
 
   const selectBoardingStop = (stop: string) => {
