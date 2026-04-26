@@ -9,7 +9,7 @@
           乗車バス停 (出発)
         </label>
         <div class="relative">
-          <input type="text" v-model="boardingStopInput" @focus="isBoardingDropdownOpen = true" @blur="isBoardingDropdownOpen = false" placeholder="バス停名を入力または選択" class="w-full p-3 pl-3 pr-10 bg-white border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 font-medium text-gray-700 transition-shadow" autocomplete="off" />
+          <input type="text" v-model="boardingStopInput" @focus="isBoardingDropdownOpen = true" @click="isBoardingDropdownOpen = true" @blur="isBoardingDropdownOpen = false" placeholder="バス停名を入力または選択" class="w-full p-3 pl-3 pr-10 bg-white border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 font-medium text-gray-700 transition-shadow" autocomplete="off" />
           <ChevronDown class="w-5 h-5 text-gray-400 absolute right-3 top-4 pointer-events-none transition-transform" :class="{ 'rotate-180': isBoardingDropdownOpen }" />
 
           <transition enter-active-class="transition duration-100 ease-out" enter-from-class="transform scale-95 opacity-0" enter-to-class="transform scale-100 opacity-100" leave-active-class="transition duration-75 ease-in" leave-from-class="transform scale-100 opacity-100" leave-to-class="transform scale-95 opacity-0">
@@ -39,7 +39,7 @@
           降車バス停 (到着・任意)
         </label>
         <div class="relative">
-          <input type="text" v-model="dropOffStopInput" @focus="isDropOffDropdownOpen = true" @blur="isDropOffDropdownOpen = false" :disabled="availableDropOffStops.length === 0" placeholder="指定なし (すべての行き先を表示)" class="w-full p-3 pl-3 pr-10 bg-white border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 font-medium text-gray-700 disabled:bg-gray-100 disabled:text-gray-400 disabled:opacity-60 transition-shadow" autocomplete="off" />
+          <input type="text" v-model="dropOffStopInput" @focus="isDropOffDropdownOpen = true" @click="isDropOffDropdownOpen = true" @blur="isDropOffDropdownOpen = false" :disabled="availableDropOffStops.length === 0" placeholder="指定なし (すべての行き先を表示)" class="w-full p-3 pl-3 pr-10 bg-white border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 font-medium text-gray-700 disabled:bg-gray-100 disabled:text-gray-400 disabled:opacity-60 transition-shadow" autocomplete="off" />
           <ChevronDown class="w-5 h-5 text-gray-400 absolute right-3 top-3.5 pointer-events-none transition-transform" :class="{ 'rotate-180': isDropOffDropdownOpen }" />
 
           <transition enter-active-class="transition duration-100 ease-out" enter-from-class="transform scale-95 opacity-0" enter-to-class="transform scale-100 opacity-100" leave-active-class="transition duration-75 ease-in" leave-from-class="transform scale-100 opacity-100" leave-to-class="transform scale-95 opacity-0">
@@ -1005,11 +1005,17 @@
   const selectBoardingStop = (stop: string) => {
     boardingStopInput.value = stop;
     isBoardingDropdownOpen.value = false;
+    if (document.activeElement instanceof HTMLElement) {
+      document.activeElement.blur();
+    }
   };
 
   const selectDropOffStop = (stop: string) => {
     dropOffStopInput.value = stop;
     isDropOffDropdownOpen.value = false;
+    if (document.activeElement instanceof HTMLElement) {
+      document.activeElement.blur();
+    }
   };
 
   // 入力変更時のリセットと開閉制御
