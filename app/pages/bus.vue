@@ -45,7 +45,7 @@
           <span class="bg-white text-emerald-800 font-bold px-2 py-1 rounded-md text-xs shadow-sm">
             {{ nextBus.routeCode }}
           </span>
-          <span class="font-bold text-xl tracking-wide drop-shadow-sm">{{ nextBus.destination }} <span class="text-sm font-medium opacity-80">行</span></span>
+          <span class="flex-1 font-bold text-xl tracking-wide drop-shadow-sm">{{ nextBus.destination }} <span class="text-sm font-medium opacity-80">行</span></span>
         </div>
       </div>
     </section>
