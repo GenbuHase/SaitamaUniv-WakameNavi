@@ -744,29 +744,41 @@
     if (isTestMode.value) {
       try {
         const getStopId = (stopName: string, company: "Kokusai" | "Seibu") => {
+          let normalizedName = stopName;
+          if (stopName === "北浦和駅" && company === "Kokusai") normalizedName = "北浦和駅西口";
+          if (stopName === "北浦和駅西口" && company === "Seibu") normalizedName = "北浦和駅";
+
           const data = company === "Kokusai" ? KOKUSAI_ROUTES_DATA : SEIBU_ROUTES_DATA;
           for (const route in data) {
-            const stop = (data as any)[route].find((s: any) => s.name === stopName);
+            const stop = (data as any)[route].find((s: any) => s.name === normalizedName);
             if (stop) return stop.id;
           }
           return null;
         };
 
-        const query: any = {};
+        const query: Record<string, string> = {};
         
         // 乗車バス停のID取得
         const kokusaiStartId = getStopId(selectedBoardingStop.value, "Kokusai");
         const seibuStartId = getStopId(selectedBoardingStop.value, "Seibu");
-        if (kokusaiStartId) query.kokusaiStartId = kokusaiStartId;
-        if (seibuStartId) query.seibuStartId = seibuStartId;
+        
+        let fetchKokusai = !!kokusaiStartId;
+        let fetchSeibu = !!seibuStartId;
 
         // 降車バス停のID取得 (任意)
         if (selectedDropOffStop.value) {
           const kokusaiGoalId = getStopId(selectedDropOffStop.value, "Kokusai");
           const seibuGoalId = getStopId(selectedDropOffStop.value, "Seibu");
-          if (kokusaiGoalId) query.kokusaiGoalId = kokusaiGoalId;
-          if (seibuGoalId) query.seibuGoalId = seibuGoalId;
+          
+          if (!kokusaiGoalId) fetchKokusai = false;
+          else if (fetchKokusai) query.kokusaiGoalId = kokusaiGoalId;
+
+          if (!seibuGoalId) fetchSeibu = false;
+          else if (fetchSeibu) query.seibuGoalId = seibuGoalId;
         }
+
+        if (fetchKokusai && kokusaiStartId) query.kokusaiStartId = kokusaiStartId;
+        if (fetchSeibu && seibuStartId) query.seibuStartId = seibuStartId;
 
         if (Object.keys(query).length > 0) {
           apiServices.value = await $fetch("/api/v2/bus/services", { query });

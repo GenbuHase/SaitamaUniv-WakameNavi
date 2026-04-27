@@ -54,9 +54,7 @@ export async function getServices(startId: string, goalId: string): Promise<BusS
   // 主要な行き先をすべて並列で取得して合成する
   if (startId === goalId) {
     const defaultGoals = ["00111643", "00111628", "00111644"].filter(id => id !== startId);
-    const results = await Promise.all(
-      defaultGoals.map(dest => fetchServices(startId, dest).catch(() => []))
-    );
+    const results = await Promise.all(defaultGoals.map(dest => fetchServices(startId, dest).catch(() => [])));
 
     const uniqueServices = new Map<string, BusService>();
     for (const res of results) {

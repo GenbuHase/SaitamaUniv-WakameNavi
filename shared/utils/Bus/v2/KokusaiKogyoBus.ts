@@ -80,7 +80,9 @@ function parseDelay(delayText: string): number {
  * @returns 正規化された運行情報の配列
  */
 export async function getServices(startId: string, goalId: string): Promise<BusService[]> {
-  const document = (await JSDOM.fromURL(getFetchUrl(startId, goalId))).window.document;
+  // 目的地が未指定（startId === goalId）の場合、goalIdを空値にすることですべての行き先を取得できる
+  const fetchGoalId = startId === goalId ? "" : goalId;
+  const document = (await JSDOM.fromURL(getFetchUrl(startId, fetchGoalId))).window.document;
   const elements = document.querySelectorAll("#resultList > .plotList");
 
   const services: BusService[] = [];
