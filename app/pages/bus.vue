@@ -58,11 +58,11 @@
 
     <!-- 区間選択パネル -->
     <section class="bg-white rounded-[2rem] shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-emerald-50/50 p-6 space-y-5">
-      <!-- 乗車バス停 -->
+      <!-- 乗車停留所 -->
       <div>
         <label class="block text-xs font-bold text-slate-500 mb-1.5 flex items-center gap-1.5 ml-1">
           <div class="p-1 bg-blue-50 rounded-full"><MapPin class="w-3 h-3 text-blue-500" /></div>
-          乗車バス停 (出発)
+          出発
         </label>
         <div class="relative group">
           <input type="text" v-model="boardingStopInput" @focus="isBoardingDropdownOpen = true" @click="isBoardingDropdownOpen = true" @blur="isBoardingDropdownOpen = false" @keydown="handleBoardingKeyDown" placeholder="バス停名を入力または選択" class="w-full p-3.5 pl-4 pr-16 bg-slate-50/50 border border-slate-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-emerald-500/30 focus:border-emerald-500 font-medium text-slate-700 transition-all duration-300" autocomplete="off" />
@@ -93,11 +93,11 @@
         </button>
       </div>
 
-      <!-- 降車バス停 (任意) -->
+      <!-- 降車停留所 -->
       <div>
         <label class="block text-xs font-bold text-slate-500 mb-1.5 flex items-center gap-1.5 ml-1">
           <div class="p-1 bg-red-50 rounded-full"><MapPin class="w-3 h-3 text-red-500" /></div>
-          降車バス停 (到着・任意)
+          到着
         </label>
         <div class="relative group">
           <input type="text" v-model="dropOffStopInput" @focus="isDropOffDropdownOpen = true" @click="isDropOffDropdownOpen = true" @blur="isDropOffDropdownOpen = false" @keydown="handleDropOffKeyDown" :disabled="availableDropOffStops.length === 0" placeholder="指定なし (すべての行き先を表示)" class="w-full p-3.5 pl-4 pr-16 bg-slate-50/50 border border-slate-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-emerald-500/30 focus:border-emerald-500 font-medium text-slate-700 disabled:bg-slate-100/50 disabled:text-slate-400 disabled:opacity-60 transition-all duration-300" autocomplete="off" />
@@ -125,13 +125,13 @@
           </transition>
         </div>
         <!-- 補足メッセージ -->
-        <p v-if="boardingStopInput && availableDropOffStops.length > 0" class="text-[10px] text-slate-400 mt-1.5 text-right tracking-wide">※ 逆方向のバスに乗る場合は、乗車バス停を変更してください</p>
+        <p v-if="boardingStopInput && availableDropOffStops.length > 0" class="text-[10px] text-slate-400 mt-1.5 text-right tracking-wide">※反対方向のバスに乗る場合は、出発地と到着地を入れ替えてください</p>
       </div>
 
       <!-- 検索ボタン -->
       <button @click="handleSearch" :disabled="isLoading" class="w-full py-4 bg-emerald-600 hover:bg-emerald-700 active:scale-[0.98] text-white font-bold rounded-2xl shadow-[0_8px_20px_rgb(5,150,105,0.2)] flex justify-center items-center gap-2 transition-all duration-300 disabled:opacity-70 disabled:active:scale-100">
         <Search class="w-4 h-4" />
-        <span class="tracking-wide">検索して表示</span>
+        <span class="tracking-wide">検索</span>
       </button>
     </section>
 
@@ -140,8 +140,8 @@
       <div class="p-5 border-b border-slate-100 bg-[#f8fbf9] flex flex-col gap-4">
         <div class="flex justify-between items-center px-1">
           <h3 class="font-bold text-slate-700 flex items-center gap-2">
-            <Filter class="w-4 h-4 text-emerald-500" />
-            通過予定リスト
+            <Clock class="w-4 h-4 text-emerald-500" />
+            時刻表
           </h3>
           <span v-if="selectedDropOffStop" class="text-[10px] bg-emerald-100/80 text-emerald-700 px-3 py-1 rounded-full font-bold tracking-wide border border-emerald-200/50 shadow-sm"> {{ selectedDropOffStop }} まで </span>
         </div>
@@ -223,7 +223,7 @@
 <script setup lang="ts">
   import { ref, computed, onMounted, onUnmounted, watch, nextTick } from "vue";
   import { useRoute } from "#imports";
-  import { Bus, Clock, AlertTriangle, MapPin, ChevronDown, Filter, ArrowLeftRight, CalendarClock, Search, X } from "lucide-vue-next";
+  import { Bus, Clock, AlertTriangle, MapPin, ChevronDown, ArrowLeftRight, CalendarClock, Search, X } from "lucide-vue-next";
 
   // --- データ定義 ---
 
