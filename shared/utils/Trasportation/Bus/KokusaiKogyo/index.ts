@@ -1,4 +1,4 @@
-import { JSDOM } from "jsdom";
+import * as cheerio from "cheerio";
 import Time from "@@/shared/utils/Time";
 
 import Bus from "..";
@@ -37,17 +37,17 @@ export default class KokusaiKogyo {
   }
 
   public static async getServices (startId: typeof BUS_STOPS[keyof typeof BUS_STOPS]["id"], goalId: typeof BUS_STOPS[keyof typeof BUS_STOPS]["id"]): Promise<Bus.Service[]> {
-    const dom = await JSDOM.fromURL(KokusaiKogyo.__getFetchUrl(startId, goalId));
-    const document = dom.window.document;
-    const buses = document.querySelectorAll("#resultList > .plotList");
+    const html = await (await fetch(KokusaiKogyo.__getFetchUrl(startId, goalId))).text();
+    const $ = cheerio.load(html);
+    const buses = $("#resultList > .plotList").toArray();
 
     const services: Bus.Service[] = [];
     for (const bus of buses) {
-      const route = bus.querySelector(".courseName").textContent;
-      const destination = bus.querySelector(".destination-name").textContent.replace(bus.querySelector(".destination-unit").textContent, "");
+      const route = $(bus).find(".courseName").text();
+      const destination = $(bus).find(".destination-name").text().replace($(bus).find(".destination-unit").text(), "");
 
       const location = (() => {
-        const locationContent = bus.querySelector(".approach-number").textContent.trim();
+        const locationContent = $(bus).find(".approach-number").text().trim();
 
         if (locationContent === "始発バス停出発前") return 100;
         if (locationContent === "まもなく到着いたします") return 1;
@@ -55,13 +55,13 @@ export default class KokusaiKogyo {
       })();
 
       const delay = (() => {
-        const delayContent = bus.querySelector(".delay-minutes-area > .middleText").textContent;
+        const delayContent = $(bus).find(".delay-minutes-area > .middleText").text();
 
         if (delayContent === "遅れなし") return 0;
         return parseInt(delayContent.match(/(\d+)分/)[1]);
       })();
 
-      const plannedTime = bus.querySelector(".on-time").textContent;
+      const plannedTime = $(bus).find(".on-time").text();
 
       const arrivalTime = Time.parseDateToTimeString(
         Time.addMinutes(

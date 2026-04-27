@@ -1,4 +1,4 @@
-import { JSDOM } from "jsdom";
+import * as cheerio from "cheerio";
 
 import Bus from ".";
 import Time from "@@/shared/utils/Time";
@@ -9,17 +9,18 @@ namespace KokusaiKogyoBus {
 
   export class Service {
     public static async getServices (startId: string, goalId: string): Promise<Bus.Service[]> {
-      const document = (await JSDOM.fromURL(this.__getFetchUrl(startId, goalId))).window.document;
-      const elements = document.querySelectorAll("#resultList > .plotList");
+      const html = await (await fetch(this.__getFetchUrl(startId, goalId))).text();
+      const $ = cheerio.load(html);
+      const elements = $("#resultList > .plotList").toArray();
   
       const services: Bus.Service[] = [];
       for (const elem of elements) {
-        const route: string = elem.querySelector(".courseName")?.textContent || "";
-        const destination: string = elem.querySelector(".destination-name")?.textContent || "";
-        const destinationUnit: string = elem.querySelector(".destination-unit")?.textContent || "";
-        const location: string = elem.querySelector(".approach-number")?.textContent || "";
-        const delay: string = elem.querySelector(".delay-minutes-area > .middleText")?.textContent || "";
-        const plannedTime: string = elem.querySelector(".on-time")?.textContent || "";
+        const route: string = $(elem).find(".courseName").text() || "";
+        const destination: string = $(elem).find(".destination-name").text() || "";
+        const destinationUnit: string = $(elem).find(".destination-unit").text() || "";
+        const location: string = $(elem).find(".approach-number").text() || "";
+        const delay: string = $(elem).find(".delay-minutes-area > .middleText").text() || "";
+        const plannedTime: string = $(elem).find(".on-time").text() || "";
 
         services.push(
           this.__normalize({ route, destination, destinationUnit, location, delay, plannedTime })

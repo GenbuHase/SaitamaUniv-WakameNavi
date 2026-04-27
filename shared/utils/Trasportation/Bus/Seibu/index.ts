@@ -1,4 +1,4 @@
-import { JSDOM } from "jsdom";
+import * as cheerio from "cheerio";
 import Time from "@@/shared/utils/Time";
 
 import Bus from "..";
@@ -37,24 +37,24 @@ export default class Seibu {
   }
   
   public static async getServices (startId: typeof BUS_STOPS[keyof typeof BUS_STOPS]["id"], goalId: typeof BUS_STOPS[keyof typeof BUS_STOPS]["id"]): Promise<Bus.Service[]> {
-    const dom = await JSDOM.fromURL(Seibu.__getFetchUrl(startId, goalId));
-    const document = dom.window.document;
-    const buses = document.querySelectorAll("#resultList > .plotList");
+    const html = await (await fetch(Seibu.__getFetchUrl(startId, goalId))).text();
+    const $ = cheerio.load(html);
+    const buses = $("#resultList > .plotList").toArray();
 
     const services: Bus.Service[] = [];
     for (const bus of buses) {
-      const route = bus.querySelector(".courseName").textContent.replace(/[０-９]/g, str => String.fromCharCode(str.charCodeAt(0) - 0xFEE0)).slice(1, -1);
-      const destination = bus.querySelector(".destination-name").textContent?.split("～")[1].slice(0, -1);
+      const route = $(bus).find(".courseName").text().replace(/[０-９]/g, str => String.fromCharCode(str.charCodeAt(0) - 0xFEE0)).slice(1, -1);
+      const destination = $(bus).find(".destination-name").text()?.split("～")[1]?.slice(0, -1) || "";
 
       const location: number = (() => {
-        const { className } = bus.querySelector(".locationClass");
+        const className = $(bus).find(".locationClass").attr("class") || "";
 
         const matcher = className.match(/position-(\d)/);
         return matcher ? parseInt(matcher[1]) : 100;
       })();
 
-      const plannedTime = bus.querySelector(".plannedTime").textContent.match(/\d{1,2}:\d{1,2}/)[0];
-      const arrivalTime = bus.querySelector(".predictionTime").textContent.match(/\d{1,2}:\d{1,2}/)[0];
+      const plannedTime = $(bus).find(".plannedTime").text().match(/\d{1,2}:\d{1,2}/)?.[0] || "";
+      const arrivalTime = $(bus).find(".predictionTime").text().match(/\d{1,2}:\d{1,2}/)?.[0] || "";
 
       const delay = Time.getDifferenceInMinutes(
         Time.parseTimeStringToDate(arrivalTime),

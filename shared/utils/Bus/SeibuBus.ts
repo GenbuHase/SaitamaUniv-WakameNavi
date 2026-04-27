@@ -1,4 +1,4 @@
-import { JSDOM } from "jsdom";
+import * as cheerio from "cheerio";
 
 import Bus from ".";
 import Time from "@@/shared/utils/Time";
@@ -9,16 +9,17 @@ namespace SeibuBus {
 
   export class Service {
     public static async getServices (startId: string, goalId: string): Promise<Bus.Service[]> {
-      const document = (await JSDOM.fromURL(this.__getFetchUrl(startId, goalId))).window.document;
-      const elements = document.querySelectorAll("#resultList > .plotList");
+      const html = await (await fetch(this.__getFetchUrl(startId, goalId))).text();
+      const $ = cheerio.load(html);
+      const elements = $("#resultList > .plotList").toArray();
   
       const services: Bus.Service[] = [];
       for (const elem of elements) {
-        const route: string = elem.querySelector(".courseName")?.textContent || "";
-        const destination: string = elem.querySelector(".destination-name")?.textContent || "";
-        const location: Element | null = elem.querySelector(".locationClass") || null;
-        const plannedTime: string = elem.querySelector(".plannedTime")?.textContent || "";
-        const arrivalTime: string = elem.querySelector(".predictionTime")?.textContent || "";
+        const route: string = $(elem).find(".courseName").text() || "";
+        const destination: string = $(elem).find(".destination-name").text() || "";
+        const location: string = $(elem).find(".locationClass").attr("class") || "";
+        const plannedTime: string = $(elem).find(".plannedTime").text() || "";
+        const arrivalTime: string = $(elem).find(".predictionTime").text() || "";
 
         services.push(
           this.__normalize({
@@ -45,7 +46,7 @@ namespace SeibuBus {
       const destination: string = unnormalizedService.destination.split("～")[1].slice(0, -1);
 
       const location: number = (() => {
-        const { className } = unnormalizedService.location || { className: "" };
+        const className = unnormalizedService.location || "";
         const classMatcher = className.match(/position-(\d)/);
 
         return classMatcher ? parseInt(classMatcher[1]) : 100;
@@ -83,7 +84,7 @@ namespace SeibuBus {
     export type UnnormalizedService = {
       route: string;
       destination: string;
-      location: Element | null;
+      location: string;
       plannedTime: string;
       arrivalTime: string;
     }

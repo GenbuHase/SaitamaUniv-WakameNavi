@@ -5,7 +5,7 @@
  * 共通の BusService 型に正規化して返す。
  */
 
-import { JSDOM } from "jsdom";
+import * as cheerio from "cheerio";
 import Time from "@@/shared/utils/Time";
 import type { BusCompanyCode, BusService, BusLocation } from "@@/shared/types/bus";
 import { BUS_COMPANIES } from "@@/shared/types/bus";
@@ -82,17 +82,18 @@ function parseDelay(delayText: string): number {
 export async function getServices(startId: string, goalId: string): Promise<BusService[]> {
   // 目的地が未指定（startId === goalId）の場合、goalIdを空値にすることですべての行き先を取得できる
   const fetchGoalId = startId === goalId ? "" : goalId;
-  const document = (await JSDOM.fromURL(getFetchUrl(startId, fetchGoalId))).window.document;
-  const elements = document.querySelectorAll("#resultList > .plotList");
+  const html = await (await fetch(getFetchUrl(startId, fetchGoalId))).text();
+  const $ = cheerio.load(html);
+  const elements = $("#resultList > .plotList").toArray();
 
   const services: BusService[] = [];
   for (const elem of elements) {
-    const route = elem.querySelector(".courseName")?.textContent || "";
-    const destinationName = elem.querySelector(".destination-name")?.textContent || "";
-    const destinationUnit = elem.querySelector(".destination-unit")?.textContent || "";
-    const locationText = elem.querySelector(".approach-number")?.textContent || "";
-    const delayText = elem.querySelector(".delay-minutes-area > .middleText")?.textContent || "";
-    const scheduledTime = elem.querySelector(".on-time")?.textContent || "";
+    const route = $(elem).find(".courseName").text() || "";
+    const destinationName = $(elem).find(".destination-name").text() || "";
+    const destinationUnit = $(elem).find(".destination-unit").text() || "";
+    const locationText = $(elem).find(".approach-number").text() || "";
+    const delayText = $(elem).find(".delay-minutes-area > .middleText").text() || "";
+    const scheduledTime = $(elem).find(".on-time").text() || "";
 
     // 行先名から単位テキストを除去 (例: "北浦和駅西口行" → "北浦和駅西口")
     const destination = destinationName.replace(destinationUnit, "");
