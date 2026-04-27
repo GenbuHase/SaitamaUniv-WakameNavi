@@ -676,7 +676,7 @@
       route.stops.forEach((stop: any) => stopsSet.add(stop.name));
     });
     return Array.from(stopsSet).sort((a, b) => {
-      const priority = ["埼玉大学", "北浦和駅西口", "南与野駅西口", "南与野駅北入口", "志木駅東口", "北朝霞駅", "浦和駅西口"];
+      const priority = ["埼玉大学", "北浦和駅", "北浦和駅西口", "南与野駅西口", "南与野駅北入口", "志木駅東口", "北朝霞駅", "埼大裏", "浦和駅西口", "桜区役所"];
       const indexA = priority.indexOf(a);
       const indexB = priority.indexOf(b);
       if (indexA !== -1 && indexB !== -1) return indexA - indexB;
@@ -712,7 +712,15 @@
         }
       }
     });
-    return Array.from(possibleStops).sort((a, b) => a.localeCompare(b, "ja"));
+    return Array.from(possibleStops).sort((a, b) => {
+      const priority = ["埼玉大学", "北浦和駅", "北浦和駅西口", "南与野駅西口", "南与野駅北入口", "志木駅東口", "北朝霞駅", "埼大裏", "浦和駅西口", "桜区役所"];
+      const indexA = priority.indexOf(a);
+      const indexB = priority.indexOf(b);
+      if (indexA !== -1 && indexB !== -1) return indexA - indexB;
+      if (indexA !== -1) return -1;
+      if (indexB !== -1) return 1;
+      return a.localeCompare(b, "ja");
+    });
   });
 
   // データの更新シミュレーション
