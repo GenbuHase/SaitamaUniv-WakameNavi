@@ -16,17 +16,37 @@ import type { BusCompanyCode } from "@@/shared/types/bus";
 
 export default defineEventHandler(async (event) => {
   const query = getQuery(event) as { [K: string]: string };
-  const { start, goal, company } = query;
+  const { start, goal, company, kokusaiStartId, kokusaiGoalId, seibuStartId, seibuGoalId } = query;
 
-  // バリデーション: start は必須
+  // 新しい直接ID指定方式 (自由にバス停を選択できるようにする)
+  if (kokusaiStartId || seibuStartId) {
+    const services = [];
+    if (kokusaiStartId) {
+      try {
+        services.push(...await Bus.KokusaiKogyoBus.getServices(kokusaiStartId, kokusaiGoalId || kokusaiStartId));
+      } catch (e) {
+        console.error("[KokusaiKogyoBus] 運行情報の取得に失敗:", e);
+      }
+    }
+    if (seibuStartId) {
+      try {
+        services.push(...await Bus.SeibuBus.getServices(seibuStartId, seibuGoalId || seibuStartId));
+      } catch (e) {
+        console.error("[SeibuBus] 運行情報の取得に失敗:", e);
+      }
+    }
+    return services;
+  }
+
+  // バリデーション: start または直接ID は必須
   if (!start) {
     throw createError({
       statusCode: 400,
-      data: "クエリパラメータ 'start' は必須です。",
+      data: "クエリパラメータ 'start' または各社の 'startId' が必要です。",
     });
   }
 
-  // バリデーション: company が指定された場合は有効な値かチェック
+  // 従来の内部コード指定方式
   if (company && company !== "KokusaiKogyo" && company !== "Seibu") {
     throw createError({
       statusCode: 400,

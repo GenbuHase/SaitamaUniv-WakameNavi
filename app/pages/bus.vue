@@ -212,6 +212,7 @@
 
 <script setup lang="ts">
   import { ref, computed, onMounted, onUnmounted, watch, nextTick } from "vue";
+  import { useRoute } from "#imports";
   import { Bus, Clock, AlertTriangle, MapPin, ChevronDown, Filter, ArrowLeftRight, CalendarClock, Search } from "lucide-vue-next";
 
   // --- データ定義 ---
@@ -653,7 +654,12 @@
     return new Date(date.getTime() + minutes * 60000);
   };
 
-  // --- Vue コンポーネントロジック ---
+  // Vue コンポーネントロジック ---
+
+  const route = useRoute();
+  const isTestMode = computed(() => route.query.test !== undefined);
+  const apiStops = ref<any[]>([]);
+  const apiServices = ref<any[]>([]);
 
   // UI入力用 (検索ボタンを押すまで確定しない)
   const boardingStopInput = ref("南与野駅西口");
@@ -688,10 +694,18 @@
 
   // 現在時刻の更新タイマー
   let timer: ReturnType<typeof setInterval>;
-  onMounted(() => {
+  onMounted(async () => {
     timer = setInterval(() => {
       currentTime.value = new Date();
     }, 1000);
+
+    if (isTestMode.value) {
+      try {
+        apiStops.value = await $fetch('/api/v2/bus/stops');
+      } catch (e) {
+        console.error("Failed to fetch stops:", e);
+      }
+    }
 
     // 初回データロード
     refreshData();
@@ -724,8 +738,51 @@
   });
 
   // データの更新シミュレーション
-  const refreshData = () => {
+  const refreshData = async () => {
     isLoading.value = true;
+
+    if (isTestMode.value) {
+      try {
+        const getStopId = (stopName: string, company: "Kokusai" | "Seibu") => {
+          const data = company === "Kokusai" ? KOKUSAI_ROUTES_DATA : SEIBU_ROUTES_DATA;
+          for (const route in data) {
+            const stop = (data as any)[route].find((s: any) => s.name === stopName);
+            if (stop) return stop.id;
+          }
+          return null;
+        };
+
+        const query: any = {};
+        
+        // 乗車バス停のID取得
+        const kokusaiStartId = getStopId(selectedBoardingStop.value, "Kokusai");
+        const seibuStartId = getStopId(selectedBoardingStop.value, "Seibu");
+        if (kokusaiStartId) query.kokusaiStartId = kokusaiStartId;
+        if (seibuStartId) query.seibuStartId = seibuStartId;
+
+        // 降車バス停のID取得 (任意)
+        if (selectedDropOffStop.value) {
+          const kokusaiGoalId = getStopId(selectedDropOffStop.value, "Kokusai");
+          const seibuGoalId = getStopId(selectedDropOffStop.value, "Seibu");
+          if (kokusaiGoalId) query.kokusaiGoalId = kokusaiGoalId;
+          if (seibuGoalId) query.seibuGoalId = seibuGoalId;
+        }
+
+        if (Object.keys(query).length > 0) {
+          apiServices.value = await $fetch("/api/v2/bus/services", { query });
+        } else {
+          apiServices.value = [];
+        }
+      } catch (e) {
+        console.error("API error:", e);
+        apiServices.value = [];
+      } finally {
+        lastUpdated.value = new Date();
+        isLoading.value = false;
+      }
+      return;
+    }
+
     setTimeout(() => {
       const newDelays: Record<string, number> = {};
 
@@ -753,6 +810,46 @@
 
   // 統合時刻表データ (確定済みStateに基づいて計算)
   const integratedTimetable = computed(() => {
+    if (isTestMode.value) {
+      const allBuses = apiServices.value.map((service: any, index: number) => {
+        const company = service.companyCode === 'KokusaiKogyo' ? 'Kokusai' : 'Seibu';
+        const styles = company === "Kokusai"
+          ? { textColor: "text-green-700", borderColor: "border-green-700", color: "bg-green-700" }
+          : { textColor: "text-cyan-600", borderColor: "border-cyan-600", color: "bg-cyan-600" };
+
+        const scheduledDate = parseTime(service.scheduledTime, currentTime.value);
+        const estimatedDate = parseTime(service.estimatedTime, currentTime.value);
+        
+        // 深夜・翌日またぎの補正
+        if (scheduledDate.getHours() < 5 && currentTime.value.getHours() > 18) scheduledDate.setDate(scheduledDate.getDate() + 1);
+        if (estimatedDate.getHours() < 5 && currentTime.value.getHours() > 18) estimatedDate.setDate(estimatedDate.getDate() + 1);
+
+        return {
+          routeId: `${service.route}_${service.scheduledTime}_${company}_${index}`,
+          routeCode: service.route,
+          routeName: service.destination,
+          ...styles,
+          company,
+          destination: service.destination,
+          scheduledTime: service.scheduledTime,
+          estimatedTime: service.estimatedTime,
+          delay: service.delay,
+          scheduledDate,
+          estimatedDate,
+          isPast: estimatedDate < currentTime.value,
+          boardingStopName: selectedBoardingStop.value
+        };
+      });
+
+      return allBuses.sort((a, b) => {
+        if (sortType.value === "estimated") {
+          return a.estimatedDate.getTime() - b.estimatedDate.getTime();
+        } else {
+          return a.scheduledDate.getTime() - b.scheduledDate.getTime();
+        }
+      });
+    }
+
     let allBuses: any[] = [];
 
     GENERATED_ROUTES.forEach(route => {

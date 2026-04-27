@@ -5,13 +5,12 @@
  * 共通の BusService 型に正規化して返す。
  */
 
-import { JSDOM } from "jsdom";
 import Time from "@@/shared/utils/Time";
 import type { BusCompanyCode, BusService, BusLocation } from "@@/shared/types/bus";
 import { BUS_COMPANIES } from "@@/shared/types/bus";
 
 /** navitimeバスロケーションのベースURL */
-const FETCH_BASE_URL = "https://transfer.navitime.biz/seibubus-dia/pc/location/BusLocationResult";
+const FETCH_BASE_URL = "https://transfer-cloud.navitime.biz/seibubus/approachings";
 
 /** バス会社コード */
 export const COMPANY_CODE: BusCompanyCode = "Seibu";
@@ -23,55 +22,23 @@ export const COMPANY_NAME = BUS_COMPANIES.Seibu.name;
  * スクレイピングURLを生成する
  */
 function getFetchUrl(startId: string, goalId: string): string {
-  return `${FETCH_BASE_URL}?startId=${startId}&goalId=${goalId}`;
-}
-
-/**
- * CSSクラスから BusLocation に正規化する
- *
- * 西武バスの位置表現:
- * - CSSクラス `position-N` (N: 1〜) → running (N停留所前)
- * - クラスが見つからない → not_departed
- */
-function parseLocation(locationElement: Element | null): BusLocation {
-  if (!locationElement) {
-    return { status: "not_departed", stopsAway: Infinity };
-  }
-
-  const matcher = locationElement.className.match(/position-(\d+)/);
-  if (!matcher) {
-    return { status: "not_departed", stopsAway: Infinity };
-  }
-
-  const stops = parseInt(matcher[1]);
-  return {
-    status: stops <= 1 ? "approaching" : "running",
-    stopsAway: stops,
-  };
+  return `${FETCH_BASE_URL}?departure-busstop=${startId}&arrival-busstop=${goalId}`;
 }
 
 /**
  * 西武バスの系統名を正規化する
- *
- * 西武バスは系統名が全角括弧・全角数字で表示される (例: "＜北浦０３＞")。
- * これを半角数字の系統コードに変換する (例: "北浦03")。
  */
 function normalizeRouteName(rawRoute: string): string {
-  return rawRoute
-    .replace(/[０-９]/g, str => String.fromCharCode(str.charCodeAt(0) - 0xFEE0))
-    .slice(1, -1); // 括弧 ＜＞ を除去
+  return rawRoute.replace(/[０-９]/g, str => String.fromCharCode(str.charCodeAt(0) - 0xfee0)).replace(/[＜＞]/g, ""); // 括弧 ＜＞ を除去
 }
 
 /**
  * 西武バスの行先名を正規化する
- *
- * 西武バスの行先は「出発地～行先行」の形式 (例: "埼玉大学～北浦和駅行")。
- * 行先部分のみ抽出する (例: "北浦和駅")。
  */
 function normalizeDestination(rawDestination: string): string {
   const parts = rawDestination.split("～");
-  if (parts.length < 2) return rawDestination;
-  return parts[1].slice(0, -1); // 末尾の「行」を除去
+  if (parts.length < 2) return rawDestination.replace("行", "");
+  return parts[1].replace("行", ""); // 末尾の「行」を除去
 }
 
 /**
@@ -82,49 +49,98 @@ function extractTime(timeText: string): string {
   return matcher ? matcher[0] : "";
 }
 
-/**
- * 西武バスの運行情報を取得する
- *
- * @param startId - 出発バス停の navitime ID
- * @param goalId - 到着バス停の navitime ID
- * @returns 正規化された運行情報の配列
- */
 export async function getServices(startId: string, goalId: string): Promise<BusService[]> {
-  const document = (await JSDOM.fromURL(getFetchUrl(startId, goalId))).window.document;
-  const elements = document.querySelectorAll("#resultList > .plotList");
+  // 目的地が未指定（startId === goalId）の場合、Navitime Cloudでは403/404エラーになるため
+  // 主要な行き先をすべて並列で取得して合成する
+  if (startId === goalId) {
+    const defaultGoals = ["00111643", "00111628", "00111644"].filter(id => id !== startId);
+    const results = await Promise.all(
+      defaultGoals.map(dest => fetchServices(startId, dest).catch(() => []))
+    );
+
+    const uniqueServices = new Map<string, BusService>();
+    for (const res of results) {
+      for (const service of res) {
+        // 同じ便が複数回取得される可能性があるので、定刻と系統で一意にする
+        uniqueServices.set(`${service.scheduledTime}_${service.route}_${service.destination}`, service);
+      }
+    }
+    // 時間順にソートする
+    return Array.from(uniqueServices.values()).sort((a, b) => a.scheduledTime.localeCompare(b.scheduledTime));
+  }
+
+  return fetchServices(startId, goalId);
+}
+
+async function fetchServices(startId: string, goalId: string): Promise<BusService[]> {
+  const url = getFetchUrl(startId, goalId);
+  const response = await fetch(url, {
+    headers: {
+      "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+    }
+  });
+
+  if (!response.ok) {
+    throw new Error(`Seibu Bus Fetch Error: ${response.status} ${response.statusText}`);
+  }
+
+  const html = await response.text();
+  const match = html.match(/<script type="application\/json" id="__NUXT_DATA__" data-ssr="true">([\s\S]*?)<\/script>/);
+  if (!match) return [];
+
+  let data: any[];
+  try {
+    data = JSON.parse(match[1]);
+  } catch (e) {
+    return [];
+  }
+
+  const resolve = (val: any): any => (typeof val === "number" ? data[val] : val);
 
   const services: BusService[] = [];
-  for (const elem of elements) {
-    const rawRoute = elem.querySelector(".courseName")?.textContent || "";
-    const rawDestination = elem.querySelector(".destination-name")?.textContent || "";
-    const locationElement = elem.querySelector(".locationClass") || null;
-    const rawPlannedTime = elem.querySelector(".plannedTime")?.textContent || "";
-    const rawArrivalTime = elem.querySelector(".predictionTime")?.textContent || "";
 
-    const route = normalizeRouteName(rawRoute);
-    const destination = normalizeDestination(rawDestination);
-    const location = parseLocation(locationElement);
-    const scheduledTime = extractTime(rawPlannedTime);
-    const estimatedTime = extractTime(rawArrivalTime);
+  for (const item of data) {
+    if (item && typeof item === "object" && item.courseName && item.origin && item.destination && item.predictedDuration) {
+      const rawRoute = resolve(item.courseName);
+      const rawDestination = resolve(item.destination);
 
-    // 遅延分数 = 到着予測時刻 - 定刻
-    const delay = scheduledTime && estimatedTime
-      ? Time.getDifferenceInMinutes(
-          Time.parseTimeStringToDate(estimatedTime),
-          Time.parseTimeStringToDate(scheduledTime)
-        )
-      : 0;
+      const departureInfo = resolve(item.departure);
+      if (!departureInfo) continue;
 
-    services.push({
-      companyCode: COMPANY_CODE,
-      companyName: COMPANY_NAME,
-      route,
-      destination,
-      location,
-      scheduledTime,
-      estimatedTime,
-      delay: Math.max(0, delay), // 負の遅延は0に補正
-    });
+      const rawScheduledTime = resolve(departureInfo.scheduledDepartureTime) || "";
+      const rawEstimatedTime = resolve(departureInfo.predictedDepartureTime) || "";
+
+      const scheduledTime = extractTime(rawScheduledTime);
+      const estimatedTime = extractTime(rawEstimatedTime);
+
+      const delayMinutes = scheduledTime && estimatedTime ? Time.getDifferenceInMinutes(Time.parseTimeStringToDate(estimatedTime), Time.parseTimeStringToDate(scheduledTime)) : 0;
+
+      // 状態推定 (残り時間のインデックスを探して発車間近か判定)
+      let locationStatus: BusLocation = { status: "running", stopsAway: 1 };
+      const remainingTimeInfo = resolve(departureInfo.remainingTimeUntilDeparture);
+      if (remainingTimeInfo && remainingTimeInfo.includes("M")) {
+        const minMatch = remainingTimeInfo.match(/PT(\d+)M/);
+        if (minMatch) {
+          const min = parseInt(minMatch[1]);
+          if (min <= 1) {
+            locationStatus = { status: "approaching", stopsAway: 0 };
+          } else {
+            locationStatus = { status: "running", stopsAway: Math.max(1, Math.floor(min / 2)) };
+          }
+        }
+      }
+
+      services.push({
+        companyCode: COMPANY_CODE,
+        companyName: COMPANY_NAME,
+        route: normalizeRouteName(rawRoute),
+        destination: normalizeDestination(rawDestination),
+        location: locationStatus,
+        scheduledTime,
+        estimatedTime,
+        delay: Math.max(0, delayMinutes)
+      });
+    }
   }
 
   return services;
@@ -133,5 +149,5 @@ export async function getServices(startId: string, goalId: string): Promise<BusS
 export default {
   COMPANY_CODE,
   COMPANY_NAME,
-  getServices,
+  getServices
 };
