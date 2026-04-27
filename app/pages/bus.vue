@@ -65,8 +65,13 @@
           乗車バス停 (出発)
         </label>
         <div class="relative group">
-          <input type="text" v-model="boardingStopInput" @focus="isBoardingDropdownOpen = true" @click="isBoardingDropdownOpen = true" @blur="isBoardingDropdownOpen = false" @keydown="handleBoardingKeyDown" placeholder="バス停名を入力または選択" class="w-full p-3.5 pl-4 pr-10 bg-slate-50/50 border border-slate-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-emerald-500/30 focus:border-emerald-500 font-medium text-slate-700 transition-all duration-300" autocomplete="off" />
-          <ChevronDown class="w-5 h-5 text-slate-400 absolute right-4 top-4 pointer-events-none transition-transform duration-300 group-focus-within:text-emerald-500" :class="{ 'rotate-180': isBoardingDropdownOpen }" />
+          <input type="text" v-model="boardingStopInput" @focus="isBoardingDropdownOpen = true" @click="isBoardingDropdownOpen = true" @blur="isBoardingDropdownOpen = false" @keydown="handleBoardingKeyDown" placeholder="バス停名を入力または選択" class="w-full p-3.5 pl-4 pr-16 bg-slate-50/50 border border-slate-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-emerald-500/30 focus:border-emerald-500 font-medium text-slate-700 transition-all duration-300" autocomplete="off" />
+          <div class="absolute right-2 top-0 bottom-0 flex items-center gap-0.5">
+            <button v-show="boardingStopInput" @mousedown.prevent="boardingStopInput = ''" class="p-1.5 text-slate-400 hover:text-slate-600 hover:bg-slate-200/50 rounded-full transition-colors" title="クリア">
+              <X class="w-4 h-4" />
+            </button>
+            <ChevronDown class="w-5 h-5 text-slate-400 pointer-events-none transition-transform duration-300 group-focus-within:text-emerald-500 mr-2" :class="{ 'rotate-180': isBoardingDropdownOpen }" />
+          </div>
 
           <transition enter-active-class="transition duration-150 ease-out" enter-from-class="transform scale-95 opacity-0 translate-y-[-10px]" enter-to-class="transform scale-100 opacity-100 translate-y-0" leave-active-class="transition duration-100 ease-in" leave-from-class="transform scale-100 opacity-100 translate-y-0" leave-to-class="transform scale-95 opacity-0 translate-y-[-10px]">
             <div v-if="isBoardingDropdownOpen" id="boarding-dropdown-container" class="absolute z-20 w-full mt-2 bg-white border border-slate-100 rounded-2xl shadow-[0_10px_40px_rgb(0,0,0,0.08)] max-h-60 overflow-auto">
@@ -95,8 +100,13 @@
           降車バス停 (到着・任意)
         </label>
         <div class="relative group">
-          <input type="text" v-model="dropOffStopInput" @focus="isDropOffDropdownOpen = true" @click="isDropOffDropdownOpen = true" @blur="isDropOffDropdownOpen = false" @keydown="handleDropOffKeyDown" :disabled="availableDropOffStops.length === 0" placeholder="指定なし (すべての行き先を表示)" class="w-full p-3.5 pl-4 pr-10 bg-slate-50/50 border border-slate-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-emerald-500/30 focus:border-emerald-500 font-medium text-slate-700 disabled:bg-slate-100/50 disabled:text-slate-400 disabled:opacity-60 transition-all duration-300" autocomplete="off" />
-          <ChevronDown class="w-5 h-5 text-slate-400 absolute right-4 top-4 pointer-events-none transition-transform duration-300 group-focus-within:text-emerald-500" :class="{ 'rotate-180': isDropOffDropdownOpen }" />
+          <input type="text" v-model="dropOffStopInput" @focus="isDropOffDropdownOpen = true" @click="isDropOffDropdownOpen = true" @blur="isDropOffDropdownOpen = false" @keydown="handleDropOffKeyDown" :disabled="availableDropOffStops.length === 0" placeholder="指定なし (すべての行き先を表示)" class="w-full p-3.5 pl-4 pr-16 bg-slate-50/50 border border-slate-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-emerald-500/30 focus:border-emerald-500 font-medium text-slate-700 disabled:bg-slate-100/50 disabled:text-slate-400 disabled:opacity-60 transition-all duration-300" autocomplete="off" />
+          <div class="absolute right-2 top-0 bottom-0 flex items-center gap-0.5">
+            <button v-show="dropOffStopInput" @mousedown.prevent="dropOffStopInput = ''" class="p-1.5 text-slate-400 hover:text-slate-600 hover:bg-slate-200/50 rounded-full transition-colors disabled:opacity-50" :disabled="availableDropOffStops.length === 0" title="クリア">
+              <X class="w-4 h-4" />
+            </button>
+            <ChevronDown class="w-5 h-5 text-slate-400 pointer-events-none transition-transform duration-300 group-focus-within:text-emerald-500 mr-2" :class="{ 'rotate-180': isDropOffDropdownOpen }" />
+          </div>
 
           <transition enter-active-class="transition duration-150 ease-out" enter-from-class="transform scale-95 opacity-0 translate-y-[-10px]" enter-to-class="transform scale-100 opacity-100 translate-y-0" leave-active-class="transition duration-100 ease-in" leave-from-class="transform scale-100 opacity-100 translate-y-0" leave-to-class="transform scale-95 opacity-0 translate-y-[-10px]">
             <div v-if="isDropOffDropdownOpen && availableDropOffStops.length > 0" id="dropoff-dropdown-container" class="absolute z-20 w-full mt-2 bg-white border border-slate-100 rounded-2xl shadow-[0_10px_40px_rgb(0,0,0,0.08)] max-h-60 overflow-auto">
@@ -213,7 +223,7 @@
 <script setup lang="ts">
   import { ref, computed, onMounted, onUnmounted, watch, nextTick } from "vue";
   import { useRoute } from "#imports";
-  import { Bus, Clock, AlertTriangle, MapPin, ChevronDown, Filter, ArrowLeftRight, CalendarClock, Search } from "lucide-vue-next";
+  import { Bus, Clock, AlertTriangle, MapPin, ChevronDown, Filter, ArrowLeftRight, CalendarClock, Search, X } from "lucide-vue-next";
 
   // --- データ定義 ---
 
@@ -662,11 +672,11 @@
   const apiServices = ref<any[]>([]);
 
   // UI入力用 (検索ボタンを押すまで確定しない)
-  const boardingStopInput = ref("埼玉大学");
+  const boardingStopInput = ref("");
   const dropOffStopInput = ref("");
 
   // 確定した検索条件
-  const selectedBoardingStop = ref("埼玉大学");
+  const selectedBoardingStop = ref("");
   const selectedDropOffStop = ref("");
 
   const busDelays = ref<Record<string, number>>({});
@@ -1138,9 +1148,10 @@
   };
 
   // 入力変更時のリセットと開閉制御
+  let isSwapping = false;
   watch(boardingStopInput, (newVal, oldVal) => {
     boardingActiveIndex.value = -1;
-    if (newVal !== oldVal) {
+    if (newVal !== oldVal && !isSwapping) {
       dropOffStopInput.value = "";
     }
   });
@@ -1225,11 +1236,14 @@
     }
   };
 
-  const swapStops = () => {
+  const swapStops = async () => {
     if (dropOffStopInput.value) {
+      isSwapping = true;
       const temp = boardingStopInput.value;
       boardingStopInput.value = dropOffStopInput.value;
       dropOffStopInput.value = temp;
+      await nextTick();
+      isSwapping = false;
     }
   };
 </script>
