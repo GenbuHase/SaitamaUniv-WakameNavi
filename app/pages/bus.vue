@@ -662,11 +662,11 @@
   const apiServices = ref<any[]>([]);
 
   // UI入力用 (検索ボタンを押すまで確定しない)
-  const boardingStopInput = ref("南与野駅西口");
+  const boardingStopInput = ref("埼玉大学");
   const dropOffStopInput = ref("");
 
   // 確定した検索条件
-  const selectedBoardingStop = ref("南与野駅西口");
+  const selectedBoardingStop = ref("埼玉大学");
   const selectedDropOffStop = ref("");
 
   const busDelays = ref<Record<string, number>>({});
@@ -701,7 +701,7 @@
 
     if (isTestMode.value) {
       try {
-        apiStops.value = await $fetch('/api/v2/bus/stops');
+        apiStops.value = await $fetch("/api/v2/bus/stops");
       } catch (e) {
         console.error("Failed to fetch stops:", e);
       }
@@ -757,11 +757,11 @@
         };
 
         const query: Record<string, string> = {};
-        
+
         // 乗車バス停のID取得
         const kokusaiStartId = getStopId(selectedBoardingStop.value, "Kokusai");
         const seibuStartId = getStopId(selectedBoardingStop.value, "Seibu");
-        
+
         let fetchKokusai = !!kokusaiStartId;
         let fetchSeibu = !!seibuStartId;
 
@@ -769,7 +769,7 @@
         if (selectedDropOffStop.value) {
           const kokusaiGoalId = getStopId(selectedDropOffStop.value, "Kokusai");
           const seibuGoalId = getStopId(selectedDropOffStop.value, "Seibu");
-          
+
           if (!kokusaiGoalId) fetchKokusai = false;
           else if (fetchKokusai) query.kokusaiGoalId = kokusaiGoalId;
 
@@ -824,14 +824,12 @@
   const integratedTimetable = computed(() => {
     if (isTestMode.value) {
       const allBuses = apiServices.value.map((service: any, index: number) => {
-        const company = service.companyCode === 'KokusaiKogyo' ? 'Kokusai' : 'Seibu';
-        const styles = company === "Kokusai"
-          ? { textColor: "text-green-700", borderColor: "border-green-700", color: "bg-green-700" }
-          : { textColor: "text-cyan-600", borderColor: "border-cyan-600", color: "bg-cyan-600" };
+        const company = service.companyCode === "KokusaiKogyo" ? "Kokusai" : "Seibu";
+        const styles = company === "Kokusai" ? { textColor: "text-green-700", borderColor: "border-green-700", color: "bg-green-700" } : { textColor: "text-cyan-600", borderColor: "border-cyan-600", color: "bg-cyan-600" };
 
         const scheduledDate = parseTime(service.scheduledTime, currentTime.value);
         const estimatedDate = parseTime(service.estimatedTime, currentTime.value);
-        
+
         // 深夜・翌日またぎの補正
         if (scheduledDate.getHours() < 5 && currentTime.value.getHours() > 18) scheduledDate.setDate(scheduledDate.getDate() + 1);
         if (estimatedDate.getHours() < 5 && currentTime.value.getHours() > 18) estimatedDate.setDate(estimatedDate.getDate() + 1);
@@ -971,7 +969,7 @@
     ま: "ma",
     み: "mi",
     む: "mu",
-    me: "め",
+    め: "me",
     も: "mo",
     や: "ya",
     ゆ: "yu",
