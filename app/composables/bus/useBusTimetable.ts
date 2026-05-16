@@ -5,7 +5,7 @@
  * テンプレートが必要とするすべてのデータと関数を提供する。
  */
 
-import { ref, computed, onMounted, onUnmounted, watch, nextTick } from "vue";
+import { ref, computed, onMounted, onUnmounted, watch } from "vue";
 import { useRoute } from "#imports";
 
 import { KOKUSAI_ROUTES_DATA, SEIBU_ROUTES_DATA, GENERATED_ROUTES, sortStopsByPriority } from "./busRouteData";
@@ -64,12 +64,6 @@ export function useBusTimetable() {
   const lastUpdated = ref(new Date());
   const isLoading = ref(false);
   const sortType = ref<"estimated" | "scheduled">("estimated");
-
-  // ドロップダウン制御
-  const isBoardingDropdownOpen = ref(false);
-  const isDropOffDropdownOpen = ref(false);
-  const boardingActiveIndex = ref(-1);
-  const dropOffActiveIndex = ref(-1);
 
   // --- 全バス停リスト ---
 
@@ -346,125 +340,25 @@ export function useBusTimetable() {
     return integratedTimetable.value.slice(startIndex).some(bus => bus.delay > 0);
   });
 
-  // --- バス停選択 ---
-
-  const selectBoardingStop = (stop: string) => {
-    boardingStopInput.value = stop;
-    isBoardingDropdownOpen.value = false;
-    if (document.activeElement instanceof HTMLElement) {
-      document.activeElement.blur();
-    }
-  };
-
-  const selectDropOffStop = (stop: string) => {
-    dropOffStopInput.value = stop;
-    isDropOffDropdownOpen.value = false;
-    if (document.activeElement instanceof HTMLElement) {
-      document.activeElement.blur();
-    }
-  };
-
   // --- 入力変更の監視 ---
 
   let isSwapping = false;
   watch(boardingStopInput, (newVal, oldVal) => {
-    boardingActiveIndex.value = -1;
     if (newVal !== oldVal && !isSwapping) {
       dropOffStopInput.value = "";
     }
   });
 
-  watch(dropOffStopInput, () => {
-    dropOffActiveIndex.value = -1;
-  });
-
-  // --- ドロップダウンのスクロール制御 ---
-
-  const scrollToActiveElement = (containerId: string, elementId: string) => {
-    nextTick(() => {
-      const container = document.getElementById(containerId);
-      const element = document.getElementById(elementId);
-      if (container && element) {
-        const containerRect = container.getBoundingClientRect();
-        const elementRect = element.getBoundingClientRect();
-
-        if (elementRect.bottom > containerRect.bottom) {
-          container.scrollTop += elementRect.bottom - containerRect.bottom;
-        } else if (elementRect.top < containerRect.top) {
-          container.scrollTop -= containerRect.top - elementRect.top;
-        }
-      }
-    });
-  };
-
-  // --- キーボードナビゲーション ---
-
-  const handleBoardingKeyDown = (e: KeyboardEvent) => {
-    if (!isBoardingDropdownOpen.value) {
-      if (e.key === "ArrowDown" || e.key === "Enter") {
-        isBoardingDropdownOpen.value = true;
-      }
-      return;
-    }
-
-    const maxIndex = filteredBoardingStops.value.length - 1;
-    if (e.key === "ArrowDown") {
-      e.preventDefault();
-      boardingActiveIndex.value = boardingActiveIndex.value < maxIndex ? boardingActiveIndex.value + 1 : 0;
-      scrollToActiveElement("boarding-dropdown-container", `boarding-stop-${boardingActiveIndex.value}`);
-    } else if (e.key === "ArrowUp") {
-      e.preventDefault();
-      boardingActiveIndex.value = boardingActiveIndex.value > 0 ? boardingActiveIndex.value - 1 : maxIndex;
-      scrollToActiveElement("boarding-dropdown-container", `boarding-stop-${boardingActiveIndex.value}`);
-    } else if (e.key === "Enter") {
-      e.preventDefault();
-      if (boardingActiveIndex.value >= 0 && boardingActiveIndex.value <= maxIndex) {
-        selectBoardingStop(filteredBoardingStops.value[boardingActiveIndex.value]);
-      }
-    } else if (e.key === "Escape") {
-      isBoardingDropdownOpen.value = false;
-    }
-  };
-
-  const handleDropOffKeyDown = (e: KeyboardEvent) => {
-    if (!isDropOffDropdownOpen.value) {
-      if (e.key === "ArrowDown" || e.key === "Enter") {
-        isDropOffDropdownOpen.value = true;
-      }
-      return;
-    }
-
-    const items = ["", ...filteredDropOffStops.value];
-    const maxIndex = items.length - 1;
-
-    if (e.key === "ArrowDown") {
-      e.preventDefault();
-      dropOffActiveIndex.value = dropOffActiveIndex.value < maxIndex ? dropOffActiveIndex.value + 1 : 0;
-      scrollToActiveElement("dropoff-dropdown-container", `dropoff-stop-${dropOffActiveIndex.value}`);
-    } else if (e.key === "ArrowUp") {
-      e.preventDefault();
-      dropOffActiveIndex.value = dropOffActiveIndex.value > 0 ? dropOffActiveIndex.value - 1 : maxIndex;
-      scrollToActiveElement("dropoff-dropdown-container", `dropoff-stop-${dropOffActiveIndex.value}`);
-    } else if (e.key === "Enter") {
-      e.preventDefault();
-      if (dropOffActiveIndex.value >= 0 && dropOffActiveIndex.value <= maxIndex) {
-        selectDropOffStop(items[dropOffActiveIndex.value]);
-      }
-    } else if (e.key === "Escape") {
-      isDropOffDropdownOpen.value = false;
-    }
-  };
-
   // --- バス停入れ替え ---
 
-  const swapStops = async () => {
+  const swapStops = () => {
     if (dropOffStopInput.value) {
       isSwapping = true;
       const temp = boardingStopInput.value;
       boardingStopInput.value = dropOffStopInput.value;
       dropOffStopInput.value = temp;
-      await nextTick();
-      isSwapping = false;
+      // watchトリガー後にフラグをリセット
+      setTimeout(() => { isSwapping = false; }, 0);
     }
   };
 
@@ -480,10 +374,6 @@ export function useBusTimetable() {
     lastUpdated,
     isLoading,
     sortType,
-    isBoardingDropdownOpen,
-    isDropOffDropdownOpen,
-    boardingActiveIndex,
-    dropOffActiveIndex,
 
     // 算出プロパティ
     allStops,
@@ -498,10 +388,6 @@ export function useBusTimetable() {
 
     // メソッド
     handleSearch,
-    selectBoardingStop,
-    selectDropOffStop,
-    handleBoardingKeyDown,
-    handleDropOffKeyDown,
     swapStops,
 
     // ユーティリティ (テンプレートで直接使用)
