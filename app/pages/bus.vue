@@ -178,10 +178,7 @@
                   <span class="text-2xl font-black tabular-nums leading-none tracking-tight" :class="index === nextBusIndex ? 'text-emerald-800' : 'text-slate-700'">
                     {{ bus.scheduledTime }}
                   </span>
-                  <div class="flex flex-col items-center mt-1.5">
-                    <span class="text-[10px] text-slate-400 font-medium tracking-wide"> 予測 {{ bus.estimatedTime.slice(0, 5) }} </span>
-                    <span v-if="bus.delay > 0" class="text-[9px] text-red-600 font-bold bg-red-50 px-1.5 py-0.5 rounded-sm mt-0.5 shadow-sm border border-red-100"> +{{ bus.delay }}分 </span>
-                  </div>
+                  <span class="text-[10px] text-slate-400 mt-1.5 font-medium tracking-wide"> 予測 {{ bus.estimatedTime.slice(0, 5) }} </span>
                 </template>
               </div>
 
@@ -198,8 +195,8 @@
                     {{ bus.routeCode }}
                   </span>
 
-                  <!-- 遅延情報バッジ (予測順の時はここに表示) -->
-                  <span v-if="sortType === 'estimated' && bus.delay > 0" class="text-[10px] text-red-600 font-bold bg-red-50 px-2 py-0.5 rounded-full border border-red-100 shadow-sm"> +{{ bus.delay }}分 </span>
+                  <!-- 遅延情報バッジ -->
+                  <span v-if="bus.delay > 0" class="text-[10px] text-red-600 font-bold bg-red-50 px-2 py-0.5 rounded-full border border-red-100 shadow-sm"> +{{ bus.delay }}分 </span>
 
                   <!-- まもなく表示 -->
                   <span v-if="index === nextBusIndex" class="ml-auto text-[10px] font-bold text-emerald-700 bg-emerald-100 border border-emerald-200 px-2.5 py-0.5 rounded-full shadow-sm animate-pulse whitespace-nowrap"> 先発 </span>
