@@ -13,15 +13,11 @@ import type { BusRoute, BusRouteStop, BusCompanyCode } from "@@/shared/types/bus
 
 type RawStop = { id: string; name: string };
 
-function buildRoute(
-  companyCode: BusCompanyCode,
-  routeCode: string,
-  rawStops: RawStop[]
-): BusRoute {
+function buildRoute(companyCode: BusCompanyCode, routeCode: string, rawStops: RawStop[]): BusRoute {
   const stops: BusRouteStop[] = rawStops.map((s, i) => ({
     id: s.id,
     name: s.name,
-    order: i,
+    order: i
   }));
 
   return {
@@ -29,7 +25,7 @@ function buildRoute(
     routeCode,
     origin: stops[0],
     terminal: stops[stops.length - 1],
-    stops,
+    stops
   };
 }
 
@@ -48,7 +44,7 @@ const KokusaiKogyoRoutes: BusRoute[] = [
     { id: "00021226", name: "山久保" },
     { id: "00021227", name: "栄和北町" },
     { id: "00021228", name: "大泉院通り" },
-    { id: "00021229", name: "埼玉大学" },
+    { id: "00021229", name: "埼玉大学" }
   ]),
 
   buildRoute("KokusaiKogyo", "南与01", [
@@ -57,7 +53,7 @@ const KokusaiKogyoRoutes: BusRoute[] = [
     { id: "00021226", name: "山久保" },
     { id: "00021227", name: "栄和北町" },
     { id: "00021228", name: "大泉院通り" },
-    { id: "00021229", name: "埼玉大学" },
+    { id: "00021229", name: "埼玉大学" }
   ]),
 
   buildRoute("KokusaiKogyo", "南与02", [
@@ -68,7 +64,7 @@ const KokusaiKogyoRoutes: BusRoute[] = [
     { id: "00021228", name: "大泉院通り" },
     { id: "00021229", name: "埼玉大学" },
     { id: "00021529", name: "本村" },
-    { id: "00021187", name: "下大久保" },
+    { id: "00021187", name: "下大久保" }
   ]),
 
   buildRoute("KokusaiKogyo", "志03-3", [
@@ -93,7 +89,7 @@ const KokusaiKogyoRoutes: BusRoute[] = [
     { id: "00021227", name: "栄和北町" },
     { id: "00021226", name: "山久保" },
     { id: "00021225", name: "鈴谷札の辻" },
-    { id: "00021362", name: "南与野駅西口" },
+    { id: "00021362", name: "南与野駅西口" }
   ]),
 
   buildRoute("KokusaiKogyo", "北朝02", [
@@ -116,7 +112,7 @@ const KokusaiKogyoRoutes: BusRoute[] = [
     { id: "00021227", name: "栄和北町" },
     { id: "00021226", name: "山久保" },
     { id: "00021225", name: "鈴谷札の辻" },
-    { id: "00021362", name: "南与野駅西口" },
+    { id: "00021362", name: "南与野駅西口" }
   ]),
 
   buildRoute("KokusaiKogyo", "浦11", [
@@ -138,7 +134,7 @@ const KokusaiKogyoRoutes: BusRoute[] = [
     { id: "00021182", name: "栄和" },
     { id: "00021183", name: "道場" },
     { id: "00021184", name: "十石田" },
-    { id: "00021360", name: "桜区役所" },
+    { id: "00021360", name: "桜区役所" }
   ]),
 
   buildRoute("KokusaiKogyo", "浦12", [
@@ -159,7 +155,7 @@ const KokusaiKogyoRoutes: BusRoute[] = [
     { id: "00021182", name: "栄和" },
     { id: "00021183", name: "道場" },
     { id: "00021184", name: "十石田" },
-    { id: "00021360", name: "桜区役所" },
+    { id: "00021360", name: "桜区役所" }
   ]),
 
   buildRoute("KokusaiKogyo", "浦12-2", [
@@ -179,7 +175,7 @@ const KokusaiKogyoRoutes: BusRoute[] = [
     { id: "00021182", name: "栄和" },
     { id: "00021183", name: "道場" },
     { id: "00021184", name: "十石田" },
-    { id: "00021360", name: "桜区役所" },
+    { id: "00021360", name: "桜区役所" }
   ]),
 
   buildRoute("KokusaiKogyo", "浦13", [
@@ -208,7 +204,7 @@ const KokusaiKogyoRoutes: BusRoute[] = [
     { id: "00021190", name: "大久保支所" },
     { id: "00021191", name: "塚本" },
     { id: "00021192", name: "やつしまニュータウン" },
-    { id: "00021193", name: "大久保浄水場" },
+    { id: "00021193", name: "大久保浄水場" }
   ]),
 
   buildRoute("KokusaiKogyo", "浦13-2", [
@@ -231,7 +227,7 @@ const KokusaiKogyoRoutes: BusRoute[] = [
     { id: "00021184", name: "十石田" },
     { id: "00021185", name: "埼大裏" },
     { id: "00021186", name: "諏訪前橋" },
-    { id: "00021187", name: "下大久保" },
+    { id: "00021187", name: "下大久保" }
   ]),
 
   buildRoute("KokusaiKogyo", "浦桜13-3", [
@@ -260,7 +256,7 @@ const KokusaiKogyoRoutes: BusRoute[] = [
     { id: "00021190", name: "大久保支所" },
     { id: "00021191", name: "塚本" },
     { id: "00021192", name: "やつしまニュータウン" },
-    { id: "00021193", name: "大久保浄水場" },
+    { id: "00021193", name: "大久保浄水場" }
   ]),
 
   buildRoute("KokusaiKogyo", "浦15", [
@@ -275,8 +271,8 @@ const KokusaiKogyoRoutes: BusRoute[] = [
     { id: "00022231", name: "町屋四丁目" },
     { id: "00022232", name: "道場三丁目" },
     { id: "00021184", name: "十石田" },
-    { id: "00021360", name: "桜区役所" },
-  ]),
+    { id: "00021360", name: "桜区役所" }
+  ])
 ];
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -294,7 +290,7 @@ const SeibuRoutes: BusRoute[] = [
     { id: "00111641", name: "山久保" },
     { id: "00111642", name: "栄和北町" },
     { id: "00111647", name: "大泉院通り" },
-    { id: "00111643", name: "埼玉大学" },
+    { id: "00111643", name: "埼玉大学" }
   ]),
 
   buildRoute("Seibu", "南与01", [
@@ -303,18 +299,15 @@ const SeibuRoutes: BusRoute[] = [
     { id: "00111641", name: "山久保" },
     { id: "00111642", name: "栄和北町" },
     { id: "00111647", name: "大泉院通り" },
-    { id: "00111643", name: "埼玉大学" },
-  ]),
+    { id: "00111643", name: "埼玉大学" }
+  ])
 ];
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 // 全路線一覧
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-export const ALL_ROUTES: BusRoute[] = [
-  ...KokusaiKogyoRoutes,
-  ...SeibuRoutes,
-];
+export const ALL_ROUTES: BusRoute[] = [...KokusaiKogyoRoutes, ...SeibuRoutes];
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 // ユーティリティ関数
@@ -326,11 +319,7 @@ export const ALL_ROUTES: BusRoute[] = [
  * @param options - フィルタ条件
  * @returns フィルタされた路線の配列
  */
-export function filterRoutes(options: {
-  companyCode?: BusCompanyCode;
-  startId?: string;
-  goalId?: string;
-}): BusRoute[] {
+export function filterRoutes(options: { companyCode?: BusCompanyCode; startId?: string; goalId?: string }): BusRoute[] {
   let routes = ALL_ROUTES;
 
   if (options.companyCode) {
@@ -338,15 +327,11 @@ export function filterRoutes(options: {
   }
 
   if (options.startId) {
-    routes = routes.filter(r =>
-      r.stops.some(s => s.id === options.startId)
-    );
+    routes = routes.filter(r => r.stops.some(s => s.id === options.startId));
   }
 
   if (options.goalId) {
-    routes = routes.filter(r =>
-      r.stops.some(s => s.id === options.goalId)
-    );
+    routes = routes.filter(r => r.stops.some(s => s.id === options.goalId));
   }
 
   return routes;
@@ -356,5 +341,5 @@ export default {
   KokusaiKogyo: KokusaiKogyoRoutes,
   Seibu: SeibuRoutes,
   ALL_ROUTES,
-  filterRoutes,
+  filterRoutes
 };

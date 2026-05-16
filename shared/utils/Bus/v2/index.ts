@@ -55,13 +55,8 @@ function checkValidity(
   });
 
   if (companyCode) {
-    // 特定会社のみチェック
-    if (companyCode !== "KokusaiKogyo" && companyCode !== "Seibu") {
-      throw new Error(`不正なバス会社コードです: '${companyCode}' (KokusaiKogyo または Seibu を指定してください)`);
-    }
     result[companyCode] = check(companyCode);
   } else {
-    // 全社チェック
     result.KokusaiKogyo = check("KokusaiKogyo");
     result.Seibu = check("Seibu");
   }
@@ -74,9 +69,9 @@ function checkValidity(
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 /**
- * バスの運行情報を取得する (会社横断)
+ * バスの運行情報を取得する
  *
- * @param companyCode - バス会社コード (省略時は対象の全社から取得)
+ * @param companyCode - バス会社コード (省略時は全社取得)
  * @param startCode - 出発バス停コード
  * @param goalCode - 到着バス停コード (省略可)
  * @returns 正規化された運行情報の配列
@@ -98,7 +93,7 @@ async function getServices(
 
     if (startStop && (goalStop || !goalCode)) {
       try {
-        const goalId = goalStop?.id || startStop.id; // goal未指定時はstartと同じIDを使用
+        const goalId = goalStop?.id ?? startStop.id;
         services.push(...await KokusaiKogyoBus.getServices(startStop.id, goalId));
       } catch (e) {
         console.error("[KokusaiKogyoBus] 運行情報の取得に失敗:", e);
@@ -115,7 +110,7 @@ async function getServices(
 
     if (startStop && (goalStop || !goalCode)) {
       try {
-        const goalId = goalStop?.id || startStop.id;
+        const goalId = goalStop?.id ?? startStop.id;
         services.push(...await SeibuBus.getServices(startStop.id, goalId));
       } catch (e) {
         console.error("[SeibuBus] 運行情報の取得に失敗:", e);
@@ -127,7 +122,7 @@ async function getServices(
 }
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-// 路線情報取得
+// 路線情報
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 /**
@@ -144,11 +139,15 @@ function getRoutes(options?: {
   return filterRoutes(options || {});
 }
 
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// バス停情報
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
 /**
- * バス停一覧を取得する
+ * バス停情報を取得する
  *
  * @param companyCode - バス会社コードでフィルタ (省略時は全社)
- * @returns 統一バス停の配列
+ * @returns 統合バス停の配列
  */
 function getStops(companyCode?: BusCompanyCode): UnifiedBusStop[] {
   return getUnifiedBusStops(companyCode);
@@ -159,13 +158,13 @@ function getStops(companyCode?: BusCompanyCode): UnifiedBusStop[] {
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 const Bus = {
-  // サブモジュール
+  // バス停データ
   BusStops,
   Routes,
   KokusaiKogyoBus,
   SeibuBus,
 
-  // バス停操作
+  // バス停検索
   findBusStopByCode,
   getCompaniesForStop,
   getStops,
