@@ -16,14 +16,16 @@
             <span class="text-sm tracking-wide">マイルート</span>
             <span class="text-[9px] font-normal text-slate-400 mt-0.5">左端のつまみでドラッグして並べ替えできます</span>
           </div>
-          <span class="text-xs text-slate-400 bg-slate-100 px-2.5 py-0.5 rounded-full font-bold ml-1">
+        </div>
+        <div class="flex items-center gap-2">
+          <span class="text-xs text-slate-400 bg-slate-100 px-2.5 py-0.5 rounded-full font-bold">
             {{ localMyRoutes.length }}/20件
           </span>
+          <ChevronDown
+            class="w-4 h-4 text-slate-400 transition-transform duration-300"
+            :class="{ 'rotate-180': isAccordionOpen }"
+          />
         </div>
-        <ChevronDown
-          class="w-4 h-4 text-slate-400 transition-transform duration-300"
-          :class="{ 'rotate-180': isAccordionOpen }"
-        />
       </button>
 
       <!-- アコーディオンコンテンツ -->
