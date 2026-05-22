@@ -332,8 +332,21 @@ export function useBusTimetable() {
 
   // --- 次発バス ---
 
-  const nextBusIndex = computed(() => integratedTimetable.value.findIndex(item => !item.isPast));
-  const nextBus = computed(() => (nextBusIndex.value !== -1 ? integratedTimetable.value[nextBusIndex.value] : null));
+  const nextBus = computed(() => {
+    // 過去ではない（!isPast）バスを抽出
+    const upcomingBuses = integratedTimetable.value.filter(item => !item.isPast);
+    if (upcomingBuses.length === 0) return null;
+
+    // estimatedDate が最も早いものを探す
+    return upcomingBuses.reduce((earliest, current) => {
+      return current.estimatedDate.getTime() < earliest.estimatedDate.getTime() ? current : earliest;
+    }, upcomingBuses[0]);
+  });
+
+  const nextBusIndex = computed(() => {
+    if (!nextBus.value) return -1;
+    return integratedTimetable.value.findIndex(item => item.routeId === nextBus.value!.routeId);
+  });
 
   const hasDelayInUpcoming = computed(() => {
     const startIndex = nextBusIndex.value !== -1 ? nextBusIndex.value : 0;
