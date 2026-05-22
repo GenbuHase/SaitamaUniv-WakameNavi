@@ -35,7 +35,14 @@
 
   // 出発停留所がない場合は検索ポータルへリダイレクト
   if (!route.query.boarding) {
-    navigateTo("/bus");
+    const query: Record<string, any> = {};
+    if (route.query.local !== undefined) {
+      query.local = "";
+    }
+    navigateTo({
+      path: "/bus",
+      query,
+    });
   }
 
   const queryBoarding = computed(() => (route.query.boarding as string) || "");
@@ -107,8 +114,13 @@
 
   // 検索画面へ戻る (URLクエリをクリアした初期状態にする)
   const goBack = () => {
+    const query: Record<string, any> = {};
+    if (route.query.local !== undefined) {
+      query.local = "";
+    }
     navigateTo({
       path: "/bus",
+      query,
     });
   };
 </script>

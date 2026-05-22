@@ -70,6 +70,8 @@
   import { useBusTimetable } from "@/composables/bus/useBusTimetable";
   import { navigateTo, useRoute } from "#imports";
 
+  const route = useRoute();
+
   const {
     // ステート
     boardingStopInput,
@@ -99,29 +101,36 @@
   // 検索実行
   const onSearch = () => {
     if (!boardingStopInput.value) return;
+    const query: Record<string, any> = {
+      boarding: boardingStopInput.value,
+      dropOff: dropOffStopInput.value,
+    };
+    if (route.query.local !== undefined) {
+      query.local = "";
+    }
     navigateTo({
       path: "/bus/result",
-      query: {
-        boarding: boardingStopInput.value,
-        dropOff: dropOffStopInput.value,
-      },
+      query,
     });
   };
 
   // マイルート選択時
   const onApplyRoute = (boarding: string, dropOff: string) => {
+    const query: Record<string, any> = {
+      boarding,
+      dropOff,
+    };
+    if (route.query.local !== undefined) {
+      query.local = "";
+    }
     navigateTo({
       path: "/bus/result",
-      query: {
-        boarding,
-        dropOff,
-      },
+      query,
     });
   };
 
   // 戻ってきた際に以前のクエリパラメータから入力状態を復元する
   onMounted(() => {
-    const route = useRoute();
     if (route.query.boarding) {
       boardingStopInput.value = route.query.boarding as string;
       dropOffStopInput.value = (route.query.dropOff as string) || "";

@@ -327,7 +327,7 @@ export function useBusTimetable() {
         const isPast = estimatedDate < currentTime.value;
 
         return {
-          routeId: route.id,
+          routeId: `${route.id}_${timeStr}`,
           routeCode: route.code,
           routeName: route.name,
           routeColor: route.color,
