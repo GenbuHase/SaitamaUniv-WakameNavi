@@ -3,9 +3,6 @@
     <!-- 運行状況要約 -->
     <BusStatusBar :lastUpdated="lastUpdated" :hasDelay="hasDelayInUpcoming" />
 
-    <!-- 次のバス（ハイライト） -->
-    <BusNextCard :bus="nextBus" />
-
     <!-- マイルート管理パネル -->
     <BusMyRoutesPanel
       :myRoutes="myRoutes"
@@ -51,7 +48,7 @@
       <p v-if="boardingStopInput && availableDropOffStops.length > 0" class="text-[10px] text-slate-400 mt-1.5 text-right tracking-wide">※反対方向のバスに乗る場合は、出発地と到着地を入れ替えてください</p>
 
       <!-- 検索ボタン -->
-      <button @click="handleSearch" :disabled="isLoading" class="w-full py-4 bg-emerald-600 hover:bg-emerald-700 active:scale-[0.98] text-white font-bold rounded-2xl shadow-[0_8px_20px_rgb(5,150,105,0.2)] flex justify-center items-center gap-2 transition-all duration-300 disabled:opacity-70 disabled:active:scale-100 cursor-pointer">
+      <button @click="onSearch" :disabled="!boardingStopInput" class="w-full py-4 bg-emerald-600 hover:bg-emerald-700 active:scale-[0.98] text-white font-bold rounded-2xl shadow-[0_8px_20px_rgb(5,150,105,0.2)] flex justify-center items-center gap-2 transition-all duration-300 disabled:opacity-75 disabled:active:scale-100 disabled:bg-slate-300 disabled:text-slate-400 disabled:shadow-none disabled:cursor-not-allowed cursor-pointer">
         <Search class="w-4 h-4" />
         <span class="tracking-wide">検索</span>
       </button>
@@ -69,32 +66,20 @@
         </span>
       </button>
     </section>
-
-    <!-- 統合時刻表リスト -->
-    <BusTimetable
-      id="timetable-section"
-      :timetable="integratedTimetable"
-      :nextBusIndex="nextBusIndex"
-      v-model:sortType="sortType"
-      :selectedDropOffStop="selectedDropOffStop"
-    />
   </main>
 </template>
 
 <script setup lang="ts">
-  import { computed, nextTick } from "vue";
+  import { computed, onMounted } from "vue";
   import { ArrowLeftRight, Search, Star } from "lucide-vue-next";
   import { useBusTimetable } from "@/composables/bus/useBusTimetable";
+  import { navigateTo, useRoute } from "#imports";
 
   const {
     // ステート
     boardingStopInput,
     dropOffStopInput,
-    selectedBoardingStop,
-    selectedDropOffStop,
     lastUpdated,
-    isLoading,
-    sortType,
 
     // マイルートステート＆メソッド
     myRoutes,
@@ -103,20 +88,15 @@
     removeMyRoute,
     togglePinRoute,
     updateMyRoutes,
-    applyRoute,
 
     // 算出プロパティ
     availableDropOffStops,
     filteredBoardingStops,
     filteredDropOffStops,
     stopRoutesMap,
-    integratedTimetable,
-    nextBusIndex,
-    nextBus,
     hasDelayInUpcoming,
 
     // メソッド
-    handleSearch,
     swapStops,
   } = useBusTimetable();
 
@@ -127,19 +107,35 @@
     );
   });
 
-  // マイルート選択時の自動スクロール処理
-  const onApplyRoute = (boarding: string, dropOff: string) => {
-    // 選択されたルートを適用して検索
-    applyRoute(boarding, dropOff);
-
-    // DOM更新後に時刻表の位置までスムーズに自動スクロール
-    nextTick(() => {
-      setTimeout(() => {
-        const element = document.getElementById("timetable-section");
-        if (element) {
-          element.scrollIntoView({ behavior: "smooth", block: "start" });
-        }
-      }, 150);
+  // 検索実行
+  const onSearch = () => {
+    if (!boardingStopInput.value) return;
+    navigateTo({
+      path: "/bus/result",
+      query: {
+        boarding: boardingStopInput.value,
+        dropOff: dropOffStopInput.value,
+      },
     });
   };
+
+  // マイルート選択時
+  const onApplyRoute = (boarding: string, dropOff: string) => {
+    navigateTo({
+      path: "/bus/result",
+      query: {
+        boarding,
+        dropOff,
+      },
+    });
+  };
+
+  // 戻ってきた際に以前のクエリパラメータから入力状態を復元する
+  onMounted(() => {
+    const route = useRoute();
+    if (route.query.boarding) {
+      boardingStopInput.value = route.query.boarding as string;
+      dropOffStopInput.value = (route.query.dropOff as string) || "";
+    }
+  });
 </script>
