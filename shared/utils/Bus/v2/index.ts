@@ -5,7 +5,7 @@
  * 統一的に扱うためのモジュール。
  */
 
-import type { BusCompanyCode, BusService, BusRoute, UnifiedBusStop } from "@@/shared/types/bus";
+import type { BusCompanyCode, BusService, BusRoute } from "@@/shared/types/bus";
 
 import BusStops, {
   KokusaiKogyoStops,
@@ -13,7 +13,6 @@ import BusStops, {
   BusStopsByCompany,
   findBusStopByCode,
   getCompaniesForStop,
-  getUnifiedBusStops,
 } from "./BusStops";
 
 import Routes, {
@@ -139,19 +138,7 @@ function getRoutes(options?: {
   return filterRoutes(options || {});
 }
 
-// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-// バス停情報
-// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-/**
- * バス停情報を取得する
- *
- * @param companyCode - バス会社コードでフィルタ (省略時は全社)
- * @returns 統合バス停の配列
- */
-function getStops(companyCode?: BusCompanyCode): UnifiedBusStop[] {
-  return getUnifiedBusStops(companyCode);
-}
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 // エクスポート
@@ -167,7 +154,6 @@ const Bus = {
   // バス停検索
   findBusStopByCode,
   getCompaniesForStop,
-  getStops,
 
   // バリデーション
   checkValidity,
@@ -189,7 +175,6 @@ export {
   SeibuBus,
   findBusStopByCode,
   getCompaniesForStop,
-  getStops,
   checkValidity,
   getServices,
   getRoutes,

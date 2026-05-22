@@ -58,16 +58,7 @@ type BusCompanyCode = "KokusaiKogyo" | "Seibu";
 > **注意**: 同名バス停でも会社ごとにIDが異なります。  
 > 例: 埼玉大学 → 国際興業 `00021229` / 西武 `00111643`
 
-### `UnifiedBusStop`
 
-会社横断のバス停ビュー。API レスポンス用に同名バス停を統合します。
-
-| フィールド | 型 | 説明 |
-|---|---|---|
-| `code` | `string` | アプリ内で使用する英語コード |
-| `name` | `string` | バス停の表示名 |
-| `companies` | `{ companyCode, companyName, id }[]` | 会社ごとのバス停ID |
-| `routes` | `string[]` | 全系統コード (会社横断、重複除去) |
 
 ---
 

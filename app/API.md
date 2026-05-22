@@ -146,62 +146,7 @@ GET /api/v2/bus/routes?start=00021229
 
 ---
 
-### `GET /api/v2/bus/stops`
 
-利用可能なバス停一覧を取得します。国際興業バス・西武バスの両社のバス停を統合して返します。
-
-**ファイル**: [`server/api/v2/bus/stops.ts`](server/api/v2/bus/stops.ts)
-
-#### パラメータ
-
-| パラメータ | 型 | 必須 | 説明 | 例 |
-|---|---|---|---|---|
-| `company` | `string` | ❌ | バス会社コードでフィルタ | `Seibu` |
-
-#### リクエスト例
-
-```
-GET /api/v2/bus/stops
-GET /api/v2/bus/stops?company=KokusaiKogyo
-```
-
-#### レスポンス: `UnifiedBusStop[]`
-
-```json
-[
-  {
-    "code": "SaitamaUniv",
-    "name": "埼玉大学",
-    "companies": [
-      {
-        "companyCode": "KokusaiKogyo",
-        "companyName": "国際興業バス",
-        "id": "00021229"
-      },
-      {
-        "companyCode": "Seibu",
-        "companyName": "西武バス",
-        "id": "00111643"
-      }
-    ],
-    "routes": ["北浦03", "南与01", "志03-3", "北朝02"]
-  },
-  {
-    "code": "KitaUrawa",
-    "name": "北浦和駅西口",
-    "companies": [
-      {
-        "companyCode": "KokusaiKogyo",
-        "companyName": "国際興業バス",
-        "id": "00021176"
-      }
-    ],
-    "routes": ["北浦03"]
-  }
-]
-```
-
----
 
 ## バス停コード一覧
 

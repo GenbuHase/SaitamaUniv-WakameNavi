@@ -51,29 +51,6 @@ export interface BusStop {
   routes: string[];
 }
 
-/**
- * 会社横断のバス停ビュー
- *
- * API `/api/v2/bus/stops` のレスポンス用。
- * 同名バス停を統合し、どの会社が対応しているかを示す。
- */
-export interface UnifiedBusStop {
-  /** アプリ内で使用する英語コード */
-  code: string;
-
-  /** バス停の表示名 */
-  name: string;
-
-  /** 会社ごとのバス停ID */
-  companies: {
-    companyCode: BusCompanyCode;
-    companyName: string;
-    id: string;
-  }[];
-
-  /** このバス停を通過する全系統コード (会社横断) */
-  routes: string[];
-}
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 // バス運行情報 (Service)

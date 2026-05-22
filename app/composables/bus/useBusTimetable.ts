@@ -64,7 +64,7 @@ export function useBusTimetable() {
 
   // --- リアクティブステート ---
 
-  const apiStops = ref<any[]>([]);
+
   const apiServices = ref<any[]>([]);
 
   // UI入力用 (検索ボタンを押すまで確定しない)
@@ -154,13 +154,7 @@ export function useBusTimetable() {
     // ローカルストレージからマイルートをロード
     loadMyRoutes();
 
-    if (!isLocalMode.value) {
-      try {
-        apiStops.value = await $fetch("/api/v2/bus/stops");
-      } catch (e) {
-        console.error("Failed to fetch stops:", e);
-      }
-    }
+
 
     // 初回データロード
     refreshData();

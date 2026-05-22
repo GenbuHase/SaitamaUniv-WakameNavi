@@ -5,7 +5,7 @@
  * 各バス停は BusStop 型に準拠し、会社ごとのIDを持つ。
  */
 
-import type { BusStop, BusCompanyCode, UnifiedBusStop } from "@@/shared/types/bus";
+import type { BusStop, BusCompanyCode } from "@@/shared/types/bus";
 import { BUS_COMPANIES } from "@@/shared/types/bus";
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -177,58 +177,10 @@ export function getCompaniesForStop(code: string): BusCompanyCode[] {
   return companies;
 }
 
-/**
- * 全バス停を統一フォーマットで取得する
- *
- * 同名・同コードのバス停を統合し、どの会社が対応しているかを示す。
- */
-export function getUnifiedBusStops(companyFilter?: BusCompanyCode): UnifiedBusStop[] {
-  const stopMap = new Map<string, UnifiedBusStop>();
-
-  const processStops = (stops: Record<string, BusStop>) => {
-    for (const stop of Object.values(stops)) {
-      if (companyFilter && stop.companyCode !== companyFilter) continue;
-
-      const existing = stopMap.get(stop.code);
-      if (existing) {
-        // 同じコードのバス停がある場合は会社情報を追加
-        existing.companies.push({
-          companyCode: stop.companyCode,
-          companyName: BUS_COMPANIES[stop.companyCode].name,
-          id: stop.id,
-        });
-        // 系統コードをマージ (重複除去)
-        for (const route of stop.routes) {
-          if (!existing.routes.includes(route)) {
-            existing.routes.push(route);
-          }
-        }
-      } else {
-        stopMap.set(stop.code, {
-          code: stop.code,
-          name: stop.name,
-          companies: [{
-            companyCode: stop.companyCode,
-            companyName: BUS_COMPANIES[stop.companyCode].name,
-            id: stop.id,
-          }],
-          routes: [...stop.routes],
-        });
-      }
-    }
-  };
-
-  processStops(KokusaiKogyoStops);
-  processStops(SeibuStops);
-
-  return Array.from(stopMap.values());
-}
-
 export default {
   KokusaiKogyo: KokusaiKogyoStops,
   Seibu: SeibuStops,
   BusStopsByCompany,
   findBusStopByCode,
   getCompaniesForStop,
-  getUnifiedBusStops,
 };
