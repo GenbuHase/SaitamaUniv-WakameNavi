@@ -36,6 +36,16 @@ export interface TimetableEntry {
   boardingStopName: string;
 }
 
+/** マイルートのデータ構造 */
+export interface MyRoute {
+  id: string;
+  boarding: string;
+  dropOff: string;
+  isPinned: boolean;
+  createdAt: number;
+}
+
+
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 // composable 本体
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -64,6 +74,13 @@ export function useBusTimetable() {
   const lastUpdated = ref(new Date());
   const isLoading = ref(false);
   const sortType = ref<"estimated" | "scheduled">("estimated");
+
+  // --- マイルート関連ステート ---
+  const myRoutes = ref<MyRoute[]>([]);
+  const pinnedRoutes = computed(() => {
+    return myRoutes.value.filter(r => r.isPinned).slice(0, 3);
+  });
+
 
   // --- 全バス停リスト ---
 
@@ -129,6 +146,9 @@ export function useBusTimetable() {
       currentTime.value = new Date();
     }, 1000);
 
+    // ローカルストレージからマイルートをロード
+    loadMyRoutes();
+
     if (!isLocalMode.value) {
       try {
         apiStops.value = await $fetch("/api/v2/bus/stops");
@@ -140,6 +160,7 @@ export function useBusTimetable() {
     // 初回データロード
     refreshData();
   });
+
 
   onUnmounted(() => {
     if (timer) clearInterval(timer);
@@ -375,6 +396,78 @@ export function useBusTimetable() {
     }
   };
 
+  // --- マイルート操作 ---
+
+  const loadMyRoutes = () => {
+    if (import.meta.client) {
+      const routesJson = localStorage.getItem("wakame-navi/my_routes");
+      if (routesJson) {
+        try {
+          myRoutes.value = JSON.parse(routesJson);
+        } catch (e) {
+          console.error("Failed to parse my routes:", e);
+        }
+      }
+    }
+  };
+
+  const saveMyRoutes = () => {
+    if (import.meta.client) {
+      localStorage.setItem("wakame-navi/my_routes", JSON.stringify(myRoutes.value));
+    }
+  };
+
+  const addMyRoute = (boarding: string, dropOff: string = "") => {
+    if (!boarding) return;
+    // 重複チェック
+    const exists = myRoutes.value.some(r => r.boarding === boarding && r.dropOff === dropOff);
+    if (exists) return;
+
+    if (myRoutes.value.length >= 20) {
+      alert("マイルートは最大20件まで登録できます。");
+      return;
+    }
+
+    const newRoute: MyRoute = {
+      id: crypto.randomUUID ? crypto.randomUUID() : Date.now().toString() + Math.random().toString(36).substring(2, 9),
+      boarding,
+      dropOff,
+      isPinned: false,
+      createdAt: Date.now()
+    };
+
+    myRoutes.value.push(newRoute);
+    saveMyRoutes();
+  };
+
+  const removeMyRoute = (id: string) => {
+    myRoutes.value = myRoutes.value.filter(r => r.id !== id);
+    saveMyRoutes();
+  };
+
+  const togglePinRoute = (id: string) => {
+    const route = myRoutes.value.find(r => r.id === id);
+    if (!route) return;
+
+    if (!route.isPinned) {
+      // 既に3件ピン留めされている場合は警告
+      const pinnedCount = myRoutes.value.filter(r => r.isPinned).length;
+      if (pinnedCount >= 3) {
+        alert("ピン留め（お気に入りショートカット）は最大3件までです。");
+        return;
+      }
+    }
+
+    route.isPinned = !route.isPinned;
+    saveMyRoutes();
+  };
+
+  const applyRoute = (boarding: string, dropOff: string = "") => {
+    boardingStopInput.value = boarding;
+    dropOffStopInput.value = dropOff;
+    handleSearch();
+  };
+
   // --- 公開API ---
 
   return {
@@ -387,6 +480,14 @@ export function useBusTimetable() {
     lastUpdated,
     isLoading,
     sortType,
+
+    // マイルートステート＆メソッド
+    myRoutes,
+    pinnedRoutes,
+    addMyRoute,
+    removeMyRoute,
+    togglePinRoute,
+    applyRoute,
 
     // 算出プロパティ
     allStops,

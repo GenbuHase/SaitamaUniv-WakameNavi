@@ -6,6 +6,15 @@
     <!-- 次のバス（ハイライト） -->
     <BusNextCard :bus="nextBus" />
 
+    <!-- マイルート管理パネル -->
+    <BusMyRoutesPanel
+      :myRoutes="myRoutes"
+      :pinnedRoutes="pinnedRoutes"
+      @applyRoute="applyRoute"
+      @removeMyRoute="removeMyRoute"
+      @togglePinRoute="togglePinRoute"
+    />
+
     <!-- 区間選択パネル -->
     <section class="bg-white rounded-[2rem] shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-emerald-50/50 p-6 space-y-5">
       <!-- 乗車停留所 -->
@@ -41,9 +50,22 @@
       <p v-if="boardingStopInput && availableDropOffStops.length > 0" class="text-[10px] text-slate-400 mt-1.5 text-right tracking-wide">※反対方向のバスに乗る場合は、出発地と到着地を入れ替えてください</p>
 
       <!-- 検索ボタン -->
-      <button @click="handleSearch" :disabled="isLoading" class="w-full py-4 bg-emerald-600 hover:bg-emerald-700 active:scale-[0.98] text-white font-bold rounded-2xl shadow-[0_8px_20px_rgb(5,150,105,0.2)] flex justify-center items-center gap-2 transition-all duration-300 disabled:opacity-70 disabled:active:scale-100">
+      <button @click="handleSearch" :disabled="isLoading" class="w-full py-4 bg-emerald-600 hover:bg-emerald-700 active:scale-[0.98] text-white font-bold rounded-2xl shadow-[0_8px_20px_rgb(5,150,105,0.2)] flex justify-center items-center gap-2 transition-all duration-300 disabled:opacity-70 disabled:active:scale-100 cursor-pointer">
         <Search class="w-4 h-4" />
         <span class="tracking-wide">検索</span>
+      </button>
+
+      <!-- マイルート登録ボタン -->
+      <button
+        v-if="boardingStopInput"
+        @click="addMyRoute(boardingStopInput, dropOffStopInput)"
+        :disabled="isAlreadyRegistered"
+        class="w-full py-3.5 bg-slate-50 hover:bg-emerald-50/55 active:scale-[0.98] text-slate-600 hover:text-emerald-700 font-bold rounded-2xl border border-slate-100 hover:border-emerald-100/50 flex justify-center items-center gap-2 transition-all duration-300 disabled:opacity-60 disabled:active:scale-100 disabled:hover:bg-slate-50 disabled:hover:text-slate-400 disabled:hover:border-slate-100 cursor-pointer"
+      >
+        <Star class="w-4 h-4" :class="isAlreadyRegistered ? 'fill-amber-400 text-amber-400' : 'text-slate-400'" />
+        <span class="tracking-wide text-xs">
+          {{ isAlreadyRegistered ? 'このルートは登録済みです' : '現在のルートをマイルートに登録' }}
+        </span>
       </button>
     </section>
 
@@ -58,17 +80,27 @@
 </template>
 
 <script setup lang="ts">
-  import { ArrowLeftRight, Search } from "lucide-vue-next";
+  import { computed } from "vue";
+  import { ArrowLeftRight, Search, Star } from "lucide-vue-next";
   import { useBusTimetable } from "@/composables/bus/useBusTimetable";
 
   const {
     // ステート
     boardingStopInput,
     dropOffStopInput,
+    selectedBoardingStop,
     selectedDropOffStop,
     lastUpdated,
     isLoading,
     sortType,
+
+    // マイルートステート＆メソッド
+    myRoutes,
+    pinnedRoutes,
+    addMyRoute,
+    removeMyRoute,
+    togglePinRoute,
+    applyRoute,
 
     // 算出プロパティ
     availableDropOffStops,
@@ -84,4 +116,11 @@
     handleSearch,
     swapStops,
   } = useBusTimetable();
+
+  // 現在の入力区間が既に登録されているか判定
+  const isAlreadyRegistered = computed(() => {
+    return myRoutes.value.some(
+      r => r.boarding === boardingStopInput.value && r.dropOff === dropOffStopInput.value
+    );
+  });
 </script>
