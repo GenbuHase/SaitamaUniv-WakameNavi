@@ -3,7 +3,7 @@
     <!-- 運行状況要約 -->
     <BusStatusBar :lastUpdated="lastUpdated" :hasDelay="hasDelayInUpcoming" />
 
-    <!-- 📌 ピン留めお気に入りショートカット -->
+    <!-- 📌 ピン留めルート -->
     <BusPinnedRoutesPanel
       :myRoutes="myRoutes"
       :pinnedRoutes="pinnedRoutes"
@@ -53,7 +53,7 @@
       </button>
     </section>
 
-    <!-- ⭐️ 登録したルート一覧 (アコーディオン) -->
+    <!-- ⭐️ マイルート -->
     <BusMyRoutesPanel
       :myRoutes="myRoutes"
       @applyRoute="onApplyRoute"

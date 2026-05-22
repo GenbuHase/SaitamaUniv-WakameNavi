@@ -1,6 +1,6 @@
 <template>
   <div class="space-y-4">
-    <!-- ⭐️ 登録したルート一覧 (アコーディオン) -->
+    <!-- ⭐️ マイルート -->
     <div
       v-if="localMyRoutes.length > 0"
       class="bg-white rounded-[2rem] shadow-[0_8px_30px_rgb(0,0,0,0.03)] border border-emerald-50/50 overflow-hidden transition-all duration-300"
@@ -13,7 +13,7 @@
         <div class="flex items-center gap-2">
           <Star class="w-4 h-4 text-amber-400 fill-amber-400" />
           <div class="flex flex-col items-start text-left">
-            <span class="text-sm tracking-wide">登録したルート</span>
+            <span class="text-sm tracking-wide">マイルート</span>
             <span class="text-[9px] font-normal text-slate-400 mt-0.5">左端のつまみでドラッグして並べ替えできます</span>
           </div>
           <span class="text-xs text-slate-400 bg-slate-100 px-2.5 py-0.5 rounded-full font-bold ml-1">
@@ -64,16 +64,16 @@
                 <GripVertical class="w-4 h-4" />
               </div>
 
-              <!-- 左: スター（ピン留め）ボタン -->
+              <!-- 左: 📌ボタン -->
               <button
                 @click.stop="$emit('togglePinRoute', route.id)"
                 draggable="false"
                 class="p-1 rounded-lg transition-colors flex-shrink-0 cursor-pointer"
                 :title="route.isPinned ? 'ピン留め解除' : 'ピン留めに設定'"
               >
-                <Star
+                <Pin
                   class="w-4 h-4 transition-all duration-300"
-                  :class="route.isPinned ? 'text-amber-400 fill-amber-400 scale-110' : 'text-slate-300 group-hover:text-slate-400'"
+                  :class="route.isPinned ? 'text-red-500 fill-red-500/50 scale-110' : 'text-slate-300 group-hover:text-red-400'"
                 />
               </button>
 
@@ -113,7 +113,7 @@
       </div>
       <h4 class="text-xs font-bold text-emerald-800">マイルートを登録してみましょう！</h4>
       <p class="text-[10px] text-slate-400 leading-relaxed max-w-xs mx-auto">
-        よく使うバスの区間を検索し、下部の「⭐ マイルートに登録」ボタンから保存すると、ワンタップで即座にバスを検索できるようになります。
+        よく使うバスの区間を検索し、⭐ボタンから保存すると、ワンタップで即座にバスを検索できるようになります。
       </p>
     </div>
   </div>
@@ -122,6 +122,7 @@
 <script setup lang="ts">
   import { ref, watch } from "vue";
   import {
+    Pin,
     Star,
     ChevronDown,
     ArrowRight,

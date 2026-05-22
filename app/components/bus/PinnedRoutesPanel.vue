@@ -1,11 +1,11 @@
 <template>
-  <!-- 📌 ピン留めお気に入りショートカット -->
+  <!-- 📌 ピン留めルート -->
   <div class="bg-white rounded-[2rem] shadow-[0_8px_30px_rgb(0,0,0,0.03)] border border-emerald-50/50 p-5 space-y-4">
     <div class="flex items-center justify-between ml-1">
       <div class="flex flex-col">
         <h3 class="text-xs font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1.5">
-          <Pin class="w-3.5 h-3.5 text-emerald-500 fill-emerald-500/20" />
-          ピン留めショートカット (最大3件)
+          <Pin class="w-3.5 h-3.5 text-red-500 fill-red-500/50" />
+          ピン留めルート (最大3件)
         </h3>
         <span class="text-[9px] text-slate-400 mt-0.5">ドラッグ＆ドロップで並び替えできます</span>
       </div>
@@ -65,7 +65,7 @@
         class="flex flex-col items-center flex-shrink-0 select-none"
       >
         <div class="w-14 h-14 rounded-full border-2 border-dashed border-slate-200 text-slate-300 flex items-center justify-center bg-slate-50/30">
-          <Star class="w-5 h-5" />
+          <Pin class="w-5 h-5" />
         </div>
         <span class="text-[9px] font-bold text-slate-400 mt-2 tracking-wide">
           未設定
@@ -79,7 +79,6 @@
   import { ref, computed, watch } from "vue";
   import {
     Pin,
-    Star,
     Bus,
     X
   } from "lucide-vue-next";
