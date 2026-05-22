@@ -400,7 +400,7 @@ export function useBusTimetable() {
 
   const loadMyRoutes = () => {
     if (import.meta.client) {
-      const routesJson = localStorage.getItem("wakame-navi/my_routes");
+      const routesJson = localStorage.getItem("@genbuhase/wakame-navi/my_routes");
       if (routesJson) {
         try {
           myRoutes.value = JSON.parse(routesJson);
@@ -413,7 +413,7 @@ export function useBusTimetable() {
 
   const saveMyRoutes = () => {
     if (import.meta.client) {
-      localStorage.setItem("wakame-navi/my_routes", JSON.stringify(myRoutes.value));
+      localStorage.setItem("@genbuhase/wakame-navi/my_routes", JSON.stringify(myRoutes.value));
     }
   };
 
