@@ -436,7 +436,7 @@ export function useBusTimetable() {
       createdAt: Date.now()
     };
 
-    myRoutes.value.push(newRoute);
+    myRoutes.value.unshift(newRoute);
     saveMyRoutes();
   };
 
@@ -459,6 +459,11 @@ export function useBusTimetable() {
     }
 
     route.isPinned = !route.isPinned;
+    saveMyRoutes();
+  };
+
+  const updateMyRoutes = (newRoutes: MyRoute[]) => {
+    myRoutes.value = newRoutes;
     saveMyRoutes();
   };
 
@@ -487,6 +492,7 @@ export function useBusTimetable() {
     addMyRoute,
     removeMyRoute,
     togglePinRoute,
+    updateMyRoutes,
     applyRoute,
 
     // 算出プロパティ

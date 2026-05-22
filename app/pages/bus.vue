@@ -13,6 +13,7 @@
       @applyRoute="applyRoute"
       @removeMyRoute="removeMyRoute"
       @togglePinRoute="togglePinRoute"
+      @updateMyRoutes="updateMyRoutes"
     />
 
     <!-- 区間選択パネル -->
@@ -100,6 +101,7 @@
     addMyRoute,
     removeMyRoute,
     togglePinRoute,
+    updateMyRoutes,
     applyRoute,
 
     // 算出プロパティ
