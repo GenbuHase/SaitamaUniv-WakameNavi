@@ -3,16 +3,15 @@
     <!-- 運行状況要約 -->
     <BusStatusBar :lastUpdated="lastUpdated" :hasDelay="hasDelayInUpcoming" />
 
-    <!-- マイルート管理パネル -->
-    <BusMyRoutesPanel
+    <!-- 📌 ピン留めお気に入りショートカット -->
+    <BusPinnedRoutesPanel
       :myRoutes="myRoutes"
       :pinnedRoutes="pinnedRoutes"
       @applyRoute="onApplyRoute"
-      @removeMyRoute="removeMyRoute"
       @togglePinRoute="togglePinRoute"
       @updateMyRoutes="updateMyRoutes"
     />
-
+    
     <!-- 区間選択パネル -->
     <section class="bg-white rounded-[2rem] shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-emerald-50/50 p-6 space-y-5">
       <!-- 乗車停留所 -->
@@ -52,26 +51,22 @@
         <Search class="w-4 h-4" />
         <span class="tracking-wide">検索</span>
       </button>
-
-      <!-- マイルート登録ボタン -->
-      <button
-        v-if="boardingStopInput"
-        @click="addMyRoute(boardingStopInput, dropOffStopInput)"
-        :disabled="isAlreadyRegistered"
-        class="w-full py-3.5 bg-slate-50 hover:bg-emerald-50/55 active:scale-[0.98] text-slate-600 hover:text-emerald-700 font-bold rounded-2xl border border-slate-100 hover:border-emerald-100/50 flex justify-center items-center gap-2 transition-all duration-300 disabled:opacity-60 disabled:active:scale-100 disabled:hover:bg-slate-50 disabled:hover:text-slate-400 disabled:hover:border-slate-100 cursor-pointer"
-      >
-        <Star class="w-4 h-4" :class="isAlreadyRegistered ? 'fill-amber-400 text-amber-400' : 'text-slate-400'" />
-        <span class="tracking-wide text-xs">
-          {{ isAlreadyRegistered ? 'このルートは登録済みです' : '現在のルートをマイルートに登録' }}
-        </span>
-      </button>
     </section>
+
+    <!-- ⭐️ 登録したルート一覧 (アコーディオン) -->
+    <BusMyRoutesPanel
+      :myRoutes="myRoutes"
+      @applyRoute="onApplyRoute"
+      @removeMyRoute="removeMyRoute"
+      @togglePinRoute="togglePinRoute"
+      @updateMyRoutes="updateMyRoutes"
+    />
   </main>
 </template>
 
 <script setup lang="ts">
   import { computed, onMounted } from "vue";
-  import { ArrowLeftRight, Search, Star } from "lucide-vue-next";
+  import { ArrowLeftRight, Search } from "lucide-vue-next";
   import { useBusTimetable } from "@/composables/bus/useBusTimetable";
   import { navigateTo, useRoute } from "#imports";
 
@@ -100,12 +95,6 @@
     swapStops,
   } = useBusTimetable();
 
-  // 現在の入力区間が既に登録されているか判定
-  const isAlreadyRegistered = computed(() => {
-    return myRoutes.value.some(
-      r => r.boarding === boardingStopInput.value && r.dropOff === dropOffStopInput.value
-    );
-  });
 
   // 検索実行
   const onSearch = () => {
