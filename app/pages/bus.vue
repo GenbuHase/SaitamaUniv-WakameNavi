@@ -10,7 +10,7 @@
     <BusMyRoutesPanel
       :myRoutes="myRoutes"
       :pinnedRoutes="pinnedRoutes"
-      @applyRoute="applyRoute"
+      @applyRoute="onApplyRoute"
       @removeMyRoute="removeMyRoute"
       @togglePinRoute="togglePinRoute"
       @updateMyRoutes="updateMyRoutes"
@@ -72,6 +72,7 @@
 
     <!-- 統合時刻表リスト -->
     <BusTimetable
+      id="timetable-section"
       :timetable="integratedTimetable"
       :nextBusIndex="nextBusIndex"
       v-model:sortType="sortType"
@@ -81,7 +82,7 @@
 </template>
 
 <script setup lang="ts">
-  import { computed } from "vue";
+  import { computed, nextTick } from "vue";
   import { ArrowLeftRight, Search, Star } from "lucide-vue-next";
   import { useBusTimetable } from "@/composables/bus/useBusTimetable";
 
@@ -125,4 +126,20 @@
       r => r.boarding === boardingStopInput.value && r.dropOff === dropOffStopInput.value
     );
   });
+
+  // マイルート選択時の自動スクロール処理
+  const onApplyRoute = (boarding: string, dropOff: string) => {
+    // 選択されたルートを適用して検索
+    applyRoute(boarding, dropOff);
+
+    // DOM更新後に時刻表の位置までスムーズに自動スクロール
+    nextTick(() => {
+      setTimeout(() => {
+        const element = document.getElementById("timetable-section");
+        if (element) {
+          element.scrollIntoView({ behavior: "smooth", block: "start" });
+        }
+      }, 150);
+    });
+  };
 </script>
