@@ -2,16 +2,18 @@
   <!-- 📌 ピン留めルート -->
   <div class="bg-white rounded-[2rem] shadow-[0_8px_30px_rgb(0,0,0,0.03)] border border-emerald-50/50 p-5 space-y-4">
     <div class="flex items-center justify-between ml-1">
-      <div class="flex flex-col">
-        <h3 class="text-xs font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1.5">
-          <Pin class="w-3.5 h-3.5 text-red-500 fill-red-500/50" />
-          ピン留めルート (最大3件)
-        </h3>
-        <span class="text-[9px] text-slate-400 mt-0.5">ドラッグ＆ドロップで並び替えできます</span>
+      <div class="flex items-center gap-2">
+        <Pin class="w-4 h-4 text-red-500 fill-red-500" />
+        <div class="flex flex-col items-start text-left">
+          <h3 class="text-sm font-bold uppercase tracking-wide">ピン留めルート (最大3件)</h3>
+          <span class="text-[9px] text-slate-400 mt-0.5">ドラッグ＆ドロップで並び替えできます</span>
+        </div>
       </div>
-      <span class="text-[10px] text-slate-400 font-bold bg-slate-100 px-2 py-0.5 rounded-full">
-        {{ localPinnedRoutes.length }}/3
-      </span>
+      <div class="flex items-center gap-2">
+        <span class="text-xs text-slate-400 bg-slate-100 px-2.5 py-0.5 rounded-full font-bold">
+          {{ localMyRoutes.length }}/3
+        </span>
+      </div>
     </div>
 
     <!-- ピン留めエリアのフレックスラッパー（空スロットも一緒に並べる） -->

@@ -13,13 +13,13 @@
         <div class="flex items-center gap-2">
           <Star class="w-4 h-4 text-amber-400 fill-amber-400" />
           <div class="flex flex-col items-start text-left">
-            <span class="text-sm tracking-wide">マイルート</span>
+            <h3 class="text-sm tracking-wide">マイルート</h3>
             <span class="text-[9px] font-normal text-slate-400 mt-0.5">左端のつまみでドラッグして並べ替えできます</span>
           </div>
         </div>
         <div class="flex items-center gap-2">
           <span class="text-xs text-slate-400 bg-slate-100 px-2.5 py-0.5 rounded-full font-bold">
-            {{ localMyRoutes.length }}/20件
+            {{ localMyRoutes.length }}/20
           </span>
           <ChevronDown
             class="w-4 h-4 text-slate-400 transition-transform duration-300"
@@ -75,7 +75,7 @@
               >
                 <Pin
                   class="w-4 h-4 transition-all duration-300"
-                  :class="route.isPinned ? 'text-red-500 fill-red-500/50 scale-110' : 'text-slate-300 group-hover:text-red-400'"
+                  :class="route.isPinned ? 'text-red-500 fill-red-500 scale-110' : 'text-slate-300 group-hover:text-red-400'"
                 />
               </button>
 
