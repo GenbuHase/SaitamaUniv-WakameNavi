@@ -50,6 +50,12 @@ export interface MyRoute {
 // composable 本体
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// グローバル（シングルトン）ステート
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+const myRoutes = ref<MyRoute[]>([]);
+let isMyRoutesLoaded = false;
+
 export function useBusTimetable() {
   const route = useRoute();
 
@@ -76,7 +82,6 @@ export function useBusTimetable() {
   const sortType = ref<"estimated" | "scheduled">("estimated");
 
   // --- マイルート関連ステート ---
-  const myRoutes = ref<MyRoute[]>([]);
   const pinnedRoutes = computed(() => {
     return myRoutes.value.filter(r => r.isPinned).slice(0, 3);
   });
@@ -399,14 +404,17 @@ export function useBusTimetable() {
   // --- マイルート操作 ---
 
   const loadMyRoutes = () => {
-    if (import.meta.client) {
+    if (import.meta.client && !isMyRoutesLoaded) {
       const routesJson = localStorage.getItem("@genbuhase/wakame-navi/my_routes");
       if (routesJson) {
         try {
           myRoutes.value = JSON.parse(routesJson);
+          isMyRoutesLoaded = true;
         } catch (e) {
           console.error("Failed to parse my routes:", e);
         }
+      } else {
+        isMyRoutesLoaded = true;
       }
     }
   };
