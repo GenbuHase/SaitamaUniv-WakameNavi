@@ -20,7 +20,7 @@
       </div>
 
       <div class="flex items-baseline gap-3 my-3">
-        <span class="text-[4rem] leading-none font-black tracking-tighter tabular-nums drop-shadow-md">
+        <span class="text-[3.5rem] leading-none font-black tracking-tight tabular-nums drop-shadow-md">
           {{ bus.estimatedTime.slice(0, 5) }}
           <span class="text-3xl ml-1 font-bold">{{ bus.estimatedTime.slice(6) }}</span>
         </span>
