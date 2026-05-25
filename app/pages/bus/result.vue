@@ -9,20 +9,34 @@
       @clickFavorite="toggleMyRoute"
     />
 
-    <!-- 運行状況要約 -->
-    <BusStatusBar :lastUpdated="lastUpdated" :hasDelay="hasDelayInUpcoming" />
+    <Transition
+      mode="out-in"
+      enter-active-class="transition-all duration-500 ease-out"
+      enter-from-class="opacity-0 translate-y-2"
+      enter-to-class="opacity-100 translate-y-0"
+    >
 
-    <!-- 次のバス（ハイライト） -->
-    <BusNextCard :bus="nextBus" />
+      <!-- データの取得中（ローディング） -->
+      <BusLoadingSkeleton v-if="isLoading" />
 
-    <!-- 統合時刻表リスト -->
-    <BusTimetable
-      id="timetable-section"
-      :timetable="integratedTimetable"
-      :nextBusIndex="nextBusIndex"
-      v-model:sortType="sortType"
-      :selectedDropOffStop="selectedDropOffStop"
-    />
+      <!-- データの取得完了（結果表示） -->
+      <div v-else class="space-y-6">
+        <!-- 運行状況要約 -->
+        <BusStatusBar :lastUpdated="lastUpdated" :hasDelay="hasDelayInUpcoming" />
+
+        <!-- 次のバス（ハイライト） -->
+        <BusNextCard :bus="nextBus" />
+
+        <!-- 統合時刻表リスト -->
+        <BusTimetable
+          id="timetable-section"
+          :timetable="integratedTimetable"
+          :nextBusIndex="nextBusIndex"
+          v-model:sortType="sortType"
+          :selectedDropOffStop="selectedDropOffStop"
+        />
+      </div>
+    </Transition>
   </main>
 </template>
 
