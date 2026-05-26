@@ -5,13 +5,13 @@
       <div class="flex items-center gap-2">
         <Pin class="w-4 h-4 text-red-500 fill-red-500" />
         <div class="flex flex-col items-start text-left">
-          <h3 class="text-sm font-bold uppercase tracking-wide">ピン留めルート</h3>
+          <h3 class="text-sm font-bold text-slate-700 tracking-wide">ピン留めルート</h3>
           <span class="text-[9px] text-slate-400 mt-0.5">ドラッグ＆ドロップで並び替えできます</span>
         </div>
       </div>
       <div class="flex items-center gap-2">
         <span class="text-xs text-slate-400 bg-slate-100 px-2.5 py-0.5 rounded-full font-bold">
-          {{ localMyRoutes.length }}/3
+          {{ localPinnedRoutes.length }}/3
         </span>
       </div>
     </div>
@@ -33,7 +33,7 @@
           @dragover.prevent="onPinnedDragOver(index, $event)"
           @dragend="onPinnedDragEnd"
           class="flex flex-col items-center group cursor-grab active:cursor-grabbing flex-shrink-0 relative select-none"
-          @click="$emit('applyRoute', route.boarding, route.dropOff)"
+          @click="applyRoute(route.boarding, route.dropOff)"
           :class="{
             'opacity-30 scale-90': draggedPinnedIndex === index
           }"
@@ -45,7 +45,7 @@
             </div>
             <!-- ピン留め解除用クイックボタン -->
             <button
-              @click.stop="$emit('togglePinRoute', route.id)"
+              @click.stop="togglePinRoute(route.id)"
               draggable="false"
               class="absolute -top-1 -right-1 bg-white hover:bg-red-50 text-slate-400 hover:text-red-500 rounded-full p-1 shadow-sm border border-slate-100 hover:border-red-100 transition-all duration-200 cursor-pointer"
               title="ピン留め解除"
@@ -84,28 +84,16 @@
     Bus,
     X
   } from "lucide-vue-next";
+  import { useBusTimetable } from "@/composables/bus/useBusTimetable";
+  import type { MyRoute } from "@/composables/bus/useBusTimetable";
 
-  // マイルートインターフェース
-  interface MyRoute {
-    id: string;
-    boarding: string;
-    dropOff: string;
-    isPinned: boolean;
-    createdAt: number;
-  }
-
-  // Propsの定義
-  const props = defineProps<{
-    myRoutes: MyRoute[];
-    pinnedRoutes: MyRoute[];
-  }>();
-
-  // Emitsの定義
-  const emit = defineEmits<{
-    applyRoute: [boarding: string, dropOff: string];
-    togglePinRoute: [id: string];
-    updateMyRoutes: [newRoutes: MyRoute[]];
-  }>();
+  // Composableから状態とアクションを呼び出す
+  const {
+    myRoutes,
+    togglePinRoute,
+    updateMyRoutes,
+    applyRoute
+  } = useBusTimetable();
 
   // --- ドラッグ中状態管理 ---
   const draggedPinnedIndex = ref<number | null>(null);
@@ -115,7 +103,7 @@
 
   // 親のProps変更を監視して同期する（ドラッグ中は再レンダリング防止のため同期をロック）
   watch(
-    () => props.myRoutes,
+    myRoutes,
     (newVal) => {
       if (draggedPinnedIndex.value === null) {
         localMyRoutes.value = [...newVal];
@@ -175,7 +163,7 @@
 
   const onPinnedDragEnd = () => {
     if (draggedPinnedIndex.value !== null) {
-      emit("updateMyRoutes", [...localMyRoutes.value]);
+      updateMyRoutes([...localMyRoutes.value]);
     }
     draggedPinnedIndex.value = null;
   };

@@ -6,7 +6,7 @@
  */
 
 import { ref, computed, onMounted, onUnmounted, watch } from "vue";
-import { useRoute } from "#imports";
+import { useRoute, navigateTo } from "#imports";
 
 import { KOKUSAI_ROUTES_DATA, SEIBU_ROUTES_DATA, GENERATED_ROUTES, sortStopsByPriority } from "./busRouteData";
 import type { GeneratedRoute } from "./busRouteData";
@@ -438,7 +438,7 @@ export function useBusTimetable() {
       createdAt: Date.now()
     };
 
-    myRoutes.value.unshift(newRoute);
+    myRoutes.value.push(newRoute);
     saveMyRoutes();
   };
 
@@ -472,7 +472,37 @@ export function useBusTimetable() {
   const applyRoute = (boarding: string, dropOff: string = "") => {
     boardingStopInput.value = boarding;
     dropOffStopInput.value = dropOff;
-    handleSearch();
+    
+    const query: Record<string, any> = {
+      boarding,
+      dropOff,
+    };
+    if (route.query.local !== undefined) {
+      query.local = "";
+    }
+    navigateTo({
+      path: "/bus/result",
+      query,
+    });
+  };
+
+  const isRouteRegistered = (boarding: string, dropOff: string = "") => {
+    return myRoutes.value.some(
+      r => r.boarding === boarding && r.dropOff === dropOff
+    );
+  };
+
+  const toggleMyRoute = (boarding: string, dropOff: string = "") => {
+    if (isRouteRegistered(boarding, dropOff)) {
+      const target = myRoutes.value.find(
+        r => r.boarding === boarding && r.dropOff === dropOff
+      );
+      if (target) {
+        removeMyRoute(target.id);
+      }
+    } else {
+      addMyRoute(boarding, dropOff);
+    }
   };
 
   // --- 公開API ---
@@ -496,6 +526,8 @@ export function useBusTimetable() {
     togglePinRoute,
     updateMyRoutes,
     applyRoute,
+    isRouteRegistered,
+    toggleMyRoute,
 
     // 算出プロパティ
     allStops,

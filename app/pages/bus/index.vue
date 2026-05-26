@@ -4,13 +4,7 @@
     <BusStatusBar :lastUpdated="lastUpdated" :hasDelay="hasDelayInUpcoming" />
 
     <!-- 📌 ピン留めルート -->
-    <BusPinnedRoutesPanel
-      :myRoutes="myRoutes"
-      :pinnedRoutes="pinnedRoutes"
-      @applyRoute="onApplyRoute"
-      @togglePinRoute="togglePinRoute"
-      @updateMyRoutes="updateMyRoutes"
-    />
+    <BusPinnedRoutesPanel />
     
     <!-- 区間選択パネル -->
     <section class="bg-white rounded-[2rem] shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-emerald-50/50 p-6 space-y-5">
@@ -54,18 +48,12 @@
     </section>
 
     <!-- ⭐️ マイルート -->
-    <BusMyRoutesPanel
-      :myRoutes="myRoutes"
-      @applyRoute="onApplyRoute"
-      @removeMyRoute="removeMyRoute"
-      @togglePinRoute="togglePinRoute"
-      @updateMyRoutes="updateMyRoutes"
-    />
+    <BusMyRoutesPanel />
   </main>
 </template>
 
 <script setup lang="ts">
-  import { computed, onMounted } from "vue";
+  import { onMounted } from "vue";
   import { ArrowLeftRight, Search } from "lucide-vue-next";
   import { useBusTimetable } from "@/composables/bus/useBusTimetable";
   import { navigateTo, useRoute } from "#imports";
@@ -77,14 +65,6 @@
     boardingStopInput,
     dropOffStopInput,
     lastUpdated,
-
-    // マイルートステート＆メソッド
-    myRoutes,
-    pinnedRoutes,
-    addMyRoute,
-    removeMyRoute,
-    togglePinRoute,
-    updateMyRoutes,
 
     // 算出プロパティ
     availableDropOffStops,
@@ -114,21 +94,6 @@
     });
   };
 
-  // マイルート選択時
-  const onApplyRoute = (boarding: string, dropOff: string) => {
-    const query: Record<string, any> = {
-      boarding,
-      dropOff,
-    };
-    if (route.query.local !== undefined) {
-      query.local = "";
-    }
-    navigateTo({
-      path: "/bus/result",
-      query,
-    });
-  };
-
   // 戻ってきた際に以前のクエリパラメータから入力状態を復元する
   onMounted(() => {
     if (route.query.boarding) {
@@ -137,3 +102,4 @@
     }
   });
 </script>
+

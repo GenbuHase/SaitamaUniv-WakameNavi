@@ -6,7 +6,7 @@
       :dropOffStop="queryDropOff"
       :isFavorite="isAlreadyRegistered"
       @clickBack="goBack"
-      @clickFavorite="toggleMyRoute"
+      @clickFavorite="onToggleMyRoute"
     />
 
     <Transition
@@ -72,11 +72,6 @@
     isLoading,
     sortType,
 
-    // マイルートステート＆メソッド
-    myRoutes,
-    addMyRoute,
-    removeMyRoute,
-
     // 算出プロパティ
     integratedTimetable,
     nextBusIndex,
@@ -85,27 +80,18 @@
 
     // メソッド
     handleSearch,
+    isRouteRegistered,
+    toggleMyRoute,
   } = useBusTimetable();
 
   // 現在のルートが既にマイルート登録されているか判定
   const isAlreadyRegistered = computed(() => {
-    return myRoutes.value.some(
-      r => r.boarding === queryBoarding.value && r.dropOff === queryDropOff.value
-    );
+    return isRouteRegistered(queryBoarding.value, queryDropOff.value);
   });
 
   // お気に入り（マイルート）の追加・削除トグル
-  const toggleMyRoute = () => {
-    if (isAlreadyRegistered.value) {
-      const target = myRoutes.value.find(
-        r => r.boarding === queryBoarding.value && r.dropOff === queryDropOff.value
-      );
-      if (target) {
-        removeMyRoute(target.id);
-      }
-    } else {
-      addMyRoute(queryBoarding.value, queryDropOff.value);
-    }
+  const onToggleMyRoute = () => {
+    toggleMyRoute(queryBoarding.value, queryDropOff.value);
   };
 
   // クエリパラメータから入力を同期して検索を実行する
@@ -138,3 +124,4 @@
     });
   };
 </script>
+

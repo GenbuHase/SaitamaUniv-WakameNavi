@@ -13,7 +13,7 @@
         <div class="flex items-center gap-2">
           <Star class="w-4 h-4 text-amber-400 fill-amber-400" />
           <div class="flex flex-col items-start text-left">
-            <h3 class="text-sm tracking-wide">マイルート</h3>
+            <h3 class="text-sm font-bold text-slate-700 tracking-wide">マイルート</h3>
             <span class="text-[9px] font-normal text-slate-400 mt-0.5">左端のつまみでドラッグして並べ替えできます</span>
           </div>
         </div>
@@ -50,7 +50,7 @@
               @dragstart="onRouteDragStart(index, $event)"
               @dragover.prevent="onRouteDragOver(index, $event)"
               @dragend="onRouteDragEnd"
-              @click="$emit('applyRoute', route.boarding, route.dropOff)"
+              @click="applyRoute(route.boarding, route.dropOff)"
               class="flex items-center justify-between p-3.5 bg-slate-50/50 hover:bg-emerald-50/30 rounded-2xl border border-slate-100/80 hover:border-emerald-100/50 transition-all duration-300 active:scale-[0.99] cursor-pointer group relative select-none"
               :class="{
                 'opacity-30 border-dashed border-emerald-300 bg-emerald-50/20 shadow-inner scale-[0.98]': draggedIndex === index
@@ -68,7 +68,7 @@
 
               <!-- 左: 📌ボタン -->
               <button
-                @click.stop="$emit('togglePinRoute', route.id)"
+                @click.stop="togglePinRoute(route.id)"
                 draggable="false"
                 class="p-1 rounded-lg transition-colors flex-shrink-0 cursor-pointer"
                 :title="route.isPinned ? 'ピン留め解除' : 'ピン留めに設定'"
@@ -92,7 +92,7 @@
 
               <!-- 右: 削除ボタン -->
               <button
-                @click.stop="$emit('removeMyRoute', route.id)"
+                @click.stop="removeMyRoute(route.id)"
                 draggable="false"
                 class="p-2 text-slate-300 hover:text-red-500 hover:bg-red-50 rounded-xl transition-all duration-300 flex-shrink-0 cursor-pointer"
                 title="削除"
@@ -132,28 +132,17 @@
     Sparkles,
     GripVertical
   } from "lucide-vue-next";
+  import { useBusTimetable } from "@/composables/bus/useBusTimetable";
+  import type { MyRoute } from "@/composables/bus/useBusTimetable";
 
-  // マイルートインターフェース
-  interface MyRoute {
-    id: string;
-    boarding: string;
-    dropOff: string;
-    isPinned: boolean;
-    createdAt: number;
-  }
-
-  // Propsの定義
-  const props = defineProps<{
-    myRoutes: MyRoute[];
-  }>();
-
-  // Emitsの定義
-  const emit = defineEmits<{
-    applyRoute: [boarding: string, dropOff: string];
-    removeMyRoute: [id: string];
-    togglePinRoute: [id: string];
-    updateMyRoutes: [newRoutes: MyRoute[]];
-  }>();
+  // Composableから状態とアクションを呼び出す
+  const {
+    myRoutes,
+    removeMyRoute,
+    togglePinRoute,
+    updateMyRoutes,
+    applyRoute
+  } = useBusTimetable();
 
   // --- アコーディオンの状態 ---
   const isAccordionOpen = ref(true);
@@ -180,7 +169,7 @@
 
   // 親のProps変更を監視して同期する（ドラッグ中は再レンダリング防止のため同期をロック）
   watch(
-    () => props.myRoutes,
+    myRoutes,
     (newVal) => {
       if (draggedIndex.value === null) {
         localMyRoutes.value = [...newVal];
@@ -232,8 +221,8 @@
 
   const onRouteDragEnd = () => {
     if (draggedIndex.value !== null) {
-      // ドラッグが安全に完了したタイミングで、最終的な並び順を一気にエミットして保存
-      emit("updateMyRoutes", [...localMyRoutes.value]);
+      // ドラッグが安全に完了したタイミングで、最終的な並び順を一気に保存
+      updateMyRoutes([...localMyRoutes.value]);
     }
     draggedIndex.value = null;
     draggableRouteId.value = null; // ドラッグ終了時に確実にリセット
