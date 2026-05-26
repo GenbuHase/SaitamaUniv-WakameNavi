@@ -1,7 +1,9 @@
 // https://nuxt.com/docs/api/configuration/nuxt-config
+import { defineNuxtConfig } from "nuxt/config";
+
 export default defineNuxtConfig({
   compatibilityDate: "2025-12-08",
-  modules: ["@nuxt/eslint", "@nuxtjs/tailwindcss"],
+  modules: ["@nuxt/eslint", "@nuxtjs/tailwindcss", "nuxt-gtag"],
 
   ssr: false,
 
@@ -42,5 +44,9 @@ export default defineNuxtConfig({
     config: {
       stylistic: true
     }
+  },
+
+  gtag: {
+    id: "G-XF5BHCFJQV"
   }
 });
