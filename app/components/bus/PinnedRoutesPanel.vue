@@ -5,7 +5,7 @@
       <div class="flex items-center gap-2">
         <Pin class="w-4 h-4 text-red-500 fill-red-500" />
         <div class="flex flex-col items-start text-left">
-          <h3 class="text-sm font-bold uppercase tracking-wide">ピン留めルート (最大3件)</h3>
+          <h3 class="text-sm font-bold uppercase tracking-wide">ピン留めルート</h3>
           <span class="text-[9px] text-slate-400 mt-0.5">ドラッグ＆ドロップで並び替えできます</span>
         </div>
       </div>
