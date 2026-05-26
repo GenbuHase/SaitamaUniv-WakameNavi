@@ -42,7 +42,7 @@
 
 <script setup lang="ts">
   import { computed, onMounted, watch } from "vue";
-  import { useRoute, navigateTo } from "#imports";
+  import { useRoute, navigateTo, useHead } from "#imports";
   import { useBusTimetable } from "@/composables/bus/useBusTimetable";
 
   const route = useRoute();
@@ -61,6 +61,15 @@
 
   const queryBoarding = computed(() => (route.query.boarding as string) || "");
   const queryDropOff = computed(() => (route.query.dropOff as string) || "");
+
+  useHead({
+    title: () => {
+      const start = queryBoarding.value;
+      const end = queryDropOff.value || "指定なし";
+
+      return `${start} → ${end}｜バス検索｜わかめナビ🌱`;
+    }
+  });
 
   const {
     // ステート

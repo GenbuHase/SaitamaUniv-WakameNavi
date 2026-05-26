@@ -56,9 +56,13 @@
   import { onMounted } from "vue";
   import { ArrowLeftRight, Search } from "lucide-vue-next";
   import { useBusTimetable } from "@/composables/bus/useBusTimetable";
-  import { navigateTo, useRoute } from "#imports";
+  import { navigateTo, useRoute, useHead } from "#imports";
 
   const route = useRoute();
+
+  useHead({
+    title: "バス検索｜わかめナビ🌱",
+  });
 
   const {
     // ステート
