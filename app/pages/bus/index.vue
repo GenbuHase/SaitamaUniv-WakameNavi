@@ -56,12 +56,14 @@
   import { onMounted } from "vue";
   import { ArrowLeftRight, Search } from "lucide-vue-next";
   import { useBusTimetable } from "@/composables/bus/useBusTimetable";
-  import { navigateTo, useRoute, useHead } from "#imports";
+  import { navigateTo, useRoute, useSeoMeta } from "#imports";
 
   const route = useRoute();
 
-  useHead({
+  useSeoMeta({
     title: "バス検索｜わかめナビ🌱",
+    ogTitle: "バス検索｜わかめナビ🌱",
+    ogDescription: "埼玉大学周辺を走るバスの運行情報を確認することができるサービスです。",
   });
 
   const {

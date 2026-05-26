@@ -42,7 +42,7 @@
 
 <script setup lang="ts">
   import { computed, onMounted, watch } from "vue";
-  import { useRoute, navigateTo, useHead } from "#imports";
+  import { useRoute, navigateTo, useSeoMeta } from "#imports";
   import { useBusTimetable } from "@/composables/bus/useBusTimetable";
 
   const route = useRoute();
@@ -62,13 +62,16 @@
   const queryBoarding = computed(() => (route.query.boarding as string) || "");
   const queryDropOff = computed(() => (route.query.dropOff as string) || "");
 
-  useHead({
-    title: () => {
-      const start = queryBoarding.value;
-      const end = queryDropOff.value || "指定なし";
+  useSeoMeta({
+    title: () => `${queryBoarding.value} → ${queryDropOff.value || "指定なし"}｜バス検索｜わかめナビ🌱`,
+    ogTitle: () => `${queryBoarding.value} → ${queryDropOff.value || "指定なし"}｜バス検索｜わかめナビ🌱`,
 
-      return `${start} → ${end}｜バス検索｜わかめナビ🌱`;
-    }
+    ogDescription: () => {
+      const start = queryBoarding.value;
+      const end = queryDropOff.value ? `${queryDropOff.value}行` : "すべての行先";
+
+      return `埼玉大学周辺を走るバスの運行情報を確認することができるサービスです。${start}発、${end}のバス運行状況・リアルタイム時刻表を表示しています。`;
+    },
   });
 
   const {
