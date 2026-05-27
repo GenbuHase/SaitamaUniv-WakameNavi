@@ -175,13 +175,10 @@
       if (!name) return "";
       return name
         .replace("埼玉大学", "埼大")
-        .replace("駅西口", "")
-        .replace("駅東口", "")
-        .replace("駅北入口", "北口")
-        .replace("大久保浄水場", "浄水場")
-        .replace("常磐十丁目", "常磐")
-        .replace("大戸小学校", "大戸小")
-        .replace("南与野駅", "南与野");
+        .replace("駅", "")
+        .replace("西口", "")
+        .replace("東口", "")
+        .replace("北入口", "北");
     };
 
     const simplifiedBoarding = simplify(boarding);

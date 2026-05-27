@@ -36,7 +36,7 @@ function buildRoute(companyCode: BusCompanyCode, routeCode: string, rawStops: Ra
 const KokusaiKogyoRoutes: BusRoute[] = [
   buildRoute("KokusaiKogyo", "北浦03", [
     { id: "00021176", name: "北浦和駅西口" },
-    { id: "00021222", name: "常磐十丁目" },
+    { id: "00021222", name: "常盤十丁目" },
     { id: "00021200", name: "大戸小学校" },
     { id: "00021223", name: "鈴谷小学校" },
     { id: "00021224", name: "南与野駅北入口" },
@@ -282,7 +282,7 @@ const KokusaiKogyoRoutes: BusRoute[] = [
 const SeibuRoutes: BusRoute[] = [
   buildRoute("Seibu", "北浦03", [
     { id: "00111628", name: "北浦和駅" },
-    { id: "00111636", name: "常磐十丁目" },
+    { id: "00111636", name: "常盤十丁目" },
     { id: "00111637", name: "大戸小学校" },
     { id: "00111638", name: "鈴谷小学校" },
     { id: "00111639", name: "南与野駅北入口" },
