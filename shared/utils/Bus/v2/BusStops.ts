@@ -120,7 +120,7 @@ export const SeibuStops = {
     code: "KitaUrawa",
     name: "北浦和駅",
     companyCode: "Seibu" as BusCompanyCode,
-    routes: ["北浦03"],
+    routes: ["北浦03", "北浦10", "北浦11", "北浦15"],
   },
 
   MinamiYono: {
@@ -137,6 +137,30 @@ export const SeibuStops = {
     name: "南与野駅北入口",
     companyCode: "Seibu" as BusCompanyCode,
     routes: ["北浦03"],
+  },
+
+  UrawaKitaHighSchool: {
+    id: "00111610",
+    code: "UrawaKitaHighSchool",
+    name: "浦和北高校",
+    companyCode: "Seibu" as BusCompanyCode,
+    routes: ["北浦10"],
+  },
+
+  Okubo: {
+    id: "00111635",
+    code: "Okubo",
+    name: "大久保",
+    companyCode: "Seibu" as BusCompanyCode,
+    routes: ["北浦10", "北浦11", "北浦15"],
+  },
+
+  KamogawaDanchi: {
+    id: "00111599",
+    code: "KamogawaDanchi",
+    name: "加茂川団地",
+    companyCode: "Seibu" as BusCompanyCode,
+    routes: ["北浦15"],
   },
 } as const satisfies Record<string, BusStop>;
 
