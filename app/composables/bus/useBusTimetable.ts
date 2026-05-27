@@ -5,7 +5,7 @@
  * テンプレートが必要とするすべてのデータと関数を提供する。
  */
 
-import { ref, computed, onMounted, onUnmounted, watch } from "vue";
+import { ref, computed, onMounted, onUnmounted, watch, nextTick } from "vue";
 import { useRoute, navigateTo } from "#imports";
 
 import { KOKUSAI_ROUTES_DATA, SEIBU_ROUTES_DATA, GENERATED_ROUTES, sortStopsByPriority } from "./busRouteData";
@@ -121,6 +121,24 @@ export function useBusTimetable() {
   const filteredDropOffStops = computed(() =>
     filterStopsByQuery(availableDropOffStops.value, dropOffStopInput.value)
   );
+
+  // --- 停留所およびルートの検証 ---
+
+  const isBoardingStopInvalid = computed(() => {
+    return boardingStopInput.value !== "" && !allStops.value.includes(boardingStopInput.value);
+  });
+
+  const isDropOffStopInvalid = computed(() => {
+    return dropOffStopInput.value !== "" && !allStops.value.includes(dropOffStopInput.value);
+  });
+
+  const isRouteInvalid = computed(() => {
+    if (isBoardingStopInvalid.value || isDropOffStopInvalid.value) return true;
+    if (boardingStopInput.value && dropOffStopInput.value) {
+      return !availableDropOffStops.value.includes(dropOffStopInput.value);
+    }
+    return false;
+  });
 
   // --- バス停ごとの通過系統マップ ---
 
@@ -376,11 +394,22 @@ export function useBusTimetable() {
   // --- 入力変更の監視 ---
 
   let isSwapping = false;
+  let isSyncing = false;
+
   watch(boardingStopInput, (newVal, oldVal) => {
-    if (newVal !== oldVal && !isSwapping) {
+    if (newVal !== oldVal && !isSwapping && !isSyncing) {
       dropOffStopInput.value = "";
     }
   });
+
+  const setStops = (boarding: string, dropOff: string = "") => {
+    isSyncing = true;
+    boardingStopInput.value = boarding;
+    dropOffStopInput.value = dropOff;
+    nextTick(() => {
+      isSyncing = false;
+    });
+  };
 
   // --- バス停入れ替え ---
 
@@ -470,8 +499,7 @@ export function useBusTimetable() {
   };
 
   const applyRoute = (boarding: string, dropOff: string = "") => {
-    boardingStopInput.value = boarding;
-    dropOffStopInput.value = dropOff;
+    setStops(boarding, dropOff);
     
     const query: Record<string, any> = {
       boarding,
@@ -539,10 +567,14 @@ export function useBusTimetable() {
     nextBusIndex,
     nextBus,
     hasDelayInUpcoming,
+    isBoardingStopInvalid,
+    isDropOffStopInvalid,
+    isRouteInvalid,
 
     // メソッド
     handleSearch,
     swapStops,
+    setStops,
 
     // ユーティリティ (テンプレートで直接使用)
     formatTime,

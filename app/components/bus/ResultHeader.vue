@@ -1,10 +1,10 @@
 <template>
   <!-- 上部ナビゲーション / 選択区間サマリー -->
   <div class="flex items-center justify-between bg-white rounded-3xl border border-emerald-50/50 shadow-[0_8px_30px_rgb(0,0,0,0.03)] px-5 py-4 gap-3">
-    <!-- 左: 条件変更 -->
+    <!-- 左: 戻る -->
     <button @click="$emit('clickBack')" class="flex items-center gap-1 text-slate-500 hover:text-emerald-700 transition-colors text-xs font-black cursor-pointer bg-slate-50 hover:bg-emerald-50/50 px-3 py-2 rounded-xl border border-slate-100/80 hover:border-emerald-100/50 flex-shrink-0">
       <ChevronLeft class="w-4 h-4" />
-      <span>条件変更</span>
+      <span>戻る</span>
     </button>
 
     <!-- 中央: 区間名サマリー -->

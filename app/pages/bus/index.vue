@@ -38,10 +38,21 @@
       />
 
       <!-- 補足メッセージ -->
-      <p v-if="boardingStopInput && availableDropOffStops.length > 0" class="text-[10px] text-slate-400 mt-1.5 text-right tracking-wide">※反対方向のバスに乗る場合は、出発地と到着地を入れ替えてください</p>
+      <p v-if="boardingStopInput && availableDropOffStops.length > 0 && !isBoardingStopInvalid && !isDropOffStopInvalid && !isRouteInvalid" class="text-[10px] text-slate-400 mt-1.5 text-right tracking-wide">※反対方向のバスに乗る場合は、出発地と到着地を入れ替えてください</p>
+
+      <!-- ⚠️ エラーメッセージ -->
+      <div v-if="isBoardingStopInvalid || isDropOffStopInvalid || isRouteInvalid" class="p-4 bg-rose-50 border border-rose-100 rounded-2xl flex items-start gap-3 text-rose-800 text-sm shadow-sm transition-all duration-300">
+        <AlertCircle class="w-5 h-5 text-rose-500 flex-shrink-0 mt-0.5" />
+        <div class="space-y-1">
+          <p v-if="isBoardingStopInvalid" class="font-semibold">出発停留所「{{ boardingStopInput }}」は存在しません。</p>
+          <p v-else-if="isDropOffStopInvalid" class="font-semibold">到着停留所「{{ dropOffStopInput }}」は存在しません。</p>
+          <p v-else-if="isRouteInvalid" class="font-semibold">指定された区間を運行する直通バス路線はありません。</p>
+          <p class="text-xs text-rose-600/80">停留所名を正しく入力するか、候補リストから選択してください。</p>
+        </div>
+      </div>
 
       <!-- 検索ボタン -->
-      <button @click="onSearch" :disabled="!boardingStopInput" class="w-full py-4 bg-emerald-600 hover:bg-emerald-700 active:scale-[0.98] text-white font-bold rounded-2xl shadow-[0_8px_20px_rgb(5,150,105,0.2)] flex justify-center items-center gap-2 transition-all duration-300 disabled:opacity-75 disabled:active:scale-100 disabled:bg-slate-300 disabled:text-slate-400 disabled:shadow-none disabled:cursor-not-allowed cursor-pointer">
+      <button @click="onSearch" :disabled="!boardingStopInput || isBoardingStopInvalid || isDropOffStopInvalid || isRouteInvalid" class="w-full py-4 bg-emerald-600 hover:bg-emerald-700 active:scale-[0.98] text-white font-bold rounded-2xl shadow-[0_8px_20px_rgb(5,150,105,0.2)] flex justify-center items-center gap-2 transition-all duration-300 disabled:opacity-75 disabled:active:scale-100 disabled:bg-slate-300 disabled:text-slate-400 disabled:shadow-none disabled:cursor-not-allowed cursor-pointer">
         <Search class="w-4 h-4" />
         <span class="tracking-wide">検索</span>
       </button>
@@ -54,7 +65,7 @@
 
 <script setup lang="ts">
   import { onMounted } from "vue";
-  import { ArrowLeftRight, Search } from "lucide-vue-next";
+  import { ArrowLeftRight, Search, AlertCircle } from "lucide-vue-next";
   import { useBusTimetable } from "@/composables/bus/useBusTimetable";
   import { navigateTo, useRoute, useSeoMeta } from "#imports";
 
@@ -63,7 +74,7 @@
   useSeoMeta({
     title: "バス検索｜わかめナビ🌱",
     ogTitle: "バス検索｜わかめナビ🌱",
-    ogDescription: "埼玉大学周辺を走るバスの運行情報を確認することができるサービスです。",
+    ogDescription: "埼玉大学周辺を走るバスの運行情報を確認することができる service です。",
   });
 
   const {
@@ -78,9 +89,13 @@
     filteredDropOffStops,
     stopRoutesMap,
     hasDelayInUpcoming,
+    isBoardingStopInvalid,
+    isDropOffStopInvalid,
+    isRouteInvalid,
 
     // メソッド
     swapStops,
+    setStops,
   } = useBusTimetable();
 
 
@@ -103,8 +118,7 @@
   // 戻ってきた際に以前のクエリパラメータから入力状態を復元する
   onMounted(() => {
     if (route.query.boarding) {
-      boardingStopInput.value = route.query.boarding as string;
-      dropOffStopInput.value = (route.query.dropOff as string) || "";
+      setStops(route.query.boarding as string, (route.query.dropOff as string) || "");
     }
   });
 </script>
