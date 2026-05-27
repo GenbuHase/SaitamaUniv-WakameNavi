@@ -106,8 +106,11 @@
       boarding: boardingStopInput.value,
       dropOff: dropOffStopInput.value,
     };
+    if (route.query.campaign !== undefined) {
+      query.campaign = route.query.campaign;
+    }
     if (route.query.local !== undefined) {
-      query.local = "";
+      query.local = route.query.local;
     }
     navigateTo({
       path: "/bus/result",

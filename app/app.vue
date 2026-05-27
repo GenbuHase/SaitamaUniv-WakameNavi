@@ -15,12 +15,12 @@
     <!-- フッター (Floating Island) -->
     <footer class="fixed bottom-6 left-4 right-4 max-w-xl mx-auto bg-white/95 backdrop-blur-xl shadow-[0_8px_30px_rgb(0,0,0,0.12)] rounded-3xl border border-white/20 z-50 overflow-hidden safe-area-bottom">
       <nav class="grid grid-cols-3 h-16 relative">
-        <NuxtLink to="/" class="flex flex-col items-center justify-center gap-1 transition-all duration-300 relative group" active-class="text-emerald-600" inactive-class="text-slate-400 hover:text-emerald-500 hover:bg-emerald-50/50">
+        <NuxtLink :to="{ path: '/', query: trackingQuery }" class="flex flex-col items-center justify-center gap-1 transition-all duration-300 relative group" active-class="text-emerald-600" inactive-class="text-slate-400 hover:text-emerald-500 hover:bg-emerald-50/50">
           <Home class="w-6 h-6 transition-transform group-active:scale-90" />
           <span class="text-[10px] font-bold tracking-wide">ホーム</span>
         </NuxtLink>
 
-        <NuxtLink to="/bus" class="flex flex-col items-center justify-center gap-1 transition-all duration-300 relative group" exact-active-class="text-emerald-600" inactive-class="text-slate-400 hover:text-emerald-500 hover:bg-emerald-50/50">
+        <NuxtLink :to="{ path: '/bus', query: trackingQuery }" class="flex flex-col items-center justify-center gap-1 transition-all duration-300 relative group" exact-active-class="text-emerald-600" inactive-class="text-slate-400 hover:text-emerald-500 hover:bg-emerald-50/50">
           <Bus class="w-6 h-6 transition-transform group-active:scale-90" />
           <span class="text-[10px] font-bold tracking-wide">バス</span>
         </NuxtLink>
@@ -35,5 +35,19 @@
 </template>
 
 <script setup lang="ts">
+  import { computed } from "vue";
+  import { useRoute } from "#imports";
   import { Home, Bus, Train } from "lucide-vue-next";
+
+  const route = useRoute();
+  const trackingQuery = computed(() => {
+    const query: Record<string, any> = {};
+    if (route.query.campaign !== undefined) {
+      query.campaign = route.query.campaign;
+    }
+    if (route.query.local !== undefined) {
+      query.local = route.query.local;
+    }
+    return query;
+  });
 </script>
