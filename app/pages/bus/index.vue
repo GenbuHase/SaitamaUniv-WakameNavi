@@ -72,9 +72,8 @@
   const route = useRoute();
 
   useSeoMeta({
-    title: "バス検索｜わかめナビ🌱",
-    ogTitle: "バス検索｜わかめナビ🌱",
-    ogDescription: "埼玉大学周辺を走るバスの運行情報を確認することができる service です。",
+    title: () => `バス検索｜わかめナビ🌱${route.query.campaign ? "(一時公開版)" : ""}`,
+    ogTitle: () => `バス検索｜わかめナビ🌱${route.query.campaign ? "(一時公開版)" : ""}`
   });
 
   const {

@@ -98,8 +98,8 @@
   const queryDropOff = computed(() => (route.query.dropOff as string) || "");
 
   useSeoMeta({
-    title: () => `${queryBoarding.value} → ${queryDropOff.value || "指定なし"}｜バス検索｜わかめナビ🌱`,
-    ogTitle: () => `${queryBoarding.value} → ${queryDropOff.value || "指定なし"}｜バス検索｜わかめナビ🌱`,
+    title: () => `${queryBoarding.value} → ${queryDropOff.value || "指定なし"}｜バス検索｜わかめナビ🌱${route.query.campaign ? "(一時公開版)" : ""}`,
+    ogTitle: () => `${queryBoarding.value} → ${queryDropOff.value || "指定なし"}｜バス検索｜わかめナビ🌱${route.query.campaign ? "(一時公開版)" : ""}`,
 
     ogDescription: () => {
       const start = queryBoarding.value;
