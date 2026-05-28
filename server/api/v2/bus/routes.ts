@@ -13,16 +13,40 @@
 
 import Bus from "@@/shared/utils/Bus/v2";
 import type { BusCompanyCode } from "@@/shared/types/bus";
+import {
+  isValidBusStopId,
+  isValidCompanyCode,
+  safeGetString,
+} from "../../../utils/validation";
 
 export default defineEventHandler((event) => {
-  const query = getQuery(event) as { [K: string]: string };
-  const { start, goal, company } = query;
+  const rawQuery = getQuery(event);
+
+  // 安全な文字列としてパラメータを取得
+  const start = safeGetString(rawQuery.start);
+  const goal = safeGetString(rawQuery.goal);
+  const company = safeGetString(rawQuery.company);
 
   // バリデーション: company が指定された場合は有効な値かチェック
-  if (company && company !== "KokusaiKogyo" && company !== "Seibu") {
+  if (company && !isValidCompanyCode(company)) {
     throw createError({
       statusCode: 400,
       data: "クエリパラメータ 'company' は 'KokusaiKogyo' または 'Seibu' を指定してください。",
+    });
+  }
+
+  // バス停IDのバリデーション (ホワイトリスト照合)
+  if (start && !isValidBusStopId(start)) {
+    throw createError({
+      statusCode: 400,
+      data: "無効な出発バス停IDです。",
+    });
+  }
+
+  if (goal && !isValidBusStopId(goal)) {
+    throw createError({
+      statusCode: 400,
+      data: "無効な到着バス停IDです。",
     });
   }
 

@@ -426,15 +426,53 @@ export function useBusTimetable() {
 
   // --- マイルート操作 ---
 
+  /**
+   * MyRoute オブジェクトのスキーマバリデーション
+   *
+   * localStorageから読み込んだデータが改ざんされている可能性を考慮し、
+   * 各フィールドの型と値を検証する。
+   */
+  const isValidMyRoute = (obj: unknown): obj is MyRoute => {
+    if (!obj || typeof obj !== "object") return false;
+    const route = obj as Record<string, unknown>;
+
+    return (
+      typeof route.id === "string" && route.id.length > 0 && route.id.length <= 200 &&
+      typeof route.boarding === "string" && route.boarding.length <= 100 &&
+      typeof route.dropOff === "string" && route.dropOff.length <= 100 &&
+      typeof route.isPinned === "boolean" &&
+      typeof route.createdAt === "number" && Number.isFinite(route.createdAt)
+    );
+  };
+
   const loadMyRoutes = () => {
     if (import.meta.client && !isMyRoutesLoaded) {
       const routesJson = localStorage.getItem("@genbuhase/wakame-navi/my_routes");
       if (routesJson) {
         try {
-          myRoutes.value = JSON.parse(routesJson);
+          const parsed = JSON.parse(routesJson);
+
+          // 配列でなければ不正データとして無視
+          if (!Array.isArray(parsed)) {
+            console.warn("マイルートデータが配列ではありません。初期化します。");
+            myRoutes.value = [];
+            isMyRoutesLoaded = true;
+            return;
+          }
+
+          // 各要素をバリデーションし、不正なエントリを除外
+          const validRoutes = parsed.filter(isValidMyRoute);
+          if (validRoutes.length !== parsed.length) {
+            console.warn(`マイルートデータに不正なエントリが ${parsed.length - validRoutes.length} 件含まれていたため除外しました。`);
+          }
+
+          // 最大件数を超えている場合は切り捨て
+          myRoutes.value = validRoutes.slice(0, 20);
           isMyRoutesLoaded = true;
         } catch (e) {
           console.error("Failed to parse my routes:", e);
+          myRoutes.value = [];
+          isMyRoutesLoaded = true;
         }
       } else {
         isMyRoutesLoaded = true;

@@ -4,38 +4,95 @@
  * バスの運行情報 (リアルタイム位置情報) を取得する。
  *
  * クエリパラメータ:
- *   - start (必須): 出発バス停コード (例: "SaitamaUniv")
+ *   - start (任意): 出発バス停コード (例: "SaitamaUniv")
  *   - goal (任意): 到着バス停コード (例: "KitaUrawa")
  *   - company (任意): バス会社コード ("KokusaiKogyo" | "Seibu")
+ *   - kokusaiStartId (任意): 国際興業バスの出発バス停ID (8桁数字)
+ *   - kokusaiGoalId (任意): 国際興業バスの到着バス停ID (8桁数字)
+ *   - seibuStartId (任意): 西武バスの出発バス停ID (8桁数字)
+ *   - seibuGoalId (任意): 西武バスの到着バス停ID (8桁数字)
  *
  * レスポンス: BusService[]
  */
 
 import Bus from "@@/shared/utils/Bus/v2";
 import type { BusCompanyCode } from "@@/shared/types/bus";
+import {
+  isValidKokusaiId,
+  isValidSeibuId,
+  isValidCompanyCode,
+  isValidStopCode,
+  safeGetString,
+} from "../../../utils/validation";
+
+/** services API で使用するクエリパラメータのホワイトリスト */
+const ALLOWED_PARAMS = new Set([
+  "start", "goal", "company",
+  "kokusaiStartId", "kokusaiGoalId",
+  "seibuStartId", "seibuGoalId",
+]);
 
 export default defineCachedEventHandler(
   async event => {
-    const query = getQuery(event) as { [K: string]: string };
-    const { start, goal, company, kokusaiStartId, kokusaiGoalId, seibuStartId, seibuGoalId } = query;
+    const rawQuery = getQuery(event);
+
+    // ホワイトリストにないパラメータを除去した安全なクエリを構築
+    const start = safeGetString(rawQuery.start);
+    const goal = safeGetString(rawQuery.goal);
+    const company = safeGetString(rawQuery.company);
+    const kokusaiStartId = safeGetString(rawQuery.kokusaiStartId);
+    const kokusaiGoalId = safeGetString(rawQuery.kokusaiGoalId);
+    const seibuStartId = safeGetString(rawQuery.seibuStartId);
+    const seibuGoalId = safeGetString(rawQuery.seibuGoalId);
 
     // 新しい直接ID指定方式 (自由にバス停を選択できるようにする)
     if (kokusaiStartId || seibuStartId) {
       const services = [];
+
+      // 国際興業バス: IDホワイトリストバリデーション
       if (kokusaiStartId) {
+        if (!isValidKokusaiId(kokusaiStartId)) {
+          throw createError({
+            statusCode: 400,
+            data: "無効な国際興業バスの出発バス停IDです。",
+          });
+        }
+        if (kokusaiGoalId && !isValidKokusaiId(kokusaiGoalId)) {
+          throw createError({
+            statusCode: 400,
+            data: "無効な国際興業バスの到着バス停IDです。",
+          });
+        }
+
         try {
           services.push(...(await Bus.KokusaiKogyoBus.getServices(kokusaiStartId, kokusaiGoalId || kokusaiStartId)));
         } catch (e) {
           console.error("[KokusaiKogyoBus] 運行情報の取得に失敗:", e);
         }
       }
+
+      // 西武バス: IDホワイトリストバリデーション
       if (seibuStartId) {
+        if (!isValidSeibuId(seibuStartId)) {
+          throw createError({
+            statusCode: 400,
+            data: "無効な西武バスの出発バス停IDです。",
+          });
+        }
+        if (seibuGoalId && !isValidSeibuId(seibuGoalId)) {
+          throw createError({
+            statusCode: 400,
+            data: "無効な西武バスの到着バス停IDです。",
+          });
+        }
+
         try {
           services.push(...(await Bus.SeibuBus.getServices(seibuStartId, seibuGoalId || seibuStartId)));
         } catch (e) {
           console.error("[SeibuBus] 運行情報の取得に失敗:", e);
         }
       }
+
       return services;
     }
 
@@ -47,8 +104,23 @@ export default defineCachedEventHandler(
       });
     }
 
-    // 従来の内部コード指定方式
-    if (company && company !== "KokusaiKogyo" && company !== "Seibu") {
+    // バス停コードのバリデーション
+    if (!isValidStopCode(start)) {
+      throw createError({
+        statusCode: 400,
+        data: "無効な出発バス停コードです。"
+      });
+    }
+
+    if (goal && !isValidStopCode(goal)) {
+      throw createError({
+        statusCode: 400,
+        data: "無効な到着バス停コードです。"
+      });
+    }
+
+    // バス会社コードのバリデーション
+    if (company && !isValidCompanyCode(company)) {
       throw createError({
         statusCode: 400,
         data: "クエリパラメータ 'company' は 'KokusaiKogyo' または 'Seibu' を指定してください。"
@@ -64,11 +136,20 @@ export default defineCachedEventHandler(
     maxAge: 60,
 
     getKey: event => {
-      // パラメータの順序に関わらず同一のキャッシュを利用可能にするため、キーをソートする
-      const query = getQuery(event) as { [K: string]: string };
-      const keys = Object.keys(query).sort();
+      // ホワイトリストに含まれるパラメータのみでキャッシュキーを生成する
+      // これにより、不正なパラメータによるキャッシュポイズニングを防止する
+      const rawQuery = getQuery(event);
+      const keyParts: string[] = [];
 
-      return keys.map(k => `${k}=${query[k]}`).join("&");
+      for (const param of ALLOWED_PARAMS) {
+        const value = safeGetString(rawQuery[param]);
+        if (value) {
+          keyParts.push(`${param}=${value}`);
+        }
+      }
+
+      // パラメータをソートして順序によらず同一のキャッシュキーを生成
+      return keyParts.sort().join("&");
     }
   }
 );

@@ -18,11 +18,14 @@ export const COMPANY_CODE: BusCompanyCode = "Seibu";
 /** バス会社名 */
 export const COMPANY_NAME = BUS_COMPANIES.Seibu.name;
 
+/** 外部リクエストのタイムアウト (ミリ秒) */
+const FETCH_TIMEOUT_MS = 10_000;
+
 /**
  * スクレイピングURLを生成する
  */
 function getFetchUrl(startId: string, goalId: string): string {
-  return `${FETCH_BASE_URL}?departure-busstop=${startId}&arrival-busstop=${goalId}`;
+  return `${FETCH_BASE_URL}?departure-busstop=${encodeURIComponent(startId)}&arrival-busstop=${encodeURIComponent(goalId)}`;
 }
 
 /**
@@ -49,6 +52,26 @@ function extractTime(timeText: string): string {
   return matcher ? matcher[0] : "";
 }
 
+/**
+ * タイムアウト付きの fetch を実行する
+ *
+ * AbortController を使用し、指定時間内に応答がない場合はリクエストを中断する。
+ */
+async function fetchWithTimeout(url: string, options: RequestInit, timeoutMs: number): Promise<Response> {
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
+
+  try {
+    const response = await fetch(url, {
+      ...options,
+      signal: controller.signal,
+    });
+    return response;
+  } finally {
+    clearTimeout(timeoutId);
+  }
+}
+
 export async function getServices(startId: string, goalId: string): Promise<BusService[]> {
   // 目的地が未指定（startId === goalId）の場合、Navitime Cloudでは403/404エラーになるため
   // 主要な行き先をすべて並列で取得して合成する
@@ -72,11 +95,11 @@ export async function getServices(startId: string, goalId: string): Promise<BusS
 
 async function fetchServices(startId: string, goalId: string): Promise<BusService[]> {
   const url = getFetchUrl(startId, goalId);
-  const response = await fetch(url, {
+  const response = await fetchWithTimeout(url, {
     headers: {
       "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
     }
-  });
+  }, FETCH_TIMEOUT_MS);
 
   if (!response.ok) {
     throw new Error(`Seibu Bus Fetch Error: ${response.status} ${response.statusText}`);

@@ -19,11 +19,14 @@ export const COMPANY_CODE: BusCompanyCode = "KokusaiKogyo";
 /** バス会社名 */
 export const COMPANY_NAME = BUS_COMPANIES.KokusaiKogyo.name;
 
+/** 外部リクエストのタイムアウト (ミリ秒) */
+const FETCH_TIMEOUT_MS = 10_000;
+
 /**
  * スクレイピングURLを生成する
  */
 function getFetchUrl(startId: string, goalId: string): string {
-  return `${FETCH_BASE_URL}?startId=${startId}&goalId=${goalId}`;
+  return `${FETCH_BASE_URL}?startId=${encodeURIComponent(startId)}&goalId=${encodeURIComponent(goalId)}`;
 }
 
 /**
@@ -73,6 +76,23 @@ function parseDelay(delayText: string): number {
 }
 
 /**
+ * タイムアウト付きの fetch を実行する
+ *
+ * AbortController を使用し、指定時間内に応答がない場合はリクエストを中断する。
+ */
+async function fetchWithTimeout(url: string, timeoutMs: number): Promise<Response> {
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
+
+  try {
+    const response = await fetch(url, { signal: controller.signal });
+    return response;
+  } finally {
+    clearTimeout(timeoutId);
+  }
+}
+
+/**
  * 国際興業バスの運行情報を取得する
  *
  * @param startId - 出発バス停の navitime ID
@@ -82,7 +102,7 @@ function parseDelay(delayText: string): number {
 export async function getServices(startId: string, goalId: string): Promise<BusService[]> {
   // 目的地が未指定（startId === goalId）の場合、goalIdを空値にすることですべての行き先を取得できる
   const fetchGoalId = startId === goalId ? "" : goalId;
-  const html = await (await fetch(getFetchUrl(startId, fetchGoalId))).text();
+  const html = await (await fetchWithTimeout(getFetchUrl(startId, fetchGoalId), FETCH_TIMEOUT_MS)).text();
   const $ = cheerio.load(html);
   const elements = $("#resultList > .plotList").toArray();
 
