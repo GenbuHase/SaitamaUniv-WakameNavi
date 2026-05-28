@@ -16,8 +16,9 @@
  */
 
 import Bus from "@@/shared/utils/Bus/v2";
-import type { BusCompanyCode, BusService } from "@@/shared/types/bus";
+
 import { redis, hasRedis } from "../../../utils/redis";
+
 import {
   isValidKokusaiId,
   isValidSeibuId,
@@ -26,6 +27,10 @@ import {
   safeGetString,
 } from "../../../utils/validation";
 
+import type { BusCompanyCode, BusService } from "@@/shared/types/bus";
+
+
+
 /** services API で使用するクエリパラメータのホワイトリスト */
 const ALLOWED_PARAMS = new Set([
   "start", "goal", "company",
@@ -33,20 +38,155 @@ const ALLOWED_PARAMS = new Set([
   "seibuStartId", "seibuGoalId",
 ]);
 
-export default defineCachedEventHandler(
-  async event => {
+export default defineCachedEventHandler(async event => {
+  const rawQuery = getQuery(event);
+
+  // ホワイトリストにないパラメータを除去した安全なクエリを構築
+  const start = safeGetString(rawQuery.start);
+  const goal = safeGetString(rawQuery.goal);
+  const company = safeGetString(rawQuery.company);
+  const kokusaiStartId = safeGetString(rawQuery.kokusaiStartId);
+  const kokusaiGoalId = safeGetString(rawQuery.kokusaiGoalId);
+  const seibuStartId = safeGetString(rawQuery.seibuStartId);
+  const seibuGoalId = safeGetString(rawQuery.seibuGoalId);
+
+  // 1. キャッシュキーを安全に構築
+  const keyParts: string[] = [];
+  for (const param of ALLOWED_PARAMS) {
+    const value = safeGetString(rawQuery[param]);
+
+    if (value) {
+      keyParts.push(`${param}=${value}`);
+    }
+  }
+
+  const cacheKey = `bus_services:${keyParts.sort().join("&")}`;
+
+  // 2. Redis 共有キャッシュの確認
+  if (hasRedis && redis) {
+    try {
+      const cached = await redis.get<string | BusService[]>(cacheKey);
+
+      if (cached) {
+        return typeof cached === "string" ? (JSON.parse(cached) as BusService[]) : cached;
+      }
+    } catch (e) {
+      console.error("[Redis Cache] 読み込みに失敗 (インメモリフォールバックへ移行):", e);
+    }
+  }
+
+  // 3. 実際の運行データ取得
+  const fetchServices = async (): Promise<BusService[]> => {
+    // 新しい直接ID指定方式 (自由にバス停を選択できるようにする)
+    if (kokusaiStartId || seibuStartId) {
+      const services: BusService[] = [];
+
+      // 国際興業バス: IDホワイトリストバリデーション
+      if (kokusaiStartId) {
+        if (!isValidKokusaiId(kokusaiStartId)) {
+          throw createError({
+            statusCode: 400,
+            data: "無効な国際興業バスの出発バス停IDです。",
+          });
+        }
+
+        if (kokusaiGoalId && !isValidKokusaiId(kokusaiGoalId)) {
+          throw createError({
+            statusCode: 400,
+            data: "無効な国際興業バスの到着バス停IDです。",
+          });
+        }
+
+        try {
+          services.push(...(await Bus.KokusaiKogyoBus.getServices(kokusaiStartId, kokusaiGoalId || kokusaiStartId)));
+        } catch (e) {
+          console.error("[KokusaiKogyoBus] 運行情報の取得に失敗:", e);
+        }
+      }
+
+      // 西武バス: IDホワイトリストバリデーション
+      if (seibuStartId) {
+        if (!isValidSeibuId(seibuStartId)) {
+          throw createError({
+            statusCode: 400,
+            data: "無効な西武バスの出発バス停IDです。",
+          });
+        }
+
+        if (seibuGoalId && !isValidSeibuId(seibuGoalId)) {
+          throw createError({
+            statusCode: 400,
+            data: "無効な西武バスの到着バス停IDです。",
+          });
+        }
+
+        try {
+          services.push(...(await Bus.SeibuBus.getServices(seibuStartId, seibuGoalId || seibuStartId)));
+        } catch (e) {
+          console.error("[SeibuBus] 運行情報の取得に失敗:", e);
+        }
+      }
+
+      return services;
+    }
+
+    // バリデーション: start または直接ID は必須
+    if (!start) {
+      throw createError({
+        statusCode: 400,
+        data: "クエリパラメータ 'start' または各社の 'startId' が必要です。"
+      });
+    }
+
+    // バス停コードのバリデーション
+    if (!isValidStopCode(start)) {
+      throw createError({
+        statusCode: 400,
+        data: "無効な出発バス停コードです。"
+      });
+    }
+
+    if (goal && !isValidStopCode(goal)) {
+      throw createError({
+        statusCode: 400,
+        data: "無効な到着バス停コードです。"
+      });
+    }
+
+    // バス会社コードのバリデーション
+    if (company && !isValidCompanyCode(company)) {
+      throw createError({
+        statusCode: 400,
+        data: "クエリパラメータ 'company' は 'KokusaiKogyo' または 'Seibu' を指定してください。"
+      });
+    }
+
+    const companyCode = (company as BusCompanyCode) || null;
+
+    return await Bus.getServices(companyCode, start, goal || undefined);
+  };
+
+  const result = await fetchServices();
+
+  // 4. Redis に結果を書き込み (60秒キャッシュ)
+  if (hasRedis && redis && result && result.length > 0) {
+    try {
+      await redis.set(cacheKey, JSON.stringify(result), { ex: 60 });
+    } catch (e) {
+      console.error("[Redis Cache] 書き込みに失敗:", e);
+    }
+  }
+
+  return result;
+}, {
+  name: "v2_bus_services",
+  maxAge: 60,
+
+  getKey: event => {
+    // ホワイトリストに含まれるパラメータのみでキャッシュキーを生成する
+    // これにより、不正なパラメータによるキャッシュポイズニングを防止する
     const rawQuery = getQuery(event);
 
-    // ホワイトリストにないパラメータを除去した安全なクエリを構築
-    const start = safeGetString(rawQuery.start);
-    const goal = safeGetString(rawQuery.goal);
-    const company = safeGetString(rawQuery.company);
-    const kokusaiStartId = safeGetString(rawQuery.kokusaiStartId);
-    const kokusaiGoalId = safeGetString(rawQuery.kokusaiGoalId);
-    const seibuStartId = safeGetString(rawQuery.seibuStartId);
-    const seibuGoalId = safeGetString(rawQuery.seibuGoalId);
-
-    // 1. キャッシュキーを安全に構築
     const keyParts: string[] = [];
     for (const param of ALLOWED_PARAMS) {
       const value = safeGetString(rawQuery[param]);
@@ -54,142 +194,8 @@ export default defineCachedEventHandler(
         keyParts.push(`${param}=${value}`);
       }
     }
-    const cacheKey = `bus_services:${keyParts.sort().join("&")}`;
 
-    // 2. Redis 共有キャッシュの確認
-    if (hasRedis && redis) {
-      try {
-        const cached = await redis.get<string | BusService[]>(cacheKey);
-        if (cached) {
-          return typeof cached === "string" ? (JSON.parse(cached) as BusService[]) : cached;
-        }
-      } catch (e) {
-        console.error("[Redis Cache] 読み込みに失敗 (インメモリフォールバックへ移行):", e);
-      }
-    }
-
-    // 3. 実際の運行データ取得
-    const fetchServices = async (): Promise<BusService[]> => {
-      // 新しい直接ID指定方式 (自由にバス停を選択できるようにする)
-      if (kokusaiStartId || seibuStartId) {
-        const services: BusService[] = [];
-
-        // 国際興業バス: IDホワイトリストバリデーション
-        if (kokusaiStartId) {
-          if (!isValidKokusaiId(kokusaiStartId)) {
-            throw createError({
-              statusCode: 400,
-              data: "無効な国際興業バスの出発バス停IDです。",
-            });
-          }
-          if (kokusaiGoalId && !isValidKokusaiId(kokusaiGoalId)) {
-            throw createError({
-              statusCode: 400,
-              data: "無効な国際興業バスの到着バス停IDです。",
-            });
-          }
-
-          try {
-            services.push(...(await Bus.KokusaiKogyoBus.getServices(kokusaiStartId, kokusaiGoalId || kokusaiStartId)));
-          } catch (e) {
-            console.error("[KokusaiKogyoBus] 運行情報の取得に失敗:", e);
-          }
-        }
-
-        // 西武バス: IDホワイトリストバリデーション
-        if (seibuStartId) {
-          if (!isValidSeibuId(seibuStartId)) {
-            throw createError({
-              statusCode: 400,
-              data: "無効な西武バスの出発バス停IDです。",
-            });
-          }
-          if (seibuGoalId && !isValidSeibuId(seibuGoalId)) {
-            throw createError({
-              statusCode: 400,
-              data: "無効な西武バスの到着バス停IDです。",
-            });
-          }
-
-          try {
-            services.push(...(await Bus.SeibuBus.getServices(seibuStartId, seibuGoalId || seibuStartId)));
-          } catch (e) {
-            console.error("[SeibuBus] 運行情報の取得に失敗:", e);
-          }
-        }
-
-        return services;
-      }
-
-      // バリデーション: start または直接ID は必須
-      if (!start) {
-        throw createError({
-          statusCode: 400,
-          data: "クエリパラメータ 'start' または各社の 'startId' が必要です。"
-        });
-      }
-
-      // バス停コードのバリデーション
-      if (!isValidStopCode(start)) {
-        throw createError({
-          statusCode: 400,
-          data: "無効な出発バス停コードです。"
-        });
-      }
-
-      if (goal && !isValidStopCode(goal)) {
-        throw createError({
-          statusCode: 400,
-          data: "無効な到着バス停コードです。"
-        });
-      }
-
-      // バス会社コードのバリデーション
-      if (company && !isValidCompanyCode(company)) {
-        throw createError({
-          statusCode: 400,
-          data: "クエリパラメータ 'company' は 'KokusaiKogyo' または 'Seibu' を指定してください。"
-        });
-      }
-
-      const companyCode = (company as BusCompanyCode) || null;
-
-      return await Bus.getServices(companyCode, start, goal || undefined);
-    };
-
-    const result = await fetchServices();
-
-    // 4. Redis に結果を書き込み (60秒キャッシュ)
-    if (hasRedis && redis && result && result.length > 0) {
-      try {
-        await redis.set(cacheKey, JSON.stringify(result), { ex: 60 });
-      } catch (e) {
-        console.error("[Redis Cache] 書き込みに失敗:", e);
-      }
-    }
-
-    return result;
-  },
-  {
-    name: "v2_bus_services",
-    maxAge: 60,
-
-    getKey: event => {
-      // ホワイトリストに含まれるパラメータのみでキャッシュキーを生成する
-      // これにより、不正なパラメータによるキャッシュポイズニングを防止する
-      const rawQuery = getQuery(event);
-      const keyParts: string[] = [];
-
-      for (const param of ALLOWED_PARAMS) {
-        const value = safeGetString(rawQuery[param]);
-        if (value) {
-          keyParts.push(`${param}=${value}`);
-        }
-      }
-
-      // パラメータをソートして順序によらず同一のキャッシュキーを生成
-      return keyParts.sort().join("&");
-    }
+    // パラメータをソートして順序によらず同一のキャッシュキーを生成
+    return keyParts.sort().join("&");
   }
-);
-
+});

@@ -7,8 +7,5 @@ const redisToken = process.env.UPSTASH_REDIS_REST_TOKEN;
 export const hasRedis = !!(redisUrl && redisToken);
 
 export const redis = hasRedis
-  ? new Redis({
-      url: redisUrl || "",
-      token: redisToken || "",
-    })
+  ? Redis.fromEnv()
   : null;

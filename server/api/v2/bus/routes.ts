@@ -12,12 +12,16 @@
  */
 
 import Bus from "@@/shared/utils/Bus/v2";
-import type { BusCompanyCode } from "@@/shared/types/bus";
+
 import {
   isValidBusStopId,
   isValidCompanyCode,
   safeGetString,
 } from "../../../utils/validation";
+
+import type { BusCompanyCode } from "@@/shared/types/bus";
+
+
 
 export default defineEventHandler((event) => {
   const rawQuery = getQuery(event);
