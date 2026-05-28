@@ -7,18 +7,23 @@
 
 import type { BusCompanyCode, BusService, BusRoute } from "@@/shared/types/bus";
 
-import BusStops, {
+import Routes, {
+  ALL_ROUTES,
+  filterRoutes,
   KokusaiKogyoStops,
   SeibuStops,
   BusStopsByCompany,
   findBusStopByCode,
   getCompaniesForStop,
-} from "./BusStops";
-
-import Routes, {
-  ALL_ROUTES,
-  filterRoutes,
 } from "./Routes";
+
+const BusStops = {
+  KokusaiKogyo: KokusaiKogyoStops,
+  Seibu: SeibuStops,
+  BusStopsByCompany,
+  findBusStopByCode,
+  getCompaniesForStop,
+};
 
 import * as KokusaiKogyoBus from "./KokusaiKogyoBus";
 import * as SeibuBus from "./SeibuBus";

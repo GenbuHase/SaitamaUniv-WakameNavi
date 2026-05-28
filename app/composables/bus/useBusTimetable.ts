@@ -7,6 +7,7 @@
 
 import { ref, computed, onMounted, onUnmounted, watch, nextTick } from "vue";
 import { useRoute, navigateTo } from "#imports";
+import type { BusService } from "@@/shared/types/bus";
 
 import { KOKUSAI_ROUTES_DATA, SEIBU_ROUTES_DATA, GENERATED_ROUTES, sortStopsByPriority } from "./busRouteData";
 import type { GeneratedRoute } from "./busRouteData";
@@ -56,30 +57,48 @@ export interface MyRoute {
 const myRoutes = ref<MyRoute[]>([]);
 let isMyRoutesLoaded = false;
 
+const apiServices = ref<BusService[]>([]);
+
+// UI入力用 (検索ボタンを押すまで確定しない)
+const boardingStopInput = ref("");
+const dropOffStopInput = ref("");
+
+// 確定した検索条件
+const selectedBoardingStop = ref("");
+const selectedDropOffStop = ref("");
+
+const busDelays = ref<Record<string, number>>({});
+const currentTime = ref(new Date());
+const lastUpdated = ref(new Date());
+const isLoading = ref(false);
+const sortType = ref<"estimated" | "scheduled">("estimated");
+
+// タイマー管理のシングルトン化
+let globalTimer: ReturnType<typeof setInterval> | null = null;
+let timerRefCount = 0;
+
+function startGlobalTimer() {
+  timerRefCount++;
+  if (!globalTimer) {
+    globalTimer = setInterval(() => {
+      currentTime.value = new Date();
+    }, 1000);
+  }
+}
+
+function stopGlobalTimer() {
+  timerRefCount--;
+  if (timerRefCount <= 0 && globalTimer) {
+    clearInterval(globalTimer);
+    globalTimer = null;
+  }
+}
+
 export function useBusTimetable() {
   const route = useRoute();
 
   // ローカルシミュレーションモード (?local)
   const isLocalMode = computed(() => route.query.local !== undefined);
-
-  // --- リアクティブステート ---
-
-
-  const apiServices = ref<any[]>([]);
-
-  // UI入力用 (検索ボタンを押すまで確定しない)
-  const boardingStopInput = ref("");
-  const dropOffStopInput = ref("");
-
-  // 確定した検索条件
-  const selectedBoardingStop = ref("");
-  const selectedDropOffStop = ref("");
-
-  const busDelays = ref<Record<string, number>>({});
-  const currentTime = ref(new Date());
-  const lastUpdated = ref(new Date());
-  const isLoading = ref(false);
-  const sortType = ref<"estimated" | "scheduled">("estimated");
 
   // --- マイルート関連ステート ---
   const pinnedRoutes = computed(() => {
@@ -160,27 +179,18 @@ export function useBusTimetable() {
     return map;
   });
 
-  // --- タイマー管理 ---
-
-  let timer: ReturnType<typeof setInterval>;
-
   onMounted(async () => {
-    timer = setInterval(() => {
-      currentTime.value = new Date();
-    }, 1000);
+    startGlobalTimer();
 
     // ローカルストレージからマイルートをロード
     loadMyRoutes();
-
-
 
     // 初回データロード
     refreshData();
   });
 
-
   onUnmounted(() => {
-    if (timer) clearInterval(timer);
+    stopGlobalTimer();
   });
 
   // --- データ更新 ---
@@ -229,7 +239,7 @@ export function useBusTimetable() {
         if (fetchSeibu && seibuStartId) query.seibuStartId = seibuStartId;
 
         if (Object.keys(query).length > 0) {
-          apiServices.value = await $fetch("/api/v2/bus/services", { query });
+          apiServices.value = await $fetch<BusService[]>("/api/v2/bus/services", { query });
         } else {
           apiServices.value = [];
         }
@@ -275,7 +285,7 @@ export function useBusTimetable() {
   const integratedTimetable = computed<TimetableEntry[]>(() => {
     // API モード
     if (!isLocalMode.value) {
-      const allBuses: TimetableEntry[] = apiServices.value.map((service: any, index: number) => {
+      const allBuses: TimetableEntry[] = apiServices.value.map((service: BusService, index: number) => {
         const company: "Kokusai" | "Seibu" = service.companyCode === "KokusaiKogyo" ? "Kokusai" : "Seibu";
         const styles = company === "Kokusai"
           ? { textColor: "text-green-700", borderColor: "border-green-700", color: "bg-green-700" }

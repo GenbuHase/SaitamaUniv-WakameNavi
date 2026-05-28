@@ -5,9 +5,8 @@
  * SSRF対策として、外部URLに渡す前に必ずこのモジュールでバリデーションを行う。
  */
 
-import { ALL_ROUTES } from "@@/shared/utils/Bus/v2/Routes";
+import { ALL_ROUTES, KokusaiKogyoStops, SeibuStops } from "@@/shared/utils/Bus/v2/Routes";
 import type { BusCompanyCode } from "@@/shared/types/bus";
-import { KokusaiKogyoStops, SeibuStops } from "@@/shared/utils/Bus/v2/BusStops";
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 // バス停IDホワイトリスト (モジュールロード時に一度だけ構築)

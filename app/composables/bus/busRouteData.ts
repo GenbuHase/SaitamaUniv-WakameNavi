@@ -102,6 +102,13 @@ function createRouteVariants(
   const company: "Kokusai" | "Seibu" = companyPrefix === "kk" ? "Kokusai" : "Seibu";
   const styles = getCompanyStyles(company);
 
+  // 停留所数に応じた動的なオフセット加算 (長距離路線の時間交錯を防ぐ高度なシミュレーション最適化)
+  const getOffset = (i: number, total: number) => {
+    if (total > 20) return Math.floor(i * 1.2); // 桜区01等の長距離路線用 (始発〜終点: 約36分)
+    if (total > 10) return Math.floor(i * 1.5); // 中距離路線用 (始発〜終点: 約22分)
+    return i * 2; // 短距離路線用
+  };
+
   // 1. 往路 (Outbound)
   routes.push({
     id: `${companyPrefix}_${code}_out`,
@@ -110,7 +117,7 @@ function createRouteVariants(
     name: `${code}: ${stops[0].name} → ${stops[stops.length - 1].name}`,
     destination: stops[stops.length - 1].name,
     ...styles,
-    stops: stops.map((s, i) => ({ name: s.name, offset: i * 2 })),
+    stops: stops.map((s, i) => ({ name: s.name, offset: getOffset(i, stops.length) })),
     baseSchedule: shiftSchedule(baseScheduleTemplate, indexOffset)
   });
 
@@ -123,7 +130,7 @@ function createRouteVariants(
     name: `${code}: ${reversedStops[0].name} → ${reversedStops[reversedStops.length - 1].name}`,
     destination: reversedStops[reversedStops.length - 1].name,
     ...styles,
-    stops: reversedStops.map((s, i) => ({ name: s.name, offset: i * 2 })),
+    stops: reversedStops.map((s, i) => ({ name: s.name, offset: getOffset(i, reversedStops.length) })),
     // 復路は少し時間をずらす (例: +15分)
     baseSchedule: shiftSchedule(baseScheduleTemplate, indexOffset + 15)
   });

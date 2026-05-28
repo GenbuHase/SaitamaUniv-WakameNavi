@@ -5,16 +5,7 @@
  * Vercel環境では Vercel KV (Redis) を用い、ローカル環境等の環境変数がない環境では
  * 自動的にインメモリMapへフォールバックする。
  */
-import { Redis } from "@upstash/redis";
-
-const redisUrl = process.env.UPSTASH_REDIS_REST_URL;
-const redisToken = process.env.UPSTASH_REDIS_REST_TOKEN;
-
-// 接続情報が揃っている場合のみクライアントを初期化
-const redis = new Redis({
-  url: redisUrl || "",
-  token: redisToken || "",
-});
+import { redis, hasRedis } from "../utils/redis";
 
 /** レート制限設定 */
 const RATE_LIMIT = {
@@ -90,8 +81,7 @@ export default defineEventHandler(async event => {
   const clientIp = getClientIp(event);
   const now = Date.now();
 
-  // Upstash for Redis の利用可否を環境変数でチェック
-  const hasRedis = !!(redisUrl && redisToken);
+  // Upstash for Redis の利用可否はインポートした hasRedis を参照
 
   let currentCount = 0;
   let retryAfterSeconds = 0;
