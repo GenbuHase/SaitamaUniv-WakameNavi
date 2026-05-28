@@ -109,3 +109,5 @@ dist
 
 # Vercel project files
 .vercel/
+.vercel
+.env*

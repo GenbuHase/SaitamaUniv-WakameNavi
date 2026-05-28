@@ -5,26 +5,34 @@
 	"version": "0.2.0",
 	"configurations": [
 		{
-			"type": "node",
+			"type": "pwa-node",
 			"request": "launch",
 			"name": "Server: Nuxt",
-      "program": "./node_modules/nuxt/bin/nuxt.mjs",
-      "args": ["dev"]
+			"runtimeExecutable": "npm",
+			"runtimeArgs": ["run", "dev"],
+			"sourceMaps": true,
+			"smartStep": true,
+			"console": "integratedTerminal",
+			"restart": true
 		},
-
-    {
-      "type": "chrome",
-      "request": "launch",
-      "name": "Client: Chrome",
-      "url": "http://localhost:3000",
-      "webRoot": "${workspaceFolder}"
-    }
+		{
+			"type": "pwa-chrome",
+			"request": "launch",
+			"name": "Client: Chrome",
+			"url": "http://localhost:3000",
+			"webRoot": "${workspaceFolder}",
+			"sourceMaps": true,
+			"resolveSourceMapLocations": [
+				"${workspaceFolder}/**",
+				"!**/node_modules/**"
+			]
+		}
 	],
-
-  "compounds": [
-    {
-      "name": "Debug: Client + Server",
-      "configurations": ["Server: Nuxt", "Client: Chrome"]
-    }
-  ]
+	"compounds": [
+		{
+			"name": "Debug: Client + Server",
+			"configurations": ["Server: Nuxt", "Client: Chrome"],
+			"stopAll": true
+		}
+	]
 }

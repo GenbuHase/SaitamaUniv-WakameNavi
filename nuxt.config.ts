@@ -1,11 +1,28 @@
 // https://nuxt.com/docs/api/configuration/nuxt-config
 import { defineNuxtConfig } from "nuxt/config";
 
+import dotenv from "dotenv";
+import fs from "fs";
+import path from "path";
+
+// .env.local が存在する場合は優先して読み込む
+const envLocalPath = path.resolve(process.cwd(), ".env.local");
+if (fs.existsSync(envLocalPath)) {
+  dotenv.config({ path: envLocalPath });
+} else {
+  dotenv.config();
+}
+
 export default defineNuxtConfig({
   compatibilityDate: "2025-12-08",
   modules: ["@nuxt/eslint", "@nuxtjs/tailwindcss", "nuxt-gtag"],
 
   ssr: false,
+
+  sourcemap: {
+    server: true,
+    client: true
+  },
 
   app: {
     head: {
