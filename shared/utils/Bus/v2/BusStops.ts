@@ -18,7 +18,7 @@ export const KokusaiKogyoStops = {
     code: "SaitamaUniv",
     name: "埼玉大学",
     companyCode: "KokusaiKogyo" as BusCompanyCode,
-    routes: ["北浦03", "南与01", "志03-3", "北朝02"],
+    routes: ["北浦03", "南与01", "志03-3", "北朝02", "桜区01"],
   },
 
   KitaUrawa: {
@@ -74,7 +74,7 @@ export const KokusaiKogyoStops = {
     code: "SaitamaUnivUra",
     name: "埼大裏",
     companyCode: "KokusaiKogyo" as BusCompanyCode,
-    routes: ["浦13", "浦13-2", "浦桜13-3"],
+    routes: ["浦13", "浦13-2", "浦桜13-3", "桜区01"],
   },
 
   SakuraWardOffice: {
@@ -82,7 +82,7 @@ export const KokusaiKogyoStops = {
     code: "SakuraWardOffice",
     name: "桜区役所",
     companyCode: "KokusaiKogyo" as BusCompanyCode,
-    routes: ["浦11", "浦12", "浦12-2", "浦桜13-3", "浦15"],
+    routes: ["浦11", "浦12", "浦12-2", "浦桜13-3", "浦15", "桜区01"],
   },
 
   Urawa: {
@@ -99,6 +99,22 @@ export const KokusaiKogyoStops = {
     name: "大久保浄水場",
     companyCode: "KokusaiKogyo" as BusCompanyCode,
     routes: ["浦13", "浦桜13-3"],
+  },
+
+  NishiUrawa: {
+    id: "00021895",
+    code: "NishiUrawa",
+    name: "西浦和駅",
+    companyCode: "KokusaiKogyo" as BusCompanyCode,
+    routes: ["桜区01"],
+  },
+
+  NakaUrawa: {
+    id: "00021161",
+    code: "NakaUrawa",
+    name: "中浦和駅",
+    companyCode: "KokusaiKogyo" as BusCompanyCode,
+    routes: ["浦11", "桜区01"],
   },
 } as const satisfies Record<string, BusStop>;
 
