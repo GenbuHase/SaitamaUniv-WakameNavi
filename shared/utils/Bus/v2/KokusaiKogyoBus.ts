@@ -20,7 +20,7 @@ export const COMPANY_CODE: BusCompanyCode = "KokusaiKogyo";
 export const COMPANY_NAME = BUS_COMPANIES.KokusaiKogyo.name;
 
 /** 外部リクエストのタイムアウト (ミリ秒) */
-const FETCH_TIMEOUT_MS = 10_000;
+const FETCH_TIMEOUT_MS = 30_000;
 
 /**
  * スクレイピングURLを生成する
