@@ -298,6 +298,14 @@ export function useBusTimetable() {
         if (scheduledDate.getHours() < 5 && currentTime.value.getHours() > 18) scheduledDate.setDate(scheduledDate.getDate() + 1);
         if (estimatedDate.getHours() < 5 && currentTime.value.getHours() > 18) estimatedDate.setDate(estimatedDate.getDate() + 1);
 
+        // isPast 判定: 到着予測時刻が過ぎていても、バスがまだ走行中・接近中・未出発
+        // （＝バスロケーションAPIにまだ表示されている）なら出発済みとしない
+        const isTimePast = estimatedDate < currentTime.value;
+        const isStillActive = service.location &&
+          (service.location.status === "running" ||
+           service.location.status === "approaching" ||
+           service.location.status === "not_departed");
+
         return {
           routeId: `${service.route}_${service.scheduledTime}_${company}_${index}`,
           routeCode: service.route,
@@ -310,7 +318,7 @@ export function useBusTimetable() {
           delay: service.delay,
           scheduledDate,
           estimatedDate,
-          isPast: estimatedDate < currentTime.value,
+          isPast: isTimePast && !isStillActive,
           boardingStopName: selectedBoardingStop.value
         };
       });
