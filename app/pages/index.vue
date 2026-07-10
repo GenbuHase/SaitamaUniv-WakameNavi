@@ -29,12 +29,9 @@
 
 <script setup lang="ts">
   import { useSeoMeta } from "#imports";
-  import { useRoute } from "vue-router";
-
-  const route = useRoute();
 
   useSeoMeta({
-    title: () => `わかめナビ🌱${route.query.campaign ? "(一時公開版)" : ""}`,
-    ogTitle: () => `わかめナビ🌱${route.query.campaign ? "(一時公開版)" : ""}`
+    title: "わかめナビ🌱",
+    ogTitle: "わかめナビ🌱",
   });
 </script>

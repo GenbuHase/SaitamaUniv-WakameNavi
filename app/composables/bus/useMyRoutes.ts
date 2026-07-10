@@ -151,10 +151,7 @@ export function useMyRoutes() {
       boarding,
       dropOff,
     };
-    if (route.query.campaign !== undefined) {
-      query.campaign = String(route.query.campaign);
-    }
-    if (route.query.local !== undefined) {
+    if (import.meta.dev && route.query.local !== undefined) {
       query.local = String(route.query.local);
     }
     navigateTo({

@@ -43,10 +43,8 @@
   const route = useRoute();
   const trackingQuery = computed(() => {
     const query: Record<string, string | string[] | undefined | null> = {};
-    if (route.query.campaign !== undefined) {
-      query.campaign = normalizeQueryValue(route.query.campaign);
-    }
-    if (route.query.local !== undefined) {
+    // 開発時のみ ?local をナビ遷移でも引き継ぐ
+    if (import.meta.dev && route.query.local !== undefined) {
       query.local = normalizeQueryValue(route.query.local);
     }
     return query;

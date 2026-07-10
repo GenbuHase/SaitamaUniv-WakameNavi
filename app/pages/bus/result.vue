@@ -123,10 +123,7 @@
   // 出発停留所がない場合は検索ポータルへリダイレクト
   if (!route.query.boarding) {
     const query: Record<string, string> = {};
-    if (route.query.campaign !== undefined) {
-      query.campaign = String(route.query.campaign);
-    }
-    if (route.query.local !== undefined) {
+    if (import.meta.dev && route.query.local !== undefined) {
       query.local = String(route.query.local);
     }
     navigateTo({
@@ -139,8 +136,8 @@
   const queryDropOff = computed(() => (route.query.dropOff as string) || "");
 
   useSeoMeta({
-    title: () => `${queryBoarding.value} → ${queryDropOff.value || "指定なし"}｜バス検索｜わかめナビ🌱${route.query.campaign ? "(一時公開版)" : ""}`,
-    ogTitle: () => `${queryBoarding.value} → ${queryDropOff.value || "指定なし"}｜バス検索｜わかめナビ🌱${route.query.campaign ? "(一時公開版)" : ""}`,
+    title: () => `${queryBoarding.value} → ${queryDropOff.value || "指定なし"}｜バス検索｜わかめナビ🌱`,
+    ogTitle: () => `${queryBoarding.value} → ${queryDropOff.value || "指定なし"}｜バス検索｜わかめナビ🌱`,
 
     ogDescription: () => {
       const start = queryBoarding.value;
@@ -234,10 +231,7 @@
 
   const goBack = () => {
     const query: Record<string, string> = {};
-    if (route.query.campaign !== undefined) {
-      query.campaign = String(route.query.campaign);
-    }
-    if (route.query.local !== undefined) {
+    if (import.meta.dev && route.query.local !== undefined) {
       query.local = String(route.query.local);
     }
     navigateTo({

@@ -74,7 +74,10 @@ function stopGlobalTimer() {
 export function useBusTimetable() {
   const route = useRoute();
 
-  const isLocalMode = computed(() => route.query.local !== undefined);
+  // 本番では無効。開発サーバー (import.meta.dev) でのみ ?local を有効化する
+  const isLocalMode = computed(
+    () => import.meta.dev && route.query.local !== undefined
+  );
 
   const {
     myRoutes,

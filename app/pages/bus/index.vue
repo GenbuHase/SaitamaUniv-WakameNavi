@@ -1,8 +1,5 @@
 <template>
   <main class="space-y-6 pb-4">
-    <!-- 運行状況要約 -->
-    <BusStatusBar :lastUpdated="lastUpdated" :hasDelay="false" />
-
     <!-- マイルート操作の通知 -->
     <div
       v-if="noticeMessage"
@@ -92,15 +89,14 @@
   const route = useRoute();
 
   useSeoMeta({
-    title: () => `バス検索｜わかめナビ🌱${route.query.campaign ? "(一時公開版)" : ""}`,
-    ogTitle: () => `バス検索｜わかめナビ🌱${route.query.campaign ? "(一時公開版)" : ""}`
+    title: "バス検索｜わかめナビ🌱",
+    ogTitle: "バス検索｜わかめナビ🌱",
   });
 
   const {
     // ステート
     boardingStopInput,
     dropOffStopInput,
-    lastUpdated,
     noticeMessage,
 
     // 算出プロパティ
@@ -126,10 +122,7 @@
       boarding: boardingStopInput.value,
       dropOff: dropOffStopInput.value,
     };
-    if (route.query.campaign !== undefined) {
-      query.campaign = normalizeQueryValue(route.query.campaign);
-    }
-    if (route.query.local !== undefined) {
+    if (import.meta.dev && route.query.local !== undefined) {
       query.local = normalizeQueryValue(route.query.local);
     }
     navigateTo({
