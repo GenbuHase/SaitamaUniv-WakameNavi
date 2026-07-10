@@ -1,7 +1,7 @@
 {
   "name": "@genbuhase/wakame-navi",
   "description": "埼玉大学周辺を走るバスの運行情報を確認することができます。",
-  "version": "2.0.1",
+  "version": "2.0.1.2",
   "scripts": {
     "build": "nuxt build",
     "dev": "nuxt dev --host",
@@ -34,7 +34,8 @@
     "nuxt-gtag": "^4.1.0",
     "prettier": "^3.8.3",
     "typescript": "^6.0.3",
-    "vitest": "^4.1.10"
+    "vitest": "^4.1.10",
+    "vue-tsc": "^3.3.7"
   },
   "dependencies": {
     "@upstash/redis": "^1.34.4",
