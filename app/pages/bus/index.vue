@@ -1,7 +1,7 @@
 <template>
   <main class="space-y-6 pb-4">
     <!-- 運行状況要約 -->
-    <BusStatusBar :lastUpdated="lastUpdated" :hasDelay="hasDelayInUpcoming" />
+    <BusStatusBar :lastUpdated="lastUpdated" :hasDelay="false" />
 
     <!-- マイルート操作の通知 -->
     <div
@@ -108,7 +108,6 @@
     filteredBoardingStops,
     filteredDropOffStops,
     stopRoutesMap,
-    hasDelayInUpcoming,
     isBoardingStopInvalid,
     isDropOffStopInvalid,
     isRouteInvalid,
