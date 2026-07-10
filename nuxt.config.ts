@@ -32,10 +32,11 @@ export default defineNuxtConfig({
       meta: [
         //
         { charset: "utf-8" },
+        { name: "description", content: "埼玉大学周辺を走るバスの運行状況をひと目で確認できるアプリ" },
 
         { property: "og:site_name", content: "わかめナビ🌱" },
         { property: "og:title", content: "わかめナビ🌱" },
-        { property: "og:description", content: "埼玉大学周辺を走るバスの運行情報を確認することができるサービスです。" },
+        { property: "og:description", content: "埼玉大学周辺を走るバスの運行状況をひと目で確認できるアプリ" },
         { property: "og:type", content: "website" },
         { property: "og:url", content: "https://wakame-navi.vercel.app/" },
         { property: "og:image", content: "https://wakame-navi.vercel.app/assets/ogp_1200x600.png" },

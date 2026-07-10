@@ -27,7 +27,7 @@
 
         <div class="flex flex-col items-center justify-center gap-1 text-slate-300 cursor-not-allowed transition-all duration-300">
           <Train class="w-6 h-6" />
-          <span class="text-[10px] font-bold tracking-wide">電車</span>
+          <span class="text-[10px] font-bold tracking-wide">電車（準備中）</span>
         </div>
       </nav>
     </footer>
