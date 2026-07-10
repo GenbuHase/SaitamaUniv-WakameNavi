@@ -7,38 +7,18 @@
 
 import * as KokusaiKogyoBus from "./KokusaiKogyoBus";
 import * as SeibuBus from "./SeibuBus";
-import Routes, {
-  KokusaiKogyoStops,
-  SeibuStops,
-  BusStopsByCompany,
-  findBusStopByCode,
-  getCompaniesForStop,
-} from "./Routes";
-
-const BusStops = {
-  KokusaiKogyo: KokusaiKogyoStops,
-  Seibu: SeibuStops,
-  BusStopsByCompany,
-  findBusStopByCode,
-  getCompaniesForStop,
-};
+import Routes from "./Routes";
 
 const Bus = {
-  BusStops,
   Routes,
   KokusaiKogyoBus,
   SeibuBus,
-  findBusStopByCode,
-  getCompaniesForStop,
 } as const;
 
 export default Bus;
 
 export {
-  BusStops,
   Routes,
   KokusaiKogyoBus,
   SeibuBus,
-  findBusStopByCode,
-  getCompaniesForStop,
 };

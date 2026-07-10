@@ -2,11 +2,11 @@
  * バス路線データ定義 (v2) — 停留所・系統の単一ソース
  *
  * 停留所を追加・変更するときは、まずこのファイルの系統定義を更新する。
- * よみがなは StopKana.ts、英語コードは STOP_CODE_TO_NAME に必要分だけ追記する。
+ * よみがなは StopKana.ts に必要分だけ追記する。
  * フロントの検索マップ・ID ホワイトリスト・マイルート検証は ALL_ROUTES から導出する。
  */
 
-import type { BusRoute, BusRouteStop, BusCompanyCode, BusStop } from "@@/shared/types/bus";
+import type { BusRoute, BusRouteStop, BusCompanyCode } from "@@/shared/types/bus";
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 // ヘルパー: 停留所リストからBusRoute を生成
@@ -449,86 +449,6 @@ export function isKnownStopName(name: string): boolean {
 }
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-// バス停定義の動的生成 (BusStops.ts の統合・一本化)
-// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-/** バス停名 → 英語コードのマッピング定数 */
-export const STOP_CODE_TO_NAME: Record<string, string> = {
-  SaitamaUniv: "埼玉大学",
-  KitaUrawa: "北浦和駅西口",
-  MinamiYono: "南与野駅西口",
-  MinamiYonoKita: "南与野駅北入口",
-  Shiki: "志木駅東口",
-  KitaAsaka: "北朝霞駅",
-  ShimoOkubo: "下大久保",
-  SaitamaUnivUra: "埼大裏",
-  SakuraWardOffice: "桜区役所",
-  Urawa: "浦和駅西口",
-  OkuboPurificationPlant: "大久保浄水場",
-  NishiUrawa: "西浦和駅",
-  NakaUrawa: "中浦和駅",
-  UrawaKitaHighSchool: "浦和北高校",
-  Okubo: "大久保",
-  KamogawaDanchi: "加茂川団地",
-};
-
-export const KokusaiKogyoStops: Record<string, BusStop> = {};
-export const SeibuStops: Record<string, BusStop> = {};
-
-// ALL_ROUTES から動的に BusStop 情報を構築
-for (const route of ALL_ROUTES) {
-  const stopsMap = route.companyCode === "KokusaiKogyo" ? KokusaiKogyoStops : SeibuStops;
-  for (const stop of route.stops) {
-    let code = "";
-    for (const [c, n] of Object.entries(STOP_CODE_TO_NAME)) {
-      if (n === stop.name || (stop.name === "北浦和駅" && n === "北浦和駅西口")) {
-        code = c;
-        break;
-      }
-    }
-    if (!code) continue;
-
-    const existing = stopsMap[code];
-    if (!existing) {
-      stopsMap[code] = {
-        id: stop.id,
-        code,
-        name: stop.name,
-        companyCode: route.companyCode,
-        routes: [],
-      };
-    } else if (!existing.routes.includes(route.routeCode)) {
-      existing.routes.push(route.routeCode);
-    }
-  }
-}
-
-export const BusStopsByCompany: Record<BusCompanyCode, Record<string, BusStop>> = {
-  KokusaiKogyo: KokusaiKogyoStops,
-  Seibu: SeibuStops,
-};
-
-/**
- * バス停コードからバス停情報を取得する
- */
-export function findBusStopByCode(code: string, companyCode?: BusCompanyCode): BusStop | undefined {
-  if (companyCode) {
-    return BusStopsByCompany[companyCode]?.[code];
-  }
-  return KokusaiKogyoStops[code] || SeibuStops[code];
-}
-
-/**
- * 指定バス停コードが所属する会社の一覧を返す
- */
-export function getCompaniesForStop(code: string): BusCompanyCode[] {
-  const companies: BusCompanyCode[] = [];
-  if (code in KokusaiKogyoStops) companies.push("KokusaiKogyo");
-  if (code in SeibuStops) companies.push("Seibu");
-  return companies;
-}
-
-// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 // ユーティリティ関数
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
@@ -562,11 +482,6 @@ export default {
   ALL_ROUTES,
   ALL_STOP_NAMES,
   filterRoutes,
-  KokusaiKogyoStops,
-  SeibuStops,
-  BusStopsByCompany,
-  findBusStopByCode,
-  getCompaniesForStop,
   isKnownStopName,
   normalizeStopNameForCompany,
 };
