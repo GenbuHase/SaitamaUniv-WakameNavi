@@ -18,7 +18,9 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 22
+          # Node 24 ships npm 11; lockfile was generated with npm 11 and
+          # fails `npm ci` under Node 22's npm 10 (missing peer deps in lock).
+          node-version: 24
           cache: npm
 
       - name: Install dependencies
