@@ -3,6 +3,25 @@
     <!-- 運行状況要約 -->
     <BusStatusBar :lastUpdated="lastUpdated" :hasDelay="hasDelayInUpcoming" />
 
+    <!-- マイルート操作の通知 -->
+    <div
+      v-if="noticeMessage"
+      class="p-4 bg-amber-50 border border-amber-100 rounded-2xl flex items-start gap-3 text-amber-900 text-sm shadow-sm"
+      role="status"
+    >
+      <AlertCircle class="w-5 h-5 text-amber-500 flex-shrink-0 mt-0.5" />
+      <div class="flex-1">
+        <p class="font-semibold">{{ noticeMessage }}</p>
+      </div>
+      <button
+        type="button"
+        class="text-amber-600 hover:text-amber-800 text-xs font-bold cursor-pointer"
+        @click="clearNotice"
+      >
+        閉じる
+      </button>
+    </div>
+
     <!-- 📌 ピン留めルート -->
     <BusPinnedRoutesPanel />
     
@@ -67,6 +86,7 @@
   import { onMounted } from "vue";
   import { ArrowLeftRight, Search, AlertCircle } from "lucide-vue-next";
   import { useBusTimetable } from "@/composables/bus/useBusTimetable";
+  import { normalizeQueryValue } from "@/utils/queryParams";
   import { navigateTo, useRoute, useSeoMeta } from "#imports";
 
   const route = useRoute();
@@ -81,6 +101,7 @@
     boardingStopInput,
     dropOffStopInput,
     lastUpdated,
+    noticeMessage,
 
     // 算出プロパティ
     availableDropOffStops,
@@ -95,21 +116,22 @@
     // メソッド
     swapStops,
     setStops,
+    clearNotice,
   } = useBusTimetable();
 
 
   // 検索実行
   const onSearch = () => {
     if (!boardingStopInput.value) return;
-    const query: Record<string, any> = {
+    const query: Record<string, string | string[] | undefined | null> = {
       boarding: boardingStopInput.value,
       dropOff: dropOffStopInput.value,
     };
     if (route.query.campaign !== undefined) {
-      query.campaign = route.query.campaign;
+      query.campaign = normalizeQueryValue(route.query.campaign);
     }
     if (route.query.local !== undefined) {
-      query.local = route.query.local;
+      query.local = normalizeQueryValue(route.query.local);
     }
     navigateTo({
       path: "/bus/result",

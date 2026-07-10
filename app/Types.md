@@ -9,6 +9,15 @@
 国際興業バス・西武バスの両社を統一的に扱うための型を定義しています。  
 各社のスクレイパーはこれらの型に正規化してデータを返します。
 
+### 会社コードの表記
+
+| 層 | 国際興業 | 西武 |
+|---|---|---|
+| API / shared (`BusCompanyCode`) | `KokusaiKogyo` | `Seibu` |
+| フロント UI (`UiCompanyCode`) | `Kokusai` | `Seibu` |
+
+変換は [`app/composables/bus/busCompany.ts`](composables/bus/busCompany.ts) の `toUiCompany` / `toApiCompany` に集約しています。
+
 ---
 
 ## バス会社
@@ -58,15 +67,13 @@ type BusCompanyCode = "KokusaiKogyo" | "Seibu";
 > **注意**: 同名バス停でも会社ごとにIDが異なります。  
 > 例: 埼玉大学 → 国際興業 `00021229` / 西武 `00111643`
 
-
-
 ---
 
 ## バス運行情報 (Service)
 
 ### `BusLocation`
 
-バスの現在位置情報。国際興業バスのテキストパースと西武バスのCSSクラスパースを統一します。
+バスの現在位置情報。両社の表現を統一します。
 
 | フィールド | 型 | 説明 |
 |---|---|---|
@@ -83,11 +90,13 @@ type BusCompanyCode = "KokusaiKogyo" | "Seibu";
 
 **各社からの変換ルール:**
 
-| 国際興業バス (テキスト) | 西武バス (CSS) | 正規化結果 |
+| 国際興業バス (HTML テキスト) | 西武バス (`__NUXT_DATA__` JSON) | 正規化結果 |
 |---|---|---|
-| `"始発バス停出発前"` | クラスなし | `{ status: "not_departed", stopsAway: Infinity }` |
-| `"まもなく到着いたします"` | `position-1` | `{ status: "approaching", stopsAway: 0 or 1 }` |
-| `"N個前"` | `position-N` | `{ status: "running", stopsAway: N }` |
+| `"始発バス停出発前"` | 残り時間なし / 未出発相当 | `{ status: "not_departed", stopsAway: Infinity }` |
+| `"まもなく到着いたします"` | 残り約1分以内 (`PTnM`) | `{ status: "approaching", stopsAway: 0 }` |
+| `"N個前"` | 残り時間から推定した停留所数 | `{ status: "running", stopsAway: N }` |
+
+> **実装メモ (西武)**: HTML を cheerio でパースするのではなく、ページ内の `<script id="__NUXT_DATA__">` JSON をパースして運行情報を抽出します。DOM 構造変更より JSON スキーマ変更の影響を受けます。
 
 ### `BusService`
 

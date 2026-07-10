@@ -2,7 +2,7 @@
   <div class="space-y-4">
     <!-- ⭐️ マイルート -->
     <div
-      v-if="localMyRoutes.length > 0"
+      v-if="localItems.length > 0"
       class="bg-white rounded-[2rem] shadow-[0_8px_30px_rgb(0,0,0,0.03)] border border-emerald-50/50 overflow-hidden transition-all duration-300"
     >
       <!-- アコーディオンヘッダー -->
@@ -19,7 +19,7 @@
         </div>
         <div class="flex items-center gap-2">
           <span class="text-xs text-slate-400 bg-slate-100 px-2.5 py-0.5 rounded-full font-bold">
-            {{ localMyRoutes.length }}/20
+            {{ localItems.length }}/20
           </span>
           <ChevronDown
             class="w-4 h-4 text-slate-400 transition-transform duration-300"
@@ -44,12 +44,12 @@
             class="max-h-72 overflow-y-auto pr-1 space-y-2.5 custom-scrollbar min-h-[50px]"
           >
             <div
-              v-for="(route, index) in localMyRoutes"
+              v-for="(route, index) in localItems"
               :key="route.id"
-              :draggable="isRouteDraggable(route.id)"
-              @dragstart="onRouteDragStart(index, $event)"
-              @dragover.prevent="onRouteDragOver(index, $event)"
-              @dragend="onRouteDragEnd"
+              :draggable="isItemDraggable(route.id)"
+              @dragstart="onDragStart(index, $event)"
+              @dragover.prevent="onDragOver(index, $event)"
+              @dragend="onDragEnd"
               @click="applyRoute(route.boarding, route.dropOff)"
               class="flex items-center justify-between p-3.5 bg-slate-50/50 hover:bg-emerald-50/30 rounded-2xl border border-slate-100/80 hover:border-emerald-100/50 transition-all duration-300 active:scale-[0.99] cursor-pointer group relative select-none"
               :class="{
@@ -122,7 +122,7 @@
 </template>
 
 <script setup lang="ts">
-  import { ref, watch } from "vue";
+  import { ref } from "vue";
   import {
     Pin,
     Star,
@@ -133,9 +133,8 @@
     GripVertical
   } from "lucide-vue-next";
   import { useBusTimetable } from "@/composables/bus/useBusTimetable";
-  import type { MyRoute } from "@/composables/bus/useBusTimetable";
+  import { useDragReorder } from "@/composables/bus/useDragReorder";
 
-  // Composableから状態とアクションを呼び出す
   const {
     myRoutes,
     removeMyRoute,
@@ -144,93 +143,25 @@
     applyRoute
   } = useBusTimetable();
 
-  // --- アコーディオンの状態 ---
   const isAccordionOpen = ref(true);
 
-  // --- ドラッグ中状態管理 ---
-  const draggedIndex = ref<number | null>(null);
-  const draggableRouteId = ref<string | null>(null);
-
-  // ドラッグハンドルの hover で draggable 属性を制御
-  const isRouteDraggable = (id: string) => {
-    return draggableRouteId.value === id;
-  };
-  const enableDrag = (id: string) => {
-    draggableRouteId.value = id;
-  };
-  const disableDrag = () => {
-    if (draggedIndex.value === null) {
-      draggableRouteId.value = null;
-    }
-  };
-
-  // ドラッグ＆ドロップ動作を完璧に安定させるためのローカルステート
-  const localMyRoutes = ref<MyRoute[]>([]);
-
-  // 親のProps変更を監視して同期する（ドラッグ中は再レンダリング防止のため同期をロック）
-  watch(
-    myRoutes,
-    (newVal) => {
-      if (draggedIndex.value === null) {
-        localMyRoutes.value = [...newVal];
-      }
-    },
-    { immediate: true, deep: true }
-  );
-
-  // 1. マイルートのドラッグハンドラ
-  const onRouteDragStart = (index: number, event: DragEvent) => {
-    if (event.dataTransfer) {
-      event.dataTransfer.effectAllowed = "move";
-      event.dataTransfer.setData("text/plain", index.toString());
-      
-      const target = event.currentTarget as HTMLElement;
-      if (target) {
-        target.style.opacity = "0.99";
-      }
-    }
-    // ドラッグイメージ（ゴースト）が正しく生成されるよう、インデックスの格納を非同期化する
-    setTimeout(() => {
-      draggedIndex.value = index;
-    }, 0);
-  };
-
-  const onRouteDragOver = (index: number, event: DragEvent) => {
-    event.preventDefault();
-    if (draggedIndex.value === null || draggedIndex.value === index) return;
-
-    // 高さの半分を境界線として超えたときのみ入れ替えを実行（チャタリングを完全防止）
-    const rect = (event.currentTarget as HTMLElement).getBoundingClientRect();
-    const relativeY = event.clientY - rect.top;
-    const threshold = rect.height / 2;
-
-    if (draggedIndex.value < index && relativeY < threshold) {
-      return;
-    }
-    if (draggedIndex.value > index && relativeY > threshold) {
-      return;
-    }
-
-    // ローカル配列内だけで要素の入れ替えを行う（親にはエミットしないことでDOMロストを防止）
-    const target = localMyRoutes.value[draggedIndex.value];
-    localMyRoutes.value.splice(draggedIndex.value, 1);
-    localMyRoutes.value.splice(index, 0, target);
-
-    draggedIndex.value = index;
-  };
-
-  const onRouteDragEnd = () => {
-    if (draggedIndex.value !== null) {
-      // ドラッグが安全に完了したタイミングで、最終的な並び順を一気に保存
-      updateMyRoutes([...localMyRoutes.value]);
-    }
-    draggedIndex.value = null;
-    draggableRouteId.value = null; // ドラッグ終了時に確実にリセット
-  };
+  const {
+    localItems,
+    draggedIndex,
+    isItemDraggable,
+    enableDrag,
+    disableDrag,
+    onDragStart,
+    onDragOver,
+    onDragEnd,
+  } = useDragReorder({
+    source: myRoutes,
+    onCommit: updateMyRoutes,
+    axis: "vertical",
+  });
 </script>
 
 <style scoped>
-  /* リストスクロールバーのカスタマイズ */
   .custom-scrollbar::-webkit-scrollbar {
     width: 4px;
   }
@@ -245,7 +176,6 @@
     background: #a1a1aa;
   }
 
-  /* 並び替え時のスライドアニメーション (FLIP) */
   .route-list-move {
     transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
   }

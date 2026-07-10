@@ -41,7 +41,7 @@ function normalizeRouteName(rawRoute: string): string {
 function normalizeDestination(rawDestination: string): string {
   const parts = rawDestination.split("～");
   if (parts.length < 2) return rawDestination.replace("行", "");
-  return parts[1].replace("行", ""); // 末尾の「行」を除去
+  return (parts[1] ?? rawDestination).replace("行", ""); // 末尾の「行」を除去
 }
 
 /**
@@ -107,29 +107,50 @@ async function fetchServices(startId: string, goalId: string): Promise<BusServic
 
   const html = await response.text();
   const match = html.match(/<script type="application\/json" id="__NUXT_DATA__" data-ssr="true">([\s\S]*?)<\/script>/);
-  if (!match) return [];
-
-  let data: any[];
-  try {
-    data = JSON.parse(match[1]);
-  } catch (e) {
+  if (!match) {
+    console.error("[SeibuBus] __NUXT_DATA__ not found (page structure may have changed):", {
+      startId,
+      goalId,
+      htmlLength: html.length,
+    });
     return [];
   }
 
-  const resolve = (val: any): any => (typeof val === "number" ? data[val] : val);
+  const nuxtDataJson = match[1];
+  if (!nuxtDataJson) {
+    return [];
+  }
+
+  let data: unknown[];
+  try {
+    data = JSON.parse(nuxtDataJson) as unknown[];
+  } catch (e) {
+    console.error("[SeibuBus] __NUXT_DATA__ JSON parse failed:", {
+      startId,
+      goalId,
+      error: e instanceof Error ? e.message : String(e),
+    });
+    return [];
+  }
+
+  const resolve = (val: unknown): unknown => (typeof val === "number" ? data[val] : val);
+  const asRecord = (val: unknown): Record<string, unknown> | null =>
+    val && typeof val === "object" ? val as Record<string, unknown> : null;
+  const asString = (val: unknown): string => (typeof val === "string" ? val : "");
 
   const services: BusService[] = [];
 
   for (const item of data) {
-    if (item && typeof item === "object" && item.courseName && item.origin && item.destination && item.predictedDuration) {
-      const rawRoute = resolve(item.courseName);
-      const rawDestination = resolve(item.destination);
+    const row = asRecord(item);
+    if (row && row.courseName && row.origin && row.destination && row.predictedDuration) {
+      const rawRoute = asString(resolve(row.courseName));
+      const rawDestination = asString(resolve(row.destination));
 
-      const departureInfo = resolve(item.departure);
+      const departureInfo = asRecord(resolve(row.departure));
       if (!departureInfo) continue;
 
-      const rawScheduledTime = resolve(departureInfo.scheduledDepartureTime) || "";
-      const rawEstimatedTime = resolve(departureInfo.predictedDepartureTime) || "";
+      const rawScheduledTime = asString(resolve(departureInfo.scheduledDepartureTime));
+      const rawEstimatedTime = asString(resolve(departureInfo.predictedDepartureTime));
 
       const scheduledTime = extractTime(rawScheduledTime);
       const estimatedTime = extractTime(rawEstimatedTime);
@@ -138,11 +159,11 @@ async function fetchServices(startId: string, goalId: string): Promise<BusServic
 
       // 状態推定 (残り時間のインデックスを探して発車間近か判定)
       let locationStatus: BusLocation = { status: "running", stopsAway: 1 };
-      const remainingTimeInfo = resolve(departureInfo.remainingTimeUntilDeparture);
+      const remainingTimeInfo = asString(resolve(departureInfo.remainingTimeUntilDeparture));
       if (remainingTimeInfo && remainingTimeInfo.includes("M")) {
         const minMatch = remainingTimeInfo.match(/PT(\d+)M/);
-        if (minMatch) {
-          const min = parseInt(minMatch[1]);
+        if (minMatch?.[1]) {
+          const min = parseInt(minMatch[1], 10);
           if (min <= 1) {
             locationStatus = { status: "approaching", stopsAway: 0 };
           } else {

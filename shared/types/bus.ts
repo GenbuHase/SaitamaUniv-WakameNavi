@@ -131,7 +131,7 @@ export interface BusRouteStop {
 /**
  * バス路線情報
  *
- * API `/api/v2/bus/routes` のレスポンス要素。
+ * 正本は shared/utils/Bus/v2/Routes.ts の ALL_ROUTES。
  */
 export interface BusRoute {
   /** バス会社コード */

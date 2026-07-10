@@ -2,9 +2,12 @@
  * レート制限 ミドルウェア
  *
  * APIエンドポイントへのリクエスト頻度を制限する。
- * Vercel環境では Vercel KV (Redis) を用い、ローカル環境等の環境変数がない環境では
- * 自動的にインメモリMapへフォールバックする。
+ *
+ * - 本番 (!import.meta.dev): Redis (Upstash) 必須。未設定または通信失敗時は fail-closed (503)。
+ * - 開発 (import.meta.dev): Redis があれば利用し、なければインメモリ Map にフォールバック。
+ *   開発時の Redis 通信失敗もインメモリへフォールバックする。
  */
+import type { H3Event } from "h3";
 import { redis, hasRedis } from "../utils/redis";
 
 /** レート制限設定 */
@@ -19,7 +22,7 @@ const RATE_LIMIT = {
   cleanupIntervalMs: 5 * 60 * 1000,
 } as const;
 
-/** リクエスト記録 (インメモリフォールバック用) */
+/** リクエスト記録 (インメモリフォールバック用・開発環境のみ) */
 interface RequestRecord {
   count: number;
   windowStart: number;
@@ -49,9 +52,9 @@ function cleanup() {
  * ローカル開発環境 (localhost) での動作テストを保障しつつ、
  * 本番環境 (Vercel) では IP 偽装を防止するためプロキシの公式ヘッダーのみを信頼します。
  */
-function getClientIp(event: any): string {
+function getClientIp(event: H3Event): string {
   // 1. ローカル開発環境 (localhost) でのテスト対応
-  if (process.dev) {
+  if (import.meta.dev) {
     const socketIp = event.node.req.socket?.remoteAddress;
     if (socketIp === "::1" || socketIp === "127.0.0.1") {
       return "127.0.0.1";
@@ -72,23 +75,54 @@ function getClientIp(event: any): string {
   return "unknown";
 }
 
+function applyInMemoryLimit(clientIp: string, now: number): { currentCount: number; retryAfterSeconds: number } {
+  cleanup();
+  const record = requestCounts.get(clientIp);
+
+  if (!record || now - record.windowStart > RATE_LIMIT.windowMs) {
+    requestCounts.set(clientIp, { count: 1, windowStart: now });
+    return {
+      currentCount: 1,
+      retryAfterSeconds: Math.ceil(RATE_LIMIT.windowMs / 1000),
+    };
+  }
+
+  record.count++;
+  return {
+    currentCount: record.count,
+    retryAfterSeconds: Math.ceil((record.windowStart + RATE_LIMIT.windowMs - now) / 1000),
+  };
+}
+
+function rejectUnavailable() {
+  throw createError({
+    statusCode: 503,
+    data: "レート制限サービスが利用できません。しばらく時間をおいてから再試行してください。",
+  });
+}
+
 export default defineEventHandler(async event => {
   const url = getRequestURL(event);
 
   // APIエンドポイントのみにレート制限を適用
   if (!url.pathname.startsWith("/api/")) return;
 
+  const isProduction = !import.meta.dev;
   const clientIp = getClientIp(event);
   const now = Date.now();
 
-  // Upstash for Redis の利用可否はインポートした hasRedis を参照
+  // 本番では Redis 必須 (分散環境でのインメモリ制限はバイパス可能)
+  if (isProduction && !hasRedis) {
+    console.error("[RateLimit] 本番環境で Redis が未設定です。API を拒否します (fail-closed)。");
+    rejectUnavailable();
+  }
 
   let currentCount = 0;
   let retryAfterSeconds = 0;
 
-  if (hasRedis) {
+  if (hasRedis && redis) {
     // ----------------------------------------------------
-    // 1. Upstash for Redis を使った分散レート制限
+    // Upstash for Redis を使った分散レート制限
     // ----------------------------------------------------
     const key = `ratelimit:${clientIp}`;
     try {
@@ -99,31 +133,24 @@ export default defineEventHandler(async event => {
       const ttl = await redis.ttl(key);
       retryAfterSeconds = ttl > 0 ? ttl : Math.ceil(RATE_LIMIT.windowMs / 1000);
     } catch (e) {
-      // Redisとの通信エラーが発生した場合は、サービス継続のためログ出力の上、インメモリMap制限へ一時的に移行
-      console.error("[RateLimit] Upstash Redis 通信エラー。インメモリ制限にフォールバックします:", e);
-      fallbackInMemory();
+      console.error("[RateLimit] Upstash Redis 通信エラー:", e);
+      if (isProduction) {
+        // 本番: 分散制限が効かない状態での継続は危険なため fail-closed
+        rejectUnavailable();
+      }
+      // 開発: インメモリへフォールバック
+      console.warn("[RateLimit] 開発環境のためインメモリ制限にフォールバックします。");
+      const fallback = applyInMemoryLimit(clientIp, now);
+      currentCount = fallback.currentCount;
+      retryAfterSeconds = fallback.retryAfterSeconds;
     }
   } else {
     // ----------------------------------------------------
-    // 2. インメモリ Map によるローカルフォールバック制限
+    // 開発環境のみ: インメモリ Map によるフォールバック
     // ----------------------------------------------------
-    fallbackInMemory();
-  }
-
-  function fallbackInMemory() {
-    cleanup();
-    const record = requestCounts.get(clientIp);
-
-    if (!record || now - record.windowStart > RATE_LIMIT.windowMs) {
-      // 新しいウィンドウを開始
-      requestCounts.set(clientIp, { count: 1, windowStart: now });
-      currentCount = 1;
-      retryAfterSeconds = Math.ceil(RATE_LIMIT.windowMs / 1000);
-    } else {
-      record.count++;
-      currentCount = record.count;
-      retryAfterSeconds = Math.ceil((record.windowStart + RATE_LIMIT.windowMs - now) / 1000);
-    }
+    const fallback = applyInMemoryLimit(clientIp, now);
+    currentCount = fallback.currentCount;
+    retryAfterSeconds = fallback.retryAfterSeconds;
   }
 
   // 閾値チェック

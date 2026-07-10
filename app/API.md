@@ -15,17 +15,18 @@
 /api/v2/bus
 ```
 
-### 共通パラメータ
+### ローカルシミュレーション (`?local`)
 
-| パラメータ | 型 | 必須 | 説明 |
-|---|---|---|---|
-| `company` | `string` | ❌ | バス会社コード。`KokusaiKogyo` または `Seibu`。省略時は両社の情報を取得 |
+フロントエンドの結果ページ URL に `?local` を付けると、API を呼ばずクライアント側の仮ダイヤで動作します（開発・デモ用）。  
+API エンドポイント自体に `local` パラメータはありません。
 
 ### 共通エラーレスポンス
 
 | ステータス | 説明 |
 |---|---|
 | `400` | バリデーションエラー (必須パラメータ不足、不正な値など) |
+| `429` | レート制限超過 (同一 IP あたり 60 リクエスト / 分) |
+| `503` | 本番で Redis 未設定など、レート制限基盤が利用できない場合 |
 
 ---
 
@@ -37,20 +38,25 @@
 
 **ファイル**: [`server/api/v2/bus/services.ts`](server/api/v2/bus/services.ts)
 
+フロントエンドは **会社別 NAVITIME バス停 ID** を指定します。  
+レガシーの `start` / `goal` / `company`（バス停コード方式）は削除済みです。
+
 #### パラメータ
 
 | パラメータ | 型 | 必須 | 説明 | 例 |
 |---|---|---|---|---|
-| `start` | `string` | ✅ | 出発バス停コード | `SaitamaUniv` |
-| `goal` | `string` | ❌ | 到着バス停コード | `KitaUrawa` |
-| `company` | `string` | ❌ | バス会社コード | `KokusaiKogyo` |
+| `kokusaiStartId` | `string` | ※ | 国際興業バスの出発バス停 ID (8桁) | `00021229` |
+| `kokusaiGoalId` | `string` | ❌ | 国際興業バスの到着バス停 ID。省略時は全行先 | `00021176` |
+| `seibuStartId` | `string` | ※ | 西武バスの出発バス停 ID (8桁) | `00111643` |
+| `seibuGoalId` | `string` | ❌ | 西武バスの到着バス停 ID。省略時は主要行先を合成 | `00111628` |
+
+※ `kokusaiStartId` と `seibuStartId` の少なくとも一方が必要です（両方指定可）。
 
 #### リクエスト例
 
 ```
-GET /api/v2/bus/services?start=SaitamaUniv&goal=KitaUrawa
-GET /api/v2/bus/services?start=SaitamaUniv&company=Seibu
-GET /api/v2/bus/services?start=MinamiYono
+GET /api/v2/bus/services?kokusaiStartId=00021229&kokusaiGoalId=00021176&seibuStartId=00111643&seibuGoalId=00111628
+GET /api/v2/bus/services?kokusaiStartId=00021229
 ```
 
 #### レスポンス: `BusService[]`
@@ -86,93 +92,30 @@ GET /api/v2/bus/services?start=MinamiYono
 ]
 ```
 
+片方の会社の取得に失敗しても、もう片方の結果は返します（空配列になり得ます）。
+
 #### エラーレスポンス
 
 | ケース | ステータス | メッセージ |
 |---|---|---|
-| `start` 未指定 | `400` | `クエリパラメータ 'start' は必須です。` |
-| `company` が不正 | `400` | `クエリパラメータ 'company' は 'KokusaiKogyo' または 'Seibu' を指定してください。` |
+| StartId いずれも未指定 | `400` | `クエリパラメータ 'kokusaiStartId' または 'seibuStartId' が必要です。` |
+| 無効なバス停 ID | `400` | `無効な〜バス停IDです。` |
+| レート制限超過 | `429` | Too Many Requests |
+| 本番で Redis 未設定 | `503` | サービス一時利用不可 |
+
+#### キャッシュ
+
+Redis (Upstash) に TTL 60 秒でキャッシュします。未設定時は都度取得します。
 
 ---
 
-### `GET /api/v2/bus/routes`
+### 削除済み: `GET /api/v2/bus/routes`
 
-バス路線情報を取得します。各系統の全停留所リスト（順序付き）を返します。
-
-**ファイル**: [`server/api/v2/bus/routes.ts`](server/api/v2/bus/routes.ts)
-
-#### パラメータ
-
-| パラメータ | 型 | 必須 | 説明 | 例 |
-|---|---|---|---|---|
-| `start` | `string` | ❌ | 出発バス停のnavitime IDでフィルタ | `00021229` |
-| `goal` | `string` | ❌ | 到着バス停のnavitime IDでフィルタ | `00021176` |
-| `company` | `string` | ❌ | バス会社コード | `KokusaiKogyo` |
-
-#### リクエスト例
-
-```
-GET /api/v2/bus/routes
-GET /api/v2/bus/routes?company=Seibu
-GET /api/v2/bus/routes?start=00021229
-```
-
-#### レスポンス: `BusRoute[]`
-
-```json
-[
-  {
-    "companyCode": "KokusaiKogyo",
-    "routeCode": "北浦03",
-    "origin": {
-      "id": "00021176",
-      "name": "北浦和駅西口",
-      "order": 0
-    },
-    "terminal": {
-      "id": "00021229",
-      "name": "埼玉大学",
-      "order": 9
-    },
-    "stops": [
-      { "id": "00021176", "name": "北浦和駅西口", "order": 0 },
-      { "id": "00021222", "name": "常盤十丁目", "order": 1 },
-      { "id": "00021200", "name": "大戸小学校", "order": 2 },
-      "..."
-    ]
-  }
-]
-```
+路線マスタはフロントが [`shared/utils/Bus/v2/Routes.ts`](../shared/utils/Bus/v2/Routes.ts) の `ALL_ROUTES` を静的参照するため、未使用だった `/api/v2/bus/routes` は削除しました。
 
 ---
 
+## 停留所データの単一ソース
 
-
-## バス停コード一覧
-
-API で使用するバス停コード (`start`, `goal` パラメータ) の一覧です。
-
-### 国際興業バス
-
-| コード | バス停名 | 系統 |
-|---|---|---|
-| `SaitamaUniv` | 埼玉大学 | 北浦03, 南与01, 志03-3, 北朝02 |
-| `KitaUrawa` | 北浦和駅西口 | 北浦03 |
-| `MinamiYono` | 南与野駅西口 | 南与01, 南与02, 志03-3, 北朝02 |
-| `MinamiYonoKita` | 南与野駅北入口 | 北浦03 |
-| `Shiki` | 志木駅東口 | 志03-3 |
-| `KitaAsaka` | 北朝霞駅 | 北朝02 |
-| `ShimoOkubo` | 下大久保 | 南与02, 志03-3, 北朝02, 浦13-2 |
-| `SaitamaUnivUra` | 埼大裏 | 浦13, 浦13-2, 浦桜13-3 |
-| `SakuraWardOffice` | 桜区役所 | 浦11, 浦12, 浦12-2, 浦桜13-3, 浦15 |
-| `Urawa` | 浦和駅西口 | 浦11, 浦12, 浦12-2, 浦13, 浦13-2, 浦桜13-3, 浦15 |
-| `OkuboPurificationPlant` | 大久保浄水場 | 浦13, 浦桜13-3 |
-
-### 西武バス
-
-| コード | バス停名 | 系統 |
-|---|---|---|
-| `SaitamaUniv` | 埼玉大学 | 北浦03, 南与01 |
-| `KitaUrawa` | 北浦和駅 | 北浦03 |
-| `MinamiYono` | 南与野駅西口 | 南与01 |
-| `MinamiYonoKita` | 南与野駅北入口 | 北浦03 |
+停留所・系統の正本は [`shared/utils/Bus/v2/Routes.ts`](../shared/utils/Bus/v2/Routes.ts) です。  
+よみがなは [`StopKana.ts`](../shared/utils/Bus/v2/StopKana.ts)、ID ホワイトリストは `ALL_ROUTES` から導出します。

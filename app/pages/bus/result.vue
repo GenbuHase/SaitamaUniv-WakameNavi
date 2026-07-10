@@ -9,6 +9,25 @@
       @clickFavorite="onToggleMyRoute"
     />
 
+    <!-- マイルート操作の通知 -->
+    <div
+      v-if="noticeMessage"
+      class="p-4 bg-amber-50 border border-amber-100 rounded-2xl flex items-start gap-3 text-amber-900 text-sm shadow-sm"
+      role="status"
+    >
+      <AlertCircle class="w-5 h-5 text-amber-500 flex-shrink-0 mt-0.5" />
+      <div class="flex-1">
+        <p class="font-semibold">{{ noticeMessage }}</p>
+      </div>
+      <button
+        type="button"
+        class="text-amber-600 hover:text-amber-800 text-xs font-bold cursor-pointer"
+        @click="clearNotice"
+      >
+        閉じる
+      </button>
+    </div>
+
     <Transition
       mode="out-in"
       enter-active-class="transition-all duration-500 ease-out"
@@ -48,10 +67,32 @@
       </div>
 
       <!-- データの取得中（ローディング） -->
-      <BusLoadingSkeleton v-else-if="isLoading" />
+      <BusLoadingSkeleton v-else-if="isLoading && !hasTimetableData" />
 
       <!-- データの取得完了（結果表示） -->
       <div v-else class="space-y-6">
+        <!-- API エラー -->
+        <div
+          v-if="fetchError"
+          class="p-4 bg-rose-50 border border-rose-100 rounded-2xl flex items-start gap-3 text-rose-800 text-sm shadow-sm"
+          role="alert"
+        >
+          <AlertCircle class="w-5 h-5 text-rose-500 flex-shrink-0 mt-0.5" />
+          <div class="flex-1 space-y-2">
+            <p class="font-semibold">運行情報を取得できませんでした</p>
+            <p class="text-xs text-rose-600/80">{{ fetchError }}</p>
+            <button
+              type="button"
+              class="mt-1 px-4 py-2 bg-white border border-rose-200 hover:bg-rose-50 text-rose-700 font-bold rounded-xl text-xs transition-colors cursor-pointer inline-flex items-center gap-1.5"
+              :disabled="isLoading"
+              @click="onRetry"
+            >
+              <RefreshCw class="w-3.5 h-3.5" :class="{ 'animate-spin': isLoading }" />
+              再試行
+            </button>
+          </div>
+        </div>
+
         <!-- 運行状況要約 -->
         <BusStatusBar :lastUpdated="lastUpdated" :hasDelay="hasDelayInUpcoming" />
 
@@ -72,21 +113,21 @@
 </template>
 
 <script setup lang="ts">
-  import { computed, onMounted, watch } from "vue";
-  import { AlertCircle, ChevronLeft } from "lucide-vue-next";
+  import { computed, onMounted, onUnmounted, watch } from "vue";
+  import { AlertCircle, ChevronLeft, RefreshCw } from "lucide-vue-next";
   import { useRoute, navigateTo, useSeoMeta } from "#imports";
-  import { useBusTimetable } from "@/composables/bus/useBusTimetable";
+  import { useBusTimetable, BUS_API_POLL_INTERVAL_MS } from "@/composables/bus/useBusTimetable";
 
   const route = useRoute();
 
   // 出発停留所がない場合は検索ポータルへリダイレクト
   if (!route.query.boarding) {
-    const query: Record<string, any> = {};
+    const query: Record<string, string> = {};
     if (route.query.campaign !== undefined) {
-      query.campaign = route.query.campaign;
+      query.campaign = String(route.query.campaign);
     }
     if (route.query.local !== undefined) {
-      query.local = route.query.local;
+      query.local = String(route.query.local);
     }
     navigateTo({
       path: "/bus",
@@ -110,16 +151,13 @@
   });
 
   const {
-    // ステート
-    boardingStopInput,
-    dropOffStopInput,
-    selectedBoardingStop,
     selectedDropOffStop,
     lastUpdated,
     isLoading,
+    fetchError,
     sortType,
+    noticeMessage,
 
-    // 算出プロパティ
     integratedTimetable,
     nextBusIndex,
     nextBus,
@@ -128,31 +166,29 @@
     isDropOffStopInvalid,
     isRouteInvalid,
 
-    // メソッド
     handleSearch,
+    refreshData,
     isRouteRegistered,
     toggleMyRoute,
     setStops,
+    clearNotice,
   } = useBusTimetable();
 
-  // 現在のルートが既にマイルート登録されているか判定
+  const hasTimetableData = computed(() => integratedTimetable.value.length > 0);
+
   const isAlreadyRegistered = computed(() => {
     return isRouteRegistered(queryBoarding.value, queryDropOff.value);
   });
 
-  // お気に入り（マイルート）の追加・削除トグル
   const onToggleMyRoute = () => {
-    // 停留所やルートが無効な場合はお気に入り登録を防止
     if (isBoardingStopInvalid.value || isDropOffStopInvalid.value || isRouteInvalid.value) return;
     toggleMyRoute(queryBoarding.value, queryDropOff.value);
   };
 
-  // クエリパラメータから入力を同期して検索を実行する
   const updateQueryStops = () => {
     if (queryBoarding.value) {
       setStops(queryBoarding.value, queryDropOff.value);
 
-      // 停留所やルートが無効な場合は検索（API呼び出し）を実行しない
       if (isBoardingStopInvalid.value || isDropOffStopInvalid.value || isRouteInvalid.value) {
         return;
       }
@@ -160,23 +196,49 @@
     }
   };
 
+  const onRetry = () => {
+    refreshData();
+  };
+
+  let pollTimer: ReturnType<typeof setInterval> | null = null;
+
+  const startPolling = () => {
+    stopPolling();
+    pollTimer = setInterval(() => {
+      if (isBoardingStopInvalid.value || isDropOffStopInvalid.value || isRouteInvalid.value) return;
+      if (!queryBoarding.value) return;
+      // バックグラウンド更新: スケルトンを出さず前回データを保持
+      refreshData({ silent: true });
+    }, BUS_API_POLL_INTERVAL_MS);
+  };
+
+  const stopPolling = () => {
+    if (pollTimer) {
+      clearInterval(pollTimer);
+      pollTimer = null;
+    }
+  };
+
   onMounted(() => {
     updateQueryStops();
+    startPolling();
   });
 
-  // 2回目以降の照会（クエリパラメータの変更）を監視して更新する
+  onUnmounted(() => {
+    stopPolling();
+  });
+
   watch([queryBoarding, queryDropOff], () => {
     updateQueryStops();
   });
 
-  // 検索画面へ戻る (URLクエリをクリアした初期状態にする)
   const goBack = () => {
-    const query: Record<string, any> = {};
+    const query: Record<string, string> = {};
     if (route.query.campaign !== undefined) {
-      query.campaign = route.query.campaign;
+      query.campaign = String(route.query.campaign);
     }
     if (route.query.local !== undefined) {
-      query.local = route.query.local;
+      query.local = String(route.query.local);
     }
     navigateTo({
       path: "/bus",
@@ -184,4 +246,3 @@
     });
   };
 </script>
-

@@ -11,7 +11,9 @@
  * @param baseDate - 基準日 (省略時は現在日)
  */
 export function parseTime(timeStr: string, baseDate = new Date()): Date {
-  const [hours, minutes] = timeStr.split(":").map(Number);
+  const parts = timeStr.split(":").map(Number);
+  const hours = parts[0] ?? 0;
+  const minutes = parts[1] ?? 0;
   const date = new Date(baseDate);
   date.setHours(hours, minutes, 0, 0);
   return date;

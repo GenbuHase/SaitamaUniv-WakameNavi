@@ -7,8 +7,9 @@
 
 import type { BusCompanyCode, BusService, BusRoute } from "@@/shared/types/bus";
 
+import * as KokusaiKogyoBus from "./KokusaiKogyoBus";
+import * as SeibuBus from "./SeibuBus";
 import Routes, {
-  ALL_ROUTES,
   filterRoutes,
   KokusaiKogyoStops,
   SeibuStops,
@@ -24,9 +25,6 @@ const BusStops = {
   findBusStopByCode,
   getCompaniesForStop,
 };
-
-import * as KokusaiKogyoBus from "./KokusaiKogyoBus";
-import * as SeibuBus from "./SeibuBus";
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 // バス停バリデーション

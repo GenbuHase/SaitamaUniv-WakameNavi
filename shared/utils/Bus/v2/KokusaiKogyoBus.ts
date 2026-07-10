@@ -49,8 +49,8 @@ function parseLocation(locationText: string): BusLocation {
   }
 
   const matcher = trimmed.match(/(\d+)個前/);
-  if (matcher) {
-    const stops = parseInt(matcher[1]);
+  if (matcher?.[1]) {
+    const stops = parseInt(matcher[1], 10);
     return {
       status: stops <= 1 ? "approaching" : "running",
       stopsAway: stops,
@@ -72,7 +72,7 @@ function parseDelay(delayText: string): number {
   if (delayText === "遅れなし") return 0;
 
   const matcher = delayText.match(/(\d+)分/);
-  return matcher ? parseInt(matcher[1]) : 0;
+  return matcher?.[1] ? parseInt(matcher[1], 10) : 0;
 }
 
 /**
@@ -102,41 +102,80 @@ async function fetchWithTimeout(url: string, timeoutMs: number): Promise<Respons
 export async function getServices(startId: string, goalId: string): Promise<BusService[]> {
   // 目的地が未指定（startId === goalId）の場合、goalIdを空値にすることですべての行き先を取得できる
   const fetchGoalId = startId === goalId ? "" : goalId;
-  const html = await (await fetchWithTimeout(getFetchUrl(startId, fetchGoalId), FETCH_TIMEOUT_MS)).text();
+  const url = getFetchUrl(startId, fetchGoalId);
+
+  let response: Response;
+  try {
+    response = await fetchWithTimeout(url, FETCH_TIMEOUT_MS);
+  } catch (e) {
+    console.error("[KokusaiKogyoBus] fetch failed:", {
+      startId,
+      goalId: fetchGoalId || "(all)",
+      error: e instanceof Error ? e.message : String(e),
+    });
+    throw e;
+  }
+
+  if (!response.ok) {
+    console.error("[KokusaiKogyoBus] HTTP error:", {
+      status: response.status,
+      statusText: response.statusText,
+      startId,
+      goalId: fetchGoalId || "(all)",
+    });
+    throw new Error(`KokusaiKogyo Bus Fetch Error: ${response.status} ${response.statusText}`);
+  }
+
+  const html = await response.text();
   const $ = cheerio.load(html);
   const elements = $("#resultList > .plotList").toArray();
 
+  if (elements.length === 0) {
+    // 運行なしは正常系もあり得るが、DOM構造変更の検知用に構造化ログを残す
+    const hasResultList = $("#resultList").length > 0;
+    console.warn("[KokusaiKogyoBus] empty services:", {
+      startId,
+      goalId: fetchGoalId || "(all)",
+      hasResultList,
+      htmlLength: html.length,
+    });
+  }
+
   const services: BusService[] = [];
   for (const elem of elements) {
-    const route = $(elem).find(".courseName").text() || "";
-    const destinationName = $(elem).find(".destination-name").text() || "";
-    const destinationUnit = $(elem).find(".destination-unit").text() || "";
-    const locationText = $(elem).find(".approach-number").text() || "";
-    const delayText = $(elem).find(".delay-minutes-area > .middleText").text() || "";
-    const scheduledTime = $(elem).find(".on-time").text() || "";
+    try {
+      const route = $(elem).find(".courseName").text() || "";
+      const destinationName = $(elem).find(".destination-name").text() || "";
+      const destinationUnit = $(elem).find(".destination-unit").text() || "";
+      const locationText = $(elem).find(".approach-number").text() || "";
+      const delayText = $(elem).find(".delay-minutes-area > .middleText").text() || "";
+      const scheduledTime = $(elem).find(".on-time").text() || "";
 
-    // 行先名から単位テキストを除去 (例: "北浦和駅西口行" → "北浦和駅西口")
-    const destination = destinationName.replace(destinationUnit, "");
-    const location = parseLocation(locationText);
-    const delay = parseDelay(delayText);
+      // 行先名から単位テキストを除去 (例: "北浦和駅西口行" → "北浦和駅西口")
+      const destination = destinationName.replace(destinationUnit, "");
+      const location = parseLocation(locationText);
+      const delay = parseDelay(delayText);
 
-    // 到着予測時刻 = 定刻 + 遅延分数
-    const estimatedTime = Time.parseDateToTimeString(
-      Time.addMinutes(
-        Time.parseTimeStringToDate(scheduledTime), delay
-      )
-    );
+      // 到着予測時刻 = 定刻 + 遅延分数
+      const estimatedTime = Time.parseDateToTimeString(
+        Time.addMinutes(
+          Time.parseTimeStringToDate(scheduledTime), delay
+        )
+      );
 
-    services.push({
-      companyCode: COMPANY_CODE,
-      companyName: COMPANY_NAME,
-      route,
-      destination,
-      location,
-      scheduledTime,
-      estimatedTime,
-      delay,
-    });
+      services.push({
+        companyCode: COMPANY_CODE,
+        companyName: COMPANY_NAME,
+        route,
+        destination,
+        location,
+        scheduledTime,
+        estimatedTime,
+        delay,
+      });
+    } catch (e) {
+      console.error("[KokusaiKogyoBus] parse entry failed:", e);
+    }
   }
 
   return services;

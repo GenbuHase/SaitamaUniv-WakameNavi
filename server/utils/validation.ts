@@ -5,11 +5,12 @@
  * SSRF対策として、外部URLに渡す前に必ずこのモジュールでバリデーションを行う。
  */
 
-import { ALL_ROUTES, KokusaiKogyoStops, SeibuStops } from "@@/shared/utils/Bus/v2/Routes";
+import { ALL_ROUTES } from "@@/shared/utils/Bus/v2/Routes";
 import type { BusCompanyCode } from "@@/shared/types/bus";
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 // バス停IDホワイトリスト (モジュールロード時に一度だけ構築)
+// Routes.ts の ALL_ROUTES が単一ソース
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 /** 国際興業バスの有効なバス停ID */
@@ -57,21 +58,6 @@ export function isValidBusStopId(id: string): boolean {
 /** 有効なバス会社コードか */
 export function isValidCompanyCode(code: string): code is BusCompanyCode {
   return code === "KokusaiKogyo" || code === "Seibu";
-}
-
-// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-// バス停コードバリデーション (共有データのBusStopsと照合)
-// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-/** 有効なバス停コード一覧 */
-const VALID_STOP_CODES = new Set<string>([
-  ...Object.keys(KokusaiKogyoStops),
-  ...Object.keys(SeibuStops),
-]);
-
-/** 有効なバス停コードか */
-export function isValidStopCode(code: string): boolean {
-  return VALID_STOP_CODES.has(code);
 }
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━

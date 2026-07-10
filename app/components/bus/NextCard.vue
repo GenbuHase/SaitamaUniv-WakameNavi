@@ -6,7 +6,7 @@
 
     <!-- 会社ロゴっぽい表示 -->
     <div class="absolute top-5 right-5 text-[10px] font-bold px-2.5 py-1 bg-white/20 backdrop-blur-md rounded-full border border-white/30 shadow-sm">
-      {{ bus.company === "Kokusai" ? "国際興業バス" : "西武バス" }}
+      {{ getCompanyDisplayName(bus.company) }}
     </div>
 
     <div class="absolute -bottom-6 -right-6 p-3 opacity-10 transform -rotate-6">
@@ -51,6 +51,7 @@
 <script setup lang="ts">
   import { Bus } from "lucide-vue-next";
   import type { TimetableEntry } from "@/composables/bus/useBusTimetable";
+  import { getCompanyDisplayName } from "@/composables/bus/busCompany";
 
   defineProps<{
     /** 先発バスのデータ (null時は空状態を表示) */

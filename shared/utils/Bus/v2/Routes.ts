@@ -1,8 +1,9 @@
 /**
- * バス路線データ定義 (v2)
+ * バス路線データ定義 (v2) — 停留所・系統の単一ソース
  *
- * 各系統の停留所リストを順序付きで定義する。
- * BusRoute 型に準拠し、始発・終着・全停留所を保持する。
+ * 停留所を追加・変更するときは、まずこのファイルの系統定義を更新する。
+ * よみがなは StopKana.ts、英語コードは STOP_CODE_TO_NAME に必要分だけ追記する。
+ * フロントの検索マップ・ID ホワイトリスト・マイルート検証は ALL_ROUTES から導出する。
  */
 
 import type { BusRoute, BusRouteStop, BusCompanyCode, BusStop } from "@@/shared/types/bus";
@@ -14,17 +15,24 @@ import type { BusRoute, BusRouteStop, BusCompanyCode, BusStop } from "@@/shared/
 type RawStop = { id: string; name: string };
 
 function buildRoute(companyCode: BusCompanyCode, routeCode: string, rawStops: RawStop[]): BusRoute {
+  if (rawStops.length === 0) {
+    throw new Error(`Route ${routeCode} must have at least one stop`);
+  }
+
   const stops: BusRouteStop[] = rawStops.map((s, i) => ({
     id: s.id,
     name: s.name,
     order: i
   }));
 
+  const origin = stops[0]!;
+  const terminal = stops[stops.length - 1]!;
+
   return {
     companyCode,
     routeCode,
-    origin: stops[0],
-    terminal: stops[stops.length - 1],
+    origin,
+    terminal,
     stops
   };
 }
@@ -410,6 +418,36 @@ const SeibuRoutes: BusRoute[] = [
 
 export const ALL_ROUTES: BusRoute[] = [...KokusaiKogyoRoutes, ...SeibuRoutes];
 
+/** ALL_ROUTES に登場する全停留所名（ホワイトリスト） */
+export const ALL_STOP_NAMES: ReadonlySet<string> = (() => {
+  const names = new Set<string>();
+  for (const route of ALL_ROUTES) {
+    for (const stop of route.stops) {
+      names.add(stop.name);
+    }
+  }
+  return names;
+})();
+
+/**
+ * 会社間で表記が異なる北浦和駅系のエイリアスを正規化する。
+ * 国際興業は「北浦和駅西口」、西武は「北浦和駅」。
+ */
+export function normalizeStopNameForCompany(
+  stopName: string,
+  company: "Kokusai" | "Seibu" | BusCompanyCode
+): string {
+  const isKokusai = company === "Kokusai" || company === "KokusaiKogyo";
+  if (stopName === "北浦和駅" && isKokusai) return "北浦和駅西口";
+  if (stopName === "北浦和駅西口" && !isKokusai) return "北浦和駅";
+  return stopName;
+}
+
+/** 既知の停留所名か（マイルート等のホワイトリスト検証用） */
+export function isKnownStopName(name: string): boolean {
+  return ALL_STOP_NAMES.has(name);
+}
+
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 // バス停定義の動的生成 (BusStops.ts の統合・一本化)
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -450,7 +488,8 @@ for (const route of ALL_ROUTES) {
     }
     if (!code) continue;
 
-    if (!stopsMap[code]) {
+    const existing = stopsMap[code];
+    if (!existing) {
       stopsMap[code] = {
         id: stop.id,
         code,
@@ -458,9 +497,8 @@ for (const route of ALL_ROUTES) {
         companyCode: route.companyCode,
         routes: [],
       };
-    }
-    if (!stopsMap[code].routes.includes(route.routeCode)) {
-      stopsMap[code].routes.push(route.routeCode);
+    } else if (!existing.routes.includes(route.routeCode)) {
+      existing.routes.push(route.routeCode);
     }
   }
 }
@@ -522,10 +560,13 @@ export default {
   KokusaiKogyo: KokusaiKogyoRoutes,
   Seibu: SeibuRoutes,
   ALL_ROUTES,
+  ALL_STOP_NAMES,
   filterRoutes,
   KokusaiKogyoStops,
   SeibuStops,
   BusStopsByCompany,
   findBusStopByCode,
   getCompaniesForStop,
+  isKnownStopName,
+  normalizeStopNameForCompany,
 };

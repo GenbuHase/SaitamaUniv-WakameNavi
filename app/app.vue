@@ -38,15 +38,16 @@
   import { computed } from "vue";
   import { useRoute } from "#imports";
   import { Home, Bus, Train } from "lucide-vue-next";
+  import { normalizeQueryValue } from "@/utils/queryParams";
 
   const route = useRoute();
   const trackingQuery = computed(() => {
-    const query: Record<string, any> = {};
+    const query: Record<string, string | string[] | undefined | null> = {};
     if (route.query.campaign !== undefined) {
-      query.campaign = route.query.campaign;
+      query.campaign = normalizeQueryValue(route.query.campaign);
     }
     if (route.query.local !== undefined) {
-      query.local = route.query.local;
+      query.local = normalizeQueryValue(route.query.local);
     }
     return query;
   });

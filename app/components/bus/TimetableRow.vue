@@ -26,7 +26,7 @@
         <div class="flex items-center gap-2 mb-1.5 flex-wrap">
           <!-- 会社バッジ -->
           <span class="text-[9px] font-bold px-2 py-0.5 rounded-full text-white shadow-sm" :class="bus.company === 'Kokusai' ? 'bg-[#009140]' : 'bg-cyan-600'">
-            {{ bus.company === "Kokusai" ? "国際" : "西武" }}
+            {{ getCompanyShortLabel(bus.company) }}
           </span>
 
           <!-- 系統コードバッジ -->
@@ -51,6 +51,7 @@
 
 <script setup lang="ts">
   import type { TimetableEntry } from "@/composables/bus/useBusTimetable";
+  import { getCompanyShortLabel } from "@/composables/bus/busCompany";
 
   defineProps<{
     /** バスデータ */

@@ -7,6 +7,7 @@
  */
 
 import { ALL_ROUTES } from "@@/shared/utils/Bus/v2/Routes";
+import { getCompanyStyles, type UiCompanyCode } from "./busCompany";
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 // shared のルートデータから会社・系統ごとのバス停リストを生成
@@ -52,7 +53,9 @@ export const BASE_SCHEDULE_TEMPLATE = [
  */
 export function shiftSchedule(schedule: string[], minutes: number): string[] {
   return schedule.map(time => {
-    const [h, m] = time.split(":").map(Number);
+    const parts = time.split(":").map(Number);
+    const h = parts[0] ?? 0;
+    const m = parts[1] ?? 0;
     const date = new Date();
     date.setHours(h, m + minutes, 0, 0);
     return date.toLocaleTimeString("ja-JP", { hour: "2-digit", minute: "2-digit" });
@@ -67,7 +70,7 @@ export function shiftSchedule(schedule: string[], minutes: number): string[] {
 export interface GeneratedRoute {
   id: string;
   code: string;
-  company: "Kokusai" | "Seibu";
+  company: UiCompanyCode;
   name: string;
   destination: string;
   color: string;
@@ -81,13 +84,6 @@ export interface GeneratedRoute {
 // ルート生成
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-/** 会社ごとのスタイル定義 */
-function getCompanyStyles(company: "Kokusai" | "Seibu") {
-  return company === "Kokusai"
-    ? { color: "bg-green-700", textColor: "text-green-700", borderColor: "border-green-700" }
-    : { color: "bg-cyan-600", textColor: "text-cyan-600", borderColor: "border-cyan-600" };
-}
-
 /**
  * 指定されたバス停リストから往路・復路を生成する
  */
@@ -98,8 +94,10 @@ function createRouteVariants(
   baseScheduleTemplate: string[],
   indexOffset: number
 ): GeneratedRoute[] {
+  if (stops.length === 0) return [];
+
   const routes: GeneratedRoute[] = [];
-  const company: "Kokusai" | "Seibu" = companyPrefix === "kk" ? "Kokusai" : "Seibu";
+  const company: UiCompanyCode = companyPrefix === "kk" ? "Kokusai" : "Seibu";
   const styles = getCompanyStyles(company);
 
   // 停留所数に応じた動的なオフセット加算 (長距離路線の時間交錯を防ぐ高度なシミュレーション最適化)
@@ -109,13 +107,16 @@ function createRouteVariants(
     return i * 2; // 短距離路線用
   };
 
+  const firstStop = stops[0]!;
+  const lastStop = stops[stops.length - 1]!;
+
   // 1. 往路 (Outbound)
   routes.push({
     id: `${companyPrefix}_${code}_out`,
     code,
     company,
-    name: `${code}: ${stops[0].name} → ${stops[stops.length - 1].name}`,
-    destination: stops[stops.length - 1].name,
+    name: `${code}: ${firstStop.name} → ${lastStop.name}`,
+    destination: lastStop.name,
     ...styles,
     stops: stops.map((s, i) => ({ name: s.name, offset: getOffset(i, stops.length) })),
     baseSchedule: shiftSchedule(baseScheduleTemplate, indexOffset)
@@ -123,12 +124,14 @@ function createRouteVariants(
 
   // 2. 復路 (Inbound) - 逆順
   const reversedStops = [...stops].reverse();
+  const revFirst = reversedStops[0]!;
+  const revLast = reversedStops[reversedStops.length - 1]!;
   routes.push({
     id: `${companyPrefix}_${code}_in`,
     code,
     company,
-    name: `${code}: ${reversedStops[0].name} → ${reversedStops[reversedStops.length - 1].name}`,
-    destination: reversedStops[reversedStops.length - 1].name,
+    name: `${code}: ${revFirst.name} → ${revLast.name}`,
+    destination: revLast.name,
     ...styles,
     stops: reversedStops.map((s, i) => ({ name: s.name, offset: getOffset(i, reversedStops.length) })),
     // 復路は少し時間をずらす (例: +15分)
