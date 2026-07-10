@@ -31,7 +31,7 @@ const selectedDropOffStop = ref("");
 
 const currentTime = ref(new Date());
 
-// マイルート操作のインライン通知（alert の代替）
+// マイルート操作の通知（モーダル表示用）
 const noticeMessage = ref<string | null>(null);
 let noticeTimer: ReturnType<typeof setTimeout> | null = null;
 
@@ -45,7 +45,7 @@ function showNotice(message: string | null) {
     noticeTimer = setTimeout(() => {
       noticeMessage.value = null;
       noticeTimer = null;
-    }, 4000);
+    }, 6000);
   }
 }
 

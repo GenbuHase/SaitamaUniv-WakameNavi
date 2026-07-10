@@ -9,24 +9,7 @@
       @clickFavorite="onToggleMyRoute"
     />
 
-    <!-- マイルート操作の通知 -->
-    <div
-      v-if="noticeMessage"
-      class="p-4 bg-amber-50 border border-amber-100 rounded-2xl flex items-start gap-3 text-amber-900 text-sm shadow-sm"
-      role="status"
-    >
-      <AlertCircle class="w-5 h-5 text-amber-500 flex-shrink-0 mt-0.5" />
-      <div class="flex-1">
-        <p class="font-semibold">{{ noticeMessage }}</p>
-      </div>
-      <button
-        type="button"
-        class="text-amber-600 hover:text-amber-800 text-xs font-bold cursor-pointer"
-        @click="clearNotice"
-      >
-        閉じる
-      </button>
-    </div>
+    <BusNoticePopup :message="noticeMessage" @close="clearNotice" />
 
     <Transition
       mode="out-in"

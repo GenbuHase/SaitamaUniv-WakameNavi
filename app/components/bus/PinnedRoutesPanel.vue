@@ -11,7 +11,7 @@
       </div>
       <div class="flex items-center gap-2">
         <span class="text-xs text-slate-400 bg-slate-100 px-2.5 py-0.5 rounded-full font-bold">
-          {{ localPinnedRoutes.length }}/3
+          {{ localPinnedRoutes.length }}/{{ MAX_PINNED }}
         </span>
       </div>
     </div>
@@ -55,7 +55,7 @@
       </transition-group>
 
       <div
-        v-for="i in (3 - localPinnedRoutes.length)"
+        v-for="i in (MAX_PINNED - localPinnedRoutes.length)"
         :key="'empty-' + i"
         class="flex flex-col items-center flex-shrink-0 select-none"
       >
@@ -79,6 +79,7 @@
   } from "lucide-vue-next";
   import { useBusTimetable } from "@/composables/bus/useBusTimetable";
   import { useDragReorder } from "@/composables/bus/useDragReorder";
+  import { MAX_PINNED } from "@/composables/bus/useMyRoutes";
   import type { MyRoute } from "@/composables/bus/busTypes";
 
   const {
@@ -101,7 +102,7 @@
   });
 
   const localPinnedRoutes = computed(() => {
-    return localItems.value.filter(r => r.isPinned).slice(0, 3);
+    return localItems.value.filter(r => r.isPinned).slice(0, MAX_PINNED);
   });
 
   const onPinnedDragOver = (index: number, event: DragEvent) => {

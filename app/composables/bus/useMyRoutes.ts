@@ -8,8 +8,8 @@ import { isKnownStopName } from "@@/shared/utils/Bus/v2/Routes";
 import type { MyRoute } from "./busTypes";
 
 const STORAGE_KEY = "@genbuhase/wakame-navi/my_routes";
-const MAX_ROUTES = 20;
-const MAX_PINNED = 3;
+export const MAX_ROUTES = 20;
+export const MAX_PINNED = 5;
 
 const myRoutes = ref<MyRoute[]>([]);
 let isMyRoutesLoaded = false;
@@ -132,7 +132,7 @@ export function useMyRoutes() {
     if (!target.isPinned) {
       const pinnedCount = myRoutes.value.filter(r => r.isPinned).length;
       if (pinnedCount >= MAX_PINNED) {
-        return `ピン留め（お気に入りショートカット）は最大${MAX_PINNED}件までです。`;
+        return `ピン留めは最大${MAX_PINNED}件までです。`;
       }
     }
 

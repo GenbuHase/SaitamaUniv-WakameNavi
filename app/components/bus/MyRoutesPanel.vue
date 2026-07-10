@@ -19,7 +19,7 @@
         </div>
         <div class="flex items-center gap-2">
           <span class="text-xs text-slate-400 bg-slate-100 px-2.5 py-0.5 rounded-full font-bold">
-            {{ localItems.length }}/20
+            {{ localItems.length }}/{{ MAX_ROUTES }}
           </span>
           <ChevronDown
             class="w-4 h-4 text-slate-400 transition-transform duration-300"
@@ -134,6 +134,7 @@
   } from "lucide-vue-next";
   import { useBusTimetable } from "@/composables/bus/useBusTimetable";
   import { useDragReorder } from "@/composables/bus/useDragReorder";
+  import { MAX_ROUTES } from "@/composables/bus/useMyRoutes";
 
   const {
     myRoutes,
