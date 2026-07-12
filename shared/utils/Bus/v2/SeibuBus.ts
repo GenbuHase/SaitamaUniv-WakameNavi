@@ -8,6 +8,7 @@
 import Time from "@@/shared/utils/Time";
 import type { BusCompanyCode, BusService, BusLocation } from "@@/shared/types/bus";
 import { BUS_COMPANIES } from "@@/shared/types/bus";
+import { ALL_ROUTES } from "@@/shared/utils/Bus/v2/Routes";
 
 /** navitimeバスロケーションのベースURL */
 const FETCH_BASE_URL = "https://transfer-cloud.navitime.biz/seibubus/approachings";
@@ -20,6 +21,35 @@ export const COMPANY_NAME = BUS_COMPANIES.Seibu.name;
 
 /** 外部リクエストのタイムアウト (ミリ秒) */
 const FETCH_TIMEOUT_MS = 30_000;
+
+/**
+ * 降車地未指定時に使う行き先候補を、当該停留所を含む西武系統の始発・終着から導出する。
+ * 埼大周辺固定だと朝霞・成増など他エリアでは常に空になる。
+ */
+function getDefaultGoalsForStop(startId: string): string[] {
+  const goals = new Set<string>();
+
+  for (const route of ALL_ROUTES) {
+    if (route.companyCode !== "Seibu") continue;
+
+    const stopIndex = route.stops.findIndex(s => s.id === startId);
+    if (stopIndex === -1) continue;
+
+    const origin = route.stops[0];
+    const terminal = route.stops[route.stops.length - 1];
+
+    // 乗車停留所より先の終着（進行方向）
+    if (terminal && terminal.id !== startId && stopIndex < route.stops.length - 1) {
+      goals.add(terminal.id);
+    }
+    // 逆方向定義が無い場合の保険として、乗車より手前なら始発も候補にする
+    if (origin && origin.id !== startId && stopIndex > 0) {
+      goals.add(origin.id);
+    }
+  }
+
+  return Array.from(goals);
+}
 
 /**
  * スクレイピングURLを生成する
@@ -74,9 +104,14 @@ async function fetchWithTimeout(url: string, options: RequestInit, timeoutMs: nu
 
 export async function getServices(startId: string, goalId: string): Promise<BusService[]> {
   // 目的地が未指定（startId === goalId）の場合、Navitime Cloudでは403/404エラーになるため
-  // 主要な行き先をすべて並列で取得して合成する
+  // 当該停留所を含む西武系統の始発・終着を行き先候補として並列取得し合成する
   if (startId === goalId) {
-    const defaultGoals = ["00111643", "00111628", "00111644"].filter(id => id !== startId);
+    const defaultGoals = getDefaultGoalsForStop(startId);
+    if (defaultGoals.length === 0) {
+      console.warn("[SeibuBus] no default goals for stop:", startId);
+      return [];
+    }
+
     const results = await Promise.all(defaultGoals.map(dest => fetchServices(startId, dest).catch(() => [])));
 
     const uniqueServices = new Map<string, BusService>();
