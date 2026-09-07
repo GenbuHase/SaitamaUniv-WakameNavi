@@ -1,17 +1,16 @@
 /**
  * 西武バス スクレイパー (v2)
  *
- * NAVITIME バスロケーションサイトから西武バスの運行情報をスクレイピングし、
- * 共通の BusService 型に正規化して返す。
+ * NAVITIME バスロケーションサイト (transfer-cloud.navitime.biz/seibubus) から
+ * 西武バスの運行情報を取得し、共通の BusService 型に正規化して返す。
  */
 
-import Time from "@@/shared/utils/Time";
-import type { BusCompanyCode, BusService, BusLocation } from "@@/shared/types/bus";
+import type { BusCompanyCode, BusService } from "@@/shared/types/bus";
 import { BUS_COMPANIES } from "@@/shared/types/bus";
-import { ALL_ROUTES } from "@@/shared/utils/Bus/v2/Routes";
+import { fetchNavitimeCloudServices } from "@@/shared/utils/Bus/v2/NavitimeCloud";
 
-/** navitimeバスロケーションのベースURL */
-const FETCH_BASE_URL = "https://transfer-cloud.navitime.biz/seibubus/approachings";
+/** テナントコード */
+const TENANT_CODE = "seibubus" as const;
 
 /** バス会社コード */
 export const COMPANY_CODE: BusCompanyCode = "Seibu";
@@ -19,211 +18,26 @@ export const COMPANY_CODE: BusCompanyCode = "Seibu";
 /** バス会社名 */
 export const COMPANY_NAME = BUS_COMPANIES.Seibu.name;
 
-/** 外部リクエストのタイムアウト (ミリ秒) */
-const FETCH_TIMEOUT_MS = 30_000;
-
 /**
- * 降車地未指定時に使う行き先候補を、当該停留所を含む西武系統の始発・終着から導出する。
- */
-function getDefaultGoalsForStop(startId: string): string[] {
-  const goals = new Set<string>();
-
-  for (const route of ALL_ROUTES) {
-    if (route.companyCode !== "Seibu") continue;
-
-    const stopIndex = route.stops.findIndex(s => s.id === startId);
-    if (stopIndex === -1) continue;
-
-    const origin = route.stops[0];
-    const terminal = route.stops[route.stops.length - 1];
-
-    // 乗車停留所より先の終着（進行方向）
-    if (terminal && terminal.id !== startId && stopIndex < route.stops.length - 1) {
-      goals.add(terminal.id);
-    }
-    // 逆方向定義が無い場合の保険として、乗車より手前なら始発も候補にする
-    if (origin && origin.id !== startId && stopIndex > 0) {
-      goals.add(origin.id);
-    }
-  }
-
-  return Array.from(goals);
-}
-
-/**
- * スクレイピングURLを生成する
- */
-function getFetchUrl(startId: string, goalId: string): string {
-  return `${FETCH_BASE_URL}?departure-busstop=${encodeURIComponent(startId)}&arrival-busstop=${encodeURIComponent(goalId)}`;
-}
-
-/**
- * 西武バスの系統名を正規化する
- */
-function normalizeRouteName(rawRoute: string): string {
-  return rawRoute.replace(/[０-９]/g, str => String.fromCharCode(str.charCodeAt(0) - 0xfee0)).replace(/[＜＞]/g, ""); // 括弧 ＜＞ を除去
-}
-
-/**
- * 西武バスの行先名を正規化する
- */
-function normalizeDestination(rawDestination: string): string {
-  const parts = rawDestination.split("～");
-  if (parts.length < 2) return rawDestination.replace("行", "");
-  return (parts[1] ?? rawDestination).replace("行", ""); // 末尾の「行」を除去
-}
-
-/**
- * 時刻テキストからHH:mm形式を抽出する
- */
-function extractTime(timeText: string): string {
-  const matcher = timeText.match(/\d{1,2}:\d{1,2}/);
-  return matcher ? matcher[0] : "";
-}
-
-/**
- * タイムアウト付きの fetch を実行する
+ * 西武バスの運行情報を取得する
  *
- * AbortController を使用し、指定時間内に応答がない場合はリクエストを中断する。
+ * @param startId - 出発バス停の navitime ID
+ * @param goalId - 到着バス停の navitime ID
+ * @returns 正規化された運行情報の配列
  */
-async function fetchWithTimeout(url: string, options: RequestInit, timeoutMs: number): Promise<Response> {
-  const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
-
-  try {
-    const response = await fetch(url, {
-      ...options,
-      signal: controller.signal,
-    });
-    return response;
-  } finally {
-    clearTimeout(timeoutId);
-  }
-}
-
 export async function getServices(startId: string, goalId: string): Promise<BusService[]> {
-  // 目的地が未指定（startId === goalId）の場合、Navitime Cloudでは403/404エラーになるため
-  // 当該停留所を含む西武系統の始発・終着を行き先候補として並列取得し合成する
-  if (startId === goalId) {
-    const defaultGoals = getDefaultGoalsForStop(startId);
-    if (defaultGoals.length === 0) {
-      console.warn("[SeibuBus] no default goals for stop:", startId);
-      return [];
-    }
-
-    const results = await Promise.all(defaultGoals.map(dest => fetchServices(startId, dest).catch(() => [])));
-
-    const uniqueServices = new Map<string, BusService>();
-    for (const res of results) {
-      for (const service of res) {
-        // 同じ便が複数回取得される可能性があるので、定刻と系統で一意にする
-        uniqueServices.set(`${service.scheduledTime}_${service.route}_${service.destination}`, service);
-      }
-    }
-    // 時間順にソートする
-    return Array.from(uniqueServices.values()).sort((a, b) => a.scheduledTime.localeCompare(b.scheduledTime));
-  }
-
-  return fetchServices(startId, goalId);
-}
-
-async function fetchServices(startId: string, goalId: string): Promise<BusService[]> {
-  const url = getFetchUrl(startId, goalId);
-  const response = await fetchWithTimeout(url, {
-    headers: {
-      "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
-    }
-  }, FETCH_TIMEOUT_MS);
-
-  if (!response.ok) {
-    throw new Error(`Seibu Bus Fetch Error: ${response.status} ${response.statusText}`);
-  }
-
-  const html = await response.text();
-  const match = html.match(/<script type="application\/json" id="__NUXT_DATA__" data-ssr="true">([\s\S]*?)<\/script>/);
-  if (!match) {
-    console.error("[SeibuBus] __NUXT_DATA__ not found (page structure may have changed):", {
-      startId,
-      goalId,
-      htmlLength: html.length,
-    });
-    return [];
-  }
-
-  const nuxtDataJson = match[1];
-  if (!nuxtDataJson) {
-    return [];
-  }
-
-  let data: unknown[];
-  try {
-    data = JSON.parse(nuxtDataJson) as unknown[];
-  } catch (e) {
-    console.error("[SeibuBus] __NUXT_DATA__ JSON parse failed:", {
-      startId,
-      goalId,
-      error: e instanceof Error ? e.message : String(e),
-    });
-    return [];
-  }
-
-  const resolve = (val: unknown): unknown => (typeof val === "number" ? data[val] : val);
-  const asRecord = (val: unknown): Record<string, unknown> | null =>
-    val && typeof val === "object" ? val as Record<string, unknown> : null;
-  const asString = (val: unknown): string => (typeof val === "string" ? val : "");
-
-  const services: BusService[] = [];
-
-  for (const item of data) {
-    const row = asRecord(item);
-    if (row && row.courseName && row.origin && row.destination && row.predictedDuration) {
-      const rawRoute = asString(resolve(row.courseName));
-      const rawDestination = asString(resolve(row.destination));
-
-      const departureInfo = asRecord(resolve(row.departure));
-      if (!departureInfo) continue;
-
-      const rawScheduledTime = asString(resolve(departureInfo.scheduledDepartureTime));
-      const rawEstimatedTime = asString(resolve(departureInfo.predictedDepartureTime));
-
-      const scheduledTime = extractTime(rawScheduledTime);
-      const estimatedTime = extractTime(rawEstimatedTime);
-
-      const delayMinutes = scheduledTime && estimatedTime ? Time.getDifferenceInMinutes(Time.parseTimeStringToDate(estimatedTime), Time.parseTimeStringToDate(scheduledTime)) : 0;
-
-      // 状態推定 (残り時間のインデックスを探して発車間近か判定)
-      let locationStatus: BusLocation = { status: "running", stopsAway: 1 };
-      const remainingTimeInfo = asString(resolve(departureInfo.remainingTimeUntilDeparture));
-      if (remainingTimeInfo && remainingTimeInfo.includes("M")) {
-        const minMatch = remainingTimeInfo.match(/PT(\d+)M/);
-        if (minMatch?.[1]) {
-          const min = parseInt(minMatch[1], 10);
-          if (min <= 1) {
-            locationStatus = { status: "approaching", stopsAway: 0 };
-          } else {
-            locationStatus = { status: "running", stopsAway: Math.max(1, Math.floor(min / 2)) };
-          }
-        }
-      }
-
-      services.push({
-        companyCode: COMPANY_CODE,
-        companyName: COMPANY_NAME,
-        route: normalizeRouteName(rawRoute),
-        destination: normalizeDestination(rawDestination),
-        location: locationStatus,
-        scheduledTime,
-        estimatedTime,
-        delay: Math.max(0, delayMinutes)
-      });
-    }
-  }
-
-  return services;
+  return fetchNavitimeCloudServices({
+    tenant: TENANT_CODE,
+    companyCode: COMPANY_CODE,
+    companyName: COMPANY_NAME,
+    startId,
+    goalId,
+  });
 }
 
 export default {
   COMPANY_CODE,
   COMPANY_NAME,
-  getServices
+  getServices,
 };
+
