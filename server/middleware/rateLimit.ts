@@ -117,8 +117,8 @@ export default defineEventHandler(async event => {
     rejectUnavailable();
   }
 
-  let currentCount = 0;
-  let retryAfterSeconds = 0;
+  let currentCount: number;
+  let retryAfterSeconds: number;
 
   if (hasRedis && redis) {
     // ----------------------------------------------------
