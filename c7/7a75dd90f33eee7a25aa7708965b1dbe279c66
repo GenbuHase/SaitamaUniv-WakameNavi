@@ -1,0 +1,14 @@
+package-lock.json
+  h_949a05ab995868 3,9
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "c77a75dd90f33eee7a25aa7708965b1dbe279c66",
+  "prompts": {},
+  "humans": {
+    "h_949a05ab995868": {
+      "author": "Genbu Hase <14960841+GenbuHase@users.noreply.github.com>"
+    }
+  }
+}
